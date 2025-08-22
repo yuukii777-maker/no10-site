@@ -1,49 +1,20 @@
-﻿import type { Metadata } from "next"
-import { Inter, Cormorant_Garamond } from "next/font/google"
-import "./globals.css"
+﻿import type { Metadata } from "next";
+import Link from "next/link";
+import { Inter, Cormorant_Garamond } from "next/font/google";
+import "./globals.css";
 
-// 本文 Inter / 見出し Cormorant
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" })
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-cormorant",
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300","400","500","600","700"],
   display: "swap",
-})
+});
 
 export const metadata: Metadata = {
   title: "No.10 Family Office — Legacy & Innovation",
-  description:
-    "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
-  metadataBase: new URL("http://localhost:3000"),
-  openGraph: {
-    title: "No.10 Family Office — Legacy & Innovation",
-    description:
-      "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
-    url: "/",
-    siteName: "No.10 Family Office",
-    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "No.10 Family Office" }],
-    locale: "ja_JP",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "No.10 Family Office — Legacy & Innovation",
-    description:
-      "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
-    images: ["/og.jpg"],
-  },
-  icons: { icon: "/favicon.ico" },
-  keywords: [
-    "family office",
-    "investment",
-    "legacy",
-    "venture",
-    "culture",
-    "philanthropy",
-    "Japan",
-  ],
-}
+  description: "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -52,12 +23,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Header */}
         <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b border-neutral-200">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <a href="/" className="group inline-flex items-baseline gap-2">
+            <Link href="/" className="group inline-flex items-baseline gap-2">
               <span className="font-display font-semibold tracking-wide text-2xl">No.10</span>
               <span className="text-sm uppercase tracking-[.25em] text-neutral-500 group-hover:text-neutral-900 transition">
                 Family Office
               </span>
-            </a>
+            </Link>
 
             <nav className="hidden md:flex items-center gap-8 text-sm">
               <a href="#ethos" className="hover:text-neutral-500 transition">Ethos</a>
@@ -116,5 +87,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
       </body>
     </html>
-  )
+  );
 }

@@ -1,9 +1,8 @@
-/* app/globals.css */
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* --- 基本設定（フォント変数は next/font で定義済み） --- */
+/* --- 基本設定 --- */
 :root {
   --font-body: var(--font-inter);
   --font-display: var(--font-cormorant);
@@ -17,26 +16,22 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-::selection {
-  background: #000;
-  color: #fff;
-}
+::selection { background:#000; color:#fff; }
 
-/* 見出しなどに使う上品な表示フォント */
 .font-display {
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
   letter-spacing: .01em;
 }
 
-/* 余白・幅のプリセット（毎回同じ書き方に） */
-.container-max { @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8; }
+/* 余白・幅のプリセット（@apply sm: は不可 → @screen で段階指定） */
+.container-max { @apply mx-auto max-w-7xl px-4; }
+@screen sm { .container-max { @apply px-6; } }
+@screen lg { .container-max { @apply px-8; } }
 
-/* カードの共通スタイル */
-.card {
-  @apply rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.02)];
-}
+/* カード */
+.card { @apply rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.02)]; }
 
-/* シンプルなリンク下線（ホバー時だけ出る） */
+/* 下線リンク */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-size: 0% 1px;
@@ -46,14 +41,14 @@ html {
 }
 .link-underline:hover { background-size: 100% 1px; }
 
-/* フォームの入力見栄えを統一 */
+/* 入力 */
 .input {
   @apply w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none
          focus:ring-4 focus:ring-neutral-200;
 }
 
-/* 画像の角を大きめに（高級感） */
+/* 画像 */
 .img-rounded { border-radius: 1.25rem; }
 
-/* スクロール出現の微アニメを少し滑らかに（Revealで使う） */
+/* Reveal用の軽い最適化 */
 [data-show="true"] { will-change: transform, opacity; }

@@ -1,19 +1,53 @@
-﻿import type { Metadata } from "next";
+﻿// app/layout.tsx
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
+// 本文 Inter / 見出し Cormorant
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-cormorant",
-  weight: ["300","400","500","600","700"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
+// 公開URLを環境変数から（無ければローカル）
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: "No.10 Family Office — Legacy & Innovation",
-  description: "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
+  description:
+    "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    title: "No.10 Family Office — Legacy & Innovation",
+    description:
+      "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
+    url: "/",
+    siteName: "No.10 Family Office",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "No.10 Family Office" }],
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "No.10 Family Office — Legacy & Innovation",
+    description:
+      "Stewarding multigenerational capital with craftsmanship, technology, and cultural impact.",
+    images: ["/og.jpg"],
+  },
+  icons: { icon: "/favicon.ico" },
+  keywords: [
+    "family office",
+    "investment",
+    "legacy",
+    "venture",
+    "culture",
+    "philanthropy",
+    "Japan",
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -23,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Header */}
         <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b border-neutral-200">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            {/* 内部遷移は Link を使用 */}
             <Link href="/" className="group inline-flex items-baseline gap-2">
               <span className="font-display font-semibold tracking-wide text-2xl">No.10</span>
               <span className="text-sm uppercase tracking-[.25em] text-neutral-500 group-hover:text-neutral-900 transition">
@@ -31,12 +66,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
 
             <nav className="hidden md:flex items-center gap-8 text-sm">
+              {/* 同一ページ内のアンカーは <a> でOK */}
               <a href="#ethos" className="hover:text-neutral-500 transition">Ethos</a>
               <a href="#legacy" className="hover:text-neutral-500 transition">Legacy</a>
               <a href="#portfolio" className="hover:text-neutral-500 transition">Portfolio</a>
               <a href="#people" className="hover:text-neutral-500 transition">People</a>
               <a href="#philanthropy" className="hover:text-neutral-500 transition">Philanthropy</a>
-              <a href="#contact" className="inline-flex items-center rounded-full border border-neutral-300 px-3 py-1.5 hover:bg-black hover:text-white transition">
+              <a
+                href="#contact"
+                className="inline-flex items-center rounded-full border border-neutral-300 px-3 py-1.5 hover:bg-black hover:text-white transition"
+              >
                 Contact
               </a>
             </nav>

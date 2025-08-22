@@ -1,0 +1,59 @@
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- 基本設定（フォント変数は next/font で定義済み） --- */
+:root {
+  --font-body: var(--font-inter);
+  --font-display: var(--font-cormorant);
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", Roboto,
+    "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #000;
+  color: #fff;
+}
+
+/* 見出しなどに使う上品な表示フォント */
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  letter-spacing: .01em;
+}
+
+/* 余白・幅のプリセット（毎回同じ書き方に） */
+.container-max { @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8; }
+
+/* カードの共通スタイル */
+.card {
+  @apply rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.02)];
+}
+
+/* シンプルなリンク下線（ホバー時だけ出る） */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  transition: background-size .25s ease;
+}
+.link-underline:hover { background-size: 100% 1px; }
+
+/* フォームの入力見栄えを統一 */
+.input {
+  @apply w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none
+         focus:ring-4 focus:ring-neutral-200;
+}
+
+/* 画像の角を大きめに（高級感） */
+.img-rounded { border-radius: 1.25rem; }
+
+/* スクロール出現の微アニメを少し滑らかに（Revealで使う） */
+[data-show="true"] { will-change: transform, opacity; }

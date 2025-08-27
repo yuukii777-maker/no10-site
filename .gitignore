@@ -16,3 +16,7 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 Thumbs.db
+.env.local
+.env*
+.next
+node_modules

@@ -1,194 +1,157 @@
-/* app/page.tsx — ランディング大枠 + お問い合わせフォーム */
+// app/admin/page.tsx
 "use client";
-import React, { useState } from "react";
-import Script from "next/script";
 
-export default function Home() {
-  const [pending, setPending] = useState(false);
+import { useEffect } from "react";
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setPending(true);
+type Member = {
+  author: string;
+  keyHash: string | null;
+  revoked: boolean;
+  created: string;
+  updated: string;
+};
 
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    const name = String(fd.get("name") ?? "");
-    const email = String(fd.get("email") ?? "");
-    const message = String(fd.get("message") ?? "");
+const LS_MEM = "volce_members_v1";
 
-    // Turnstile（あれば）
-    let turnstileToken = "";
-    const tokenInput = document.querySelector(
-      'input[name="cf-turnstile-response"]'
-    ) as HTMLInputElement | null;
-    if (tokenInput?.value) turnstileToken = tokenInput.value;
+async function sha256(text: string) {
+  const buf = new TextEncoder().encode(text);
+  const dig = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(dig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, message, turnstileToken }),
-    });
+export default function AdminPage() {
+  useEffect(() => {
+    const $ = (s: string) => document.querySelector(s) as HTMLElement | null;
+    const keyInp = $("#adminKey") as HTMLInputElement;
+    const wrap = $("#wrap")!;
+    const msg = $("#msg")!;
 
-    alert(res.ok ? "送信しました！" : "送信に失敗しました…");
-    if (res.ok) form.reset();
-    setPending(false);
-  }
+    const read = (): Member[] => { try { return JSON.parse(localStorage.getItem(LS_MEM) || "[]"); } catch { return []; } };
+    const write = (arr: Member[]) => localStorage.setItem(LS_MEM, JSON.stringify(arr));
+
+    function render(items: Member[]) {
+      if (!items.length) { wrap.innerHTML = '<p class="muted">メンバー登録はまだありません。</p>'; return; }
+      let html = '<div style="overflow:auto"><table><thead><tr><th>名前</th><th>状態</th><th>作成</th><th>更新</th><th>keyHash</th><th>操作</th></tr></thead><tbody>';
+      for (const it of items) {
+        html += `<tr>
+          <td>${escapeHtml(it.author)}</td>
+          <td><span class="state-badge ${it.revoked ? "revoked" : "active"}">${it.revoked ? "停止中" : "有効"}</span></td>
+          <td>${it.created || ""}</td>
+          <td>${it.updated || ""}</td>
+          <td class="keyhash">${it.keyHash ? it.keyHash.slice(0, 10) + "…" : ""}</td>
+          <td class="row-actions">
+            ${it.revoked
+              ? `<button class="btn small" data-act="restore" data-author="${encodeURIComponent(it.author)}">復活</button>`
+              : `<button class="btn small" data-act="revoke" data-author="${encodeURIComponent(it.author)}">取り上げ</button>`}
+            <button class="btn small" data-act="setkey" data-author="${encodeURIComponent(it.author)}">キーをリセット</button>
+          </td>
+        </tr>`;
+      }
+      html += "</tbody></table></div>";
+      wrap.innerHTML = html;
+
+      wrap.querySelectorAll<HTMLButtonElement>("button[data-act]").forEach(b => {
+        b.addEventListener("click", async () => {
+          const act = b.dataset.act!;
+          const author = decodeURIComponent(b.dataset.author!);
+          try {
+            const all = read();
+            const idx = all.findIndex(x => x.author === author);
+            if (idx < 0) return;
+            if (act === "revoke") all[idx].revoked = true;
+            else if (act === "restore") all[idx].revoked = false;
+            else if (act === "setkey") {
+              const nk = prompt(`${author} の新しい合言葉（英数字推奨）を入力してください:`,"") || "";
+              if (!nk.trim()) return;
+              all[idx].keyHash = await sha256(nk.trim());
+            }
+            all[idx].updated = new Date().toISOString();
+            write(all);
+            msg.textContent = "OK";
+            render(read());
+          } catch (e: any) {
+            msg.textContent = "エラー: " + (e?.message || e);
+          }
+        });
+      });
+    }
+
+    function escapeHtml(s: string) {
+      return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+    }
+
+    function ensureSamples() {
+      // 初回用：タイムライン投稿者から自動抽出（存在しなければ）
+      const mem = read();
+      if (mem.length) return;
+      try {
+        const tl = JSON.parse(localStorage.getItem("volce_timeline_v1") || "[]") as any[];
+        const map = new Map<string, Member>();
+        for (const it of tl) {
+          const a = (it.author || "").trim();
+          if (!a) continue;
+          if (!map.has(a)) {
+            map.set(a, {
+              author: a,
+              keyHash: it.keyHash || null,
+              revoked: false,
+              created: new Date().toISOString(),
+              updated: new Date().toISOString(),
+            });
+          }
+        }
+        const arr = Array.from(map.values());
+        if (arr.length) write(arr);
+      } catch {}
+    }
+
+    function load() {
+      msg.textContent = "読み込み中…";
+      ensureSamples();
+      const list = read();
+      render(list);
+      msg.textContent = "";
+    }
+
+    document.getElementById("btnLoad")!.addEventListener("click", load);
+  }, []);
 
   return (
-    <main className="space-y-24">
-      {/* Hero */}
-      <section className="pt-16 pb-20 bg-white">
-        <div className="container-max">
-          <div className="grid gap-10 lg:grid-cols-2 items-center">
-            <div>
-              <p className="uppercase tracking-[0.25em] text-sm text-neutral-500">
-                No.10 Family Office
-              </p>
-              <h1 className="font-display text-4xl sm:text-5xl leading-tight mt-3">
-                Legacy &amp; Innovation<br />
-                crafted with patience.
-              </h1>
-              <p className="mt-6 text-neutral-600">
-                Crafting long-term value across culture, technology, and
-                communities. Stewarding multigenerational capital with
-                craftsmanship.
-              </p>
-              <div className="mt-8 flex gap-3">
-                <a
-                  href="#contact"
-                  className="inline-flex rounded-xl px-4 py-2 bg-black text-white hover:opacity-90"
-                >
-                  Get in touch
-                </a>
-                <a
-                  href="#ethos"
-                  className="inline-flex rounded-xl px-4 py-2 border border-neutral-300 hover:bg-neutral-100"
-                >
-                  Explore
-                </a>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="aspect-[4/3] w-full rounded-2xl bg-neutral-100 img-rounded" />
-              {/* 後で映像/画像に差し替え予定 */}
-            </div>
+    <>
+      <style>{`
+        .page{max-width:980px;margin:16px auto 40px;position:relative;z-index:1}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:14px}
+        th{text-align:left;opacity:.85}
+        .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .small{padding:6px 10px;font-size:12px}
+        .muted{opacity:.75}
+        .keyhash{font-family:ui-monospace,Consolas,monospace;font-size:12px;opacity:.7}
+        .state-badge{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.2)}
+        .revoked{background:rgba(255,80,80,.15);border-color:rgba(255,80,80,.35)}
+        .active{background:rgba(90,200,120,.15);border-color:rgba(90,200,120,.35)}
+        .topbar{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+        input[type="password"],input[type="text"]{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff}
+      `}</style>
+
+      <main className="page">
+        <section className="card">
+          <h2 className="cutline brand" style={{ marginTop: 0 }}>メンバー管理</h2>
+
+          <div className="topbar">
+            <label>管理者合言葉</label>
+            <input id="adminKey" type="password" placeholder="ADMIN_****" style={{ minWidth: 220 }} />
+            <button className="btn small" id="btnLoad">読み込み</button>
+            <span className="muted" id="msg"></span>
           </div>
-        </div>
-      </section>
 
-      {/* Ethos */}
-      <section id="ethos">
-        <div className="container-max">
-          <h2 className="font-display text-3xl">Ethos</h2>
-          <p className="mt-3 text-neutral-600 max-w-3xl">
-            Patient capital, understated design, cultural sensitivity. We
-            partner with founders and creators who build for generations, not
-            quarters.
-          </p>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="card p-6">
-              <div className="text-sm uppercase tracking-wider text-neutral-500">
-                Craft
-              </div>
-              <div className="mt-2 font-medium">
-                Careful stewardship and meticulous execution.
-              </div>
-            </div>
-            <div className="card p-6">
-              <div className="text-sm uppercase tracking-wider text-neutral-500">
-                Time
-              </div>
-              <div className="mt-2 font-medium">
-                Compounding over decades, not years.
-              </div>
-            </div>
-            <div className="card p-6">
-              <div className="text-sm uppercase tracking-wider text-neutral-500">
-                Culture
-              </div>
-              <div className="mt-2 font-medium">
-                Respect for heritage, appetite for progress.
-              </div>
-            </div>
+          <div className="muted" style={{ marginBottom: 8 }}>
+            ※合言葉はハッシュで保存のため表示しません。必要時は「キーをリセット」で新しい合言葉に置き換えてください（既存端末トークンは失効）。
           </div>
-        </div>
-      </section>
 
-      {/* Legacy */}
-      <section id="legacy">
-        <div className="container-max">
-          <h2 className="font-display text-3xl">Legacy</h2>
-          <p className="mt-3 text-neutral-600 max-w-3xl">
-            A long view on capital allocation, supporting resilient,
-            compounding enterprises and cultural institutions.
-          </p>
-        </div>
-      </section>
-
-      {/* Portfolio */}
-      <section id="portfolio">
-        <div className="container-max">
-          <h2 className="font-display text-3xl">Portfolio</h2>
-          <p className="mt-3 text-neutral-600 max-w-3xl">
-            Select partnerships in software, media, craft, and infrastructure.
-          </p>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="card p-6">Company A — Seed</div>
-            <div className="card p-6">Company B — Series A</div>
-            <div className="card p-6">Studio / Craft Initiative</div>
-          </div>
-        </div>
-      </section>
-
-      {/* People */}
-      <section id="people">
-        <div className="container-max">
-          <h2 className="font-display text-3xl">People</h2>
-          <p className="mt-3 text-neutral-600 max-w-3xl">
-            Operators, artisans, and researchers collaborating across borders.
-          </p>
-        </div>
-      </section>
-
-      {/* Philanthropy */}
-      <section id="philanthropy">
-        <div className="container-max">
-          <h2 className="font-display text-3xl">Philanthropy</h2>
-          <p className="mt-3 text-neutral-600 max-w-3xl">
-            Enduring commitments in education, preservation, and public goods.
-          </p>
-        </div>
-      </section>
-
-      {/* Contact */}
-      <section id="contact" className="pb-24">
-        <div className="container-max">
-          <h2 className="font-display text-3xl">お問い合わせ</h2>
-          <form onSubmit={onSubmit} className="mt-4 space-y-3 max-w-xl">
-            <input name="name" className="input" placeholder="お名前" required />
-            <input name="email" type="email" className="input" placeholder="メール" required />
-            <textarea name="message" rows={5} className="input" placeholder="メッセージ" required />
-            {/* Turnstile（環境変数があれば表示） */}
-            <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
-              <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}></div>
-            ) : null}
-            <button
-              disabled={pending}
-              className="px-4 py-2 bg-black text-white rounded-xl disabled:opacity-50"
-            >
-              {pending ? "送信中…" : "送信"}
-            </button>
-          </form>
-
-          <p className="text-sm text-neutral-500 mt-6">
-            APIヘルス:{" "}
-            <a className="underline" href="/api/health" target="_blank" rel="noreferrer">
-              /api/health
-            </a>
-          </p>
-        </div>
-      </section>
-    </main>
+          <div id="wrap"></div>
+        </section>
+      </main>
+    </>
   );
 }

@@ -1,54 +1,61 @@
-﻿@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* --- 基本設定 --- */
-:root {
-  --font-body: var(--font-inter);
-  --font-display: var(--font-cormorant);
+:root{
+  --txt:#e9eef7;
+  --muted:#cbd5e1;
 }
 
-html {
-  scroll-behavior: smooth;
-  font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", Roboto,
-    "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ===== ベース ===== */
+html,body{height:100%}
+body{
+  margin:0; color:var(--txt); background:#070b12;
+  font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
 }
+h1,h2{margin:0 0 .6rem 0; line-height:1.2}
+p{margin:.6rem 0 0 0}
 
-::selection { background:#000; color:#fff; }
-
-.font-display {
-  font-family: var(--font-display), Georgia, "Times New Roman", serif;
-  letter-spacing: .01em;
+/* ====== パララックス (画像名が変わってもOKにするためdata属性で管理) ====== */
+.parallax{position:relative;height:100vh;overflow:hidden;perspective:1000px}
+.parallax > [data-layer]{
+  position:absolute; inset:0; background-repeat:repeat-x; background-size:auto 100%;
+  will-change:background-position,transform; pointer-events:none;
 }
+.parallax [data-layer="sky"]   { background: center/cover no-repeat; transform:translateZ(-400px) scale(1.35); filter:contrast(1.06) saturate(1.04) }
+.parallax [data-layer="far"]   { opacity:.85;  animation:scrollFar 120s linear infinite, drift 18s ease-in-out infinite }
+.parallax [data-layer="mid"]   { opacity:.95;  animation:scrollMid  80s linear infinite, drift 14s ease-in-out infinite }
+.parallax [data-layer="near"]  { opacity:1;     animation:scrollNear 40s linear infinite, drift 10s ease-in-out infinite }
+.parallax [data-layer="rays"]  { background: center/120% no-repeat; mix-blend-mode:screen; opacity:.6; animation:rays 8s ease-in-out infinite }
 
-/* 余白・幅のプリセット（@apply sm: は不可 → @screen で段階指定） */
-.container-max { @apply mx-auto max-w-7xl px-4; }
-@screen sm { .container-max { @apply px-6; } }
-@screen lg { .container-max { @apply px-8; } }
+@keyframes scrollFar  { to{ background-position-x:-2000px } }
+@keyframes scrollMid  { to{ background-position-x:-3200px } }
+@keyframes scrollNear { to{ background-position-x:-4600px } }
+@keyframes drift { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+@keyframes rays  { 0%,100%{ opacity:.5 } 50%{ opacity:.8 } }
 
-/* カード */
-.card { @apply rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.02)]; }
+/* ===== ヒーロー中央（ロゴ・島など置く場所） ===== */
+.hero-center{position:relative; z-index:10; height:100%; display:grid; place-items:center}
 
-/* 下線リンク */
-.link-underline {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-size: 0% 1px;
-  background-position: left bottom;
-  background-repeat: no-repeat;
-  transition: background-size .25s ease;
+/* ===== スクロールで浮かぶテキスト ===== */
+.section{position:relative; z-index:20; padding:12vh 6vw; background:
+  radial-gradient(1200px 400px at 50% -20%, rgba(255,255,255,.08), transparent 60%),
+  linear-gradient(180deg, rgba(7,11,18,0) 0%, rgba(7,11,18,.75) 35%, #070b12 100%);
 }
-.link-underline:hover { background-size: 100% 1px; }
+.reveal{opacity:0; transform:translateY(36px); filter:blur(6px); transition:opacity .9s ease, transform .9s cubic-bezier(.22,1,.36,1), filter .9s ease}
+.reveal.is-visible{opacity:1; transform:translateY(0); filter:blur(0)}
+.delay-1{transition-delay:.12s} .delay-2{transition-delay:.24s} .delay-3{transition-delay:.36s}
 
-/* 入力 */
-.input {
-  @apply w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none
-         focus:ring-4 focus:ring-neutral-200;
+/* ===== 雲っぽいカード（読みやすさUP） ===== */
+.cloud-card{
+  padding:28px 28px 24px; border-radius:22px;
+  background: radial-gradient(120% 140% at 20% 0%, rgba(255,255,255,.12), rgba(255,255,255,.06) 40%, rgba(255,255,255,.03) 70%, rgba(255,255,255,.02) 100%);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(6px) saturate(1.05);
 }
+.cloud-card h2{font-size:28px}
+.lead {color:var(--muted); font-size:16px}
 
-/* 画像 */
-.img-rounded { border-radius: 1.25rem; }
-
-/* Reveal用の軽い最適化 */
-[data-show="true"] { will-change: transform, opacity; }
+/* 小さめ画面 */
+@media (max-width: 640px){
+  .section{padding:12vh 5vw}
+  .cloud-card{padding:22px 18px}
+}

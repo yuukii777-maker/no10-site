@@ -29,7 +29,7 @@
                 radial-gradient(1200px 800px at 10% -10%, rgba(79,106,229,.15), transparent),
                 radial-gradient(1200px 800px at 110% 10%, rgba(79,106,229,.12), transparent);
 
-  /* === ここから追加：NavBar 用の変数（Modules から移設） === */
+  /* === NavBar 用の変数（Modules から移設済み） === */
   --nav-bg: color-mix(in oklab, #0a0e15 86%, transparent);
   --nav-border: rgba(255,255,255,.10);
   --gold-1: #e4c77a;
@@ -37,7 +37,6 @@
   --brand-top: #fff6cc;
   --brand-mid: #ffe39c;
   --brand-btm: #caa45a;
-  /* === 追加ここまで === */
 }
 
 /* 全体背景（画像 + オーバーレイ） */

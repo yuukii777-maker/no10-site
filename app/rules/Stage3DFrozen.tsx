@@ -10,7 +10,7 @@ export default function Stage3DFrozen() {
     const wrap = wrapRef.current!;
     const canvas = canvasRef.current!;
 
-    // まずは即時CSS背景を出しておく（読込中の空白を回避）
+    // 即時CSS背景（読込タイムラグを消す）
     const enableCss = () => {
       wrap.style.backgroundImage =
         "url(/RULE/bg_base.jpg), url(/RULE/pattern_overlay.png), url(/RULE/glow_rays.png)";
@@ -21,50 +21,29 @@ export default function Stage3DFrozen() {
     enableCss();
 
     const hasWebGL = (() => {
-      try {
-        const c = document.createElement("canvas");
-        return !!(window.WebGLRenderingContext &&
-          (c.getContext("webgl") || c.getContext("experimental-webgl")));
-      } catch {
-        return false;
-      }
+      try { const c=document.createElement("canvas"); return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl"))); }
+      catch { return false; }
     })();
+    if (!hasWebGL) return;
 
-    if (!hasWebGL) return; // CSS背景のまま終了
-
-    // ---- Three.js（静止画・描画はリサイズ時のみ）----
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance",
-    });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, powerPreference:"high-performance" });
     renderer.setClearColor(0x000000, 0);
-    renderer.outputColorSpace = THREE.SRGBColorSpace as any;
+    (renderer as any).outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(0, 0, 8);
+    camera.position.set(0,0,8);
 
     const loader = new THREE.TextureLoader();
-    const load = (url: string) =>
-      new Promise<THREE.Texture>((res, rej) => loader.load(url, res, undefined, rej));
-
-    const mk = (t: THREE.Texture, z: number, s = 18, o = 1) => {
-      const g = new THREE.PlaneGeometry(s, (s * 9) / 16);
-      const m = new THREE.MeshBasicMaterial({
-        map: t,
-        transparent: true,
-        opacity: o,
-        depthWrite: false,
-      });
-      const mesh = new THREE.Mesh(g, m);
-      mesh.position.z = z;
-      return mesh;
+    const load = (url:string) => new Promise<THREE.Texture>((res, rej)=>loader.load(url, res, undefined, rej));
+    const mk = (t:THREE.Texture, z:number, s=18, o=1) => {
+      const g=new THREE.PlaneGeometry(s,(s*9)/16);
+      const m=new THREE.MeshBasicMaterial({ map:t, transparent:true, opacity:o, depthWrite:false });
+      const mesh=new THREE.Mesh(g,m); mesh.position.z=z; return mesh;
     };
 
-    let ro: ResizeObserver | undefined;
+    let ro:ResizeObserver|undefined;
 
     (async () => {
       try {
@@ -75,16 +54,9 @@ export default function Stage3DFrozen() {
           load("/RULE/crest.png"),
           load("/RULE/ornament.png"),
         ]);
-
         const aniso = (renderer.capabilities as any).getMaxAnisotropy?.() ?? 1;
-        for (const t of [baseT, patT, raysT, crestT, ornT]) {
-          (t as any).colorSpace = THREE.SRGBColorSpace;
-          t.anisotropy = aniso;
-          t.generateMipmaps = true;
-          t.minFilter = THREE.LinearMipmapLinearFilter;
-        }
+        for (const t of [baseT,patT,raysT,crestT,ornT]){ (t as any).colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; }
 
-        // レイヤー（完全停止）
         const base = mk(baseT, -6.0, 20, 1.0);
         const pat  = mk(patT,  -5.8, 20, 0.10);
         const rays = mk(raysT, -5.6, 20, 0.28);
@@ -92,27 +64,14 @@ export default function Stage3DFrozen() {
         const orn  = mk(ornT,  -5.2, 22, 0.50);
         scene.add(base, pat, rays, crest, orn);
 
-        // 初回レンダ後、CSS背景はそのままでもOK（透明キャンバスが重なる）
         const render = () => renderer.render(scene, camera);
-        const fit = () => {
-          const w = wrap.clientWidth, h = wrap.clientHeight;
-          renderer.setSize(w, h, false);
-          camera.aspect = w / h;
-          camera.updateProjectionMatrix();
-          render();
-        };
-        ro = new ResizeObserver(fit);
-        ro.observe(wrap);
-        fit();
-      } catch {
-        // 読込失敗時はCSS背景のまま
-      }
+        const fit=()=>{const w=wrap.clientWidth,h=wrap.clientHeight;
+          renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); render();};
+        ro=new ResizeObserver(fit); ro.observe(wrap); fit();
+      } catch {/* 失敗時はCSS背景のまま */}
     })();
 
-    return () => {
-      ro?.disconnect();
-      renderer.dispose();
-    };
+    return ()=>{ ro?.disconnect(); renderer.dispose(); };
   }, []);
 
   return (
@@ -120,10 +79,7 @@ export default function Stage3DFrozen() {
       <div ref={wrapRef} className="stage" aria-hidden="true">
         <canvas ref={canvasRef} className="cv" />
       </div>
-      <style jsx>{`
-        .stage{position:fixed; inset:0; z-index:0}
-        .cv{width:100%; height:100%; display:block}
-      `}</style>
+      <style jsx>{`.stage{position:fixed; inset:0; z-index:0} .cv{width:100%; height:100%; display:block}`}</style>
     </>
   );
 }

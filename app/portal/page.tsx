@@ -5,7 +5,6 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import AudioController from "@/app/components/AudioController";
 
-/** /public 必須アセット: background2.png, cloud_* , island.png, rays.png, audio/megami.mp3 */
 const BACKGROUND_IMAGE = "/background2.png";
 
 /* ===== 調整ノブ ===== */
@@ -13,33 +12,30 @@ const CAMERA = { FOV: 36, TILT_DEG: 24, ROLL_DEG: -1.6, Z: 80 };
 const LOOP   = { COPIES: 8, STEP_RATIO: 0.84, EDGE_FADE: 0.16 };
 const MOTION = { INERTIA: 0.1, SPEED: 1.0, TOUCH_SPEED: 1.0, PX2WORLD: 0.016, TILT_MAX: 5 };
 
-/* 岩＋ロゴ＆光の一括スケール（0.85 = 15%縮小） */
+/* 岩＋ロゴ スケールと高さ */
 const ISLAND_SCALE = 0.85;
-
-/* ▼ 高さ（基準）と 揺れ幅：ここを触れば上下のレンジを調整できます */
-const ISLAND_BASE_Y = -19;  // 例：-6で高め、-20で低め（下へ）
-const ISLAND_SWAY   = 2.2;  // 揺れ幅（上下アニメの強さ）
+const ISLAND_BASE_Y = -19;
+const ISLAND_SWAY   = 2.2;
 
 /* ===== テキスト ===== */
 const TUNE = { TITLE_PX: 50, BODY_PX: 50, TITLE_W: 70, TITLE_H: 16, BODY_W: 70, BODY_H: 16, START_Y: 18, GAP_Y: 8, TEXT_SCROLL: 3.2, GROUP_Z: 12 };
 
 /* ===== 近景雲の初期非表示ガード ===== */
-const INTRO_NEAR = { startAlpha: 0.0, scrollWorldForMax: 26, requireInteract: true };
+const INTRO_NEAR = { startAlpha: 0.0, scrollWorldForMax: 26, requireInteract: false };
 
-/* ===== 使用バンド ===== */
-const USE_BANDS = { FAR_1: true, FAR_2: true, MID_1: true, MID_2: false, NEAR_1: true, NEAR_2: true } as const;
+/* ===== 使用バンド（near1を無効＝cloud_near.pngは未使用） ===== */
+const USE_BANDS = { FAR_1: true, FAR_2: true, MID_1: true, MID_2: false, NEAR_1: false, NEAR_2: true } as const;
 
-/* ===== パララックス雲 ===== */
+/* ===== 雲レイヤ設定 ===== */
 const LCONF = {
   FAR_1:  { z: -130, width: 390, height: 220, speed: 0.16, tint: 0xf4efe2, opacity: 0.10, drift: 0.0025, yoff: +36,  type: "far"  },
   FAR_2:  { z: -118, width: 380, height: 214, speed: 0.21, tint: 0xffffff, opacity: 0.20, drift: 0.0035, yoff: +22,  type: "far"  },
   MID_1:  { z:  -64, width: 350, height: 196, speed: 0.30, tint: 0xfff2dc, opacity: 0.70, drift: 0.0055, yoff:  -6,  type: "mid"  },
   MID_2:  { z:  -54, width: 336, height: 188, speed: 0.36, tint: 0xffffff, opacity: 0.15, drift: 0.0065, yoff: -20,  type: "mid"  },
-  NEAR_1: { z:  -10, width: 286, height: 174, speed: 0.56, tint: 0xffffff, opacity: 0.50, drift: 0.0000, yoff: -220, type: "near" },
   NEAR_2: { z:   -6, width: 280, height: 170, speed: 0.66, tint: 0xffffff, opacity: 0.42, drift: 0.0000, yoff: -300, type: "near" },
 };
 
-/* ===== 表示テキスト ===== */
+/* ===== テキスト行 ===== */
 const LINES = [
   { kind: "title", text: "荒野行動を通じて多くの人に影響を与える" },
   { kind: "body",  text: "VOLCEは、ゲリラ参加やイベントを中心に、荒野行動知名度アップを目指すクランです。" },
@@ -49,7 +45,7 @@ const LINES = [
   { kind: "body",  text: "入隊したいかたはＸ→＠Char_god1へ志望枠を載せてDMください。" },
 ] as const;
 
-/* ===== テクスチャ生成（省略なし） ===== */
+/* ===== テクスチャ生成ユーティリティ（省略なし） ===== */
 function makeSolidGlass(text: string, px: number) {
   const scale = 2, W = 2400 * scale, H = 720 * scale;
   const c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -108,7 +104,7 @@ function makeShadowTex(w=512,h=256,spread=0.42,soft=0.35){
   const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
 }
 
-/* ===== 雲マテリアル ===== */
+/* ===== 雲マテリアル生成 ===== */
 const makeCloudMat = (map: THREE.Texture, tint: THREE.ColorRepresentation, opacity=1, drift=0) =>
   new THREE.ShaderMaterial({
     transparent:true, depthWrite:false,
@@ -175,12 +171,14 @@ export default function PortalPage() {
       far2:  load("/cloud_far2.png"),
       mid1:  load("/cloud_mid.png"),
       mid2:  load("/cloud_mid2.png"),
-      near1: load("/cloud_near.png"),
+      // near1: load("/cloud_near.png"), // ←使わない（ファイルがあっても無視されます）
       near2: load("/cloud_near2.png"),
       island: load("/island.png"),
       rays:   load("/rays.png"),
-    };
+    } as const;
+
     Object.values(tex).forEach((t:any) => {
+      if (!t) return;
       t.colorSpace = THREE.SRGBColorSpace;
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.minFilter = THREE.LinearMipmapLinearFilter;
@@ -188,26 +186,26 @@ export default function PortalPage() {
       t.generateMipmaps = true;
     });
 
-    // バンド生成
+    // バンド作成
     const farBand1  = USE_BANDS.FAR_1  ? makeBand(tex.far1,  LCONF.FAR_1)  : null; if (farBand1)  scene.add(farBand1);
     const farBand2  = USE_BANDS.FAR_2  ? makeBand(tex.far2,  LCONF.FAR_2)  : null; if (farBand2)  scene.add(farBand2);
     const midBand1  = USE_BANDS.MID_1  ? makeBand(tex.mid1,  LCONF.MID_1)  : null; if (midBand1)  scene.add(midBand1);
     const midBand2  = USE_BANDS.MID_2  ? makeBand(tex.mid2,  LCONF.MID_2)  : null; if (midBand2)  scene.add(midBand2);
-    const nearBand1 = USE_BANDS.NEAR_1 ? makeBand(tex.near1, LCONF.NEAR_1) : null; if (nearBand1) scene.add(nearBand1);
+    // const nearBand1 = USE_BANDS.NEAR_1 ? makeBand(tex.near1, LCONF.NEAR_1) : null;
     const nearBand2 = USE_BANDS.NEAR_2 ? makeBand(tex.near2, LCONF.NEAR_2) : null; if (nearBand2) scene.add(nearBand2);
 
-    // ===== 浮島（ロゴ） =====
+    // 浮島（ロゴ）
     const island = new THREE.Mesh(
       new THREE.PlaneGeometry(58, 58),
       new THREE.MeshBasicMaterial({ map: tex.island, transparent: true, depthWrite: false })
     );
-    island.position.set(0, ISLAND_BASE_Y, -2); // 基準Yを使用
+    island.position.set(0, ISLAND_BASE_Y, -2);
     island.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG);
     island.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG);
     island.scale.set(ISLAND_SCALE, ISLAND_SCALE, 1);
     scene.add(island);
 
-    // ===== 光（rays） =====
+    // 光
     const rays = (tex.rays as any).image
       ? new THREE.Mesh(
           new THREE.PlaneGeometry(260, 160),
@@ -226,13 +224,13 @@ export default function PortalPage() {
                 float col=beams*glow; gl_FragColor=vec4(vec3(1.0,0.98,0.88)*col, col*uOpacity);} `,
           })
         );
-    rays.position.set(0, ISLAND_BASE_Y + 4, -7); // 島の基準Yに追従
+    rays.position.set(0, ISLAND_BASE_Y + 4, -7);
     rays.rotation.x = island.rotation.x;
     rays.rotation.z = island.rotation.z;
     rays.scale.set(ISLAND_SCALE, ISLAND_SCALE, 1);
     scene.add(rays);
 
-    // ===== テキスト =====
+    // テキスト
     type Item = { solid: THREE.Mesh; edge: THREE.Mesh; shadow: THREE.Mesh; baseY: number; speed: number };
     const items: Item[] = [];
     const shadowTex = makeShadowTex();
@@ -256,7 +254,7 @@ export default function PortalPage() {
       items.push({ solid, edge, shadow, baseY: y, speed: 0.72 });
     });
 
-    // === 入力系 ===
+    // 入力 & スクロール（iPhone対応）
     const isInteractive = (t: EventTarget | null) =>
       t instanceof Element && t.closest('a, button, [role="button"], input, textarea, select, summary, details');
 
@@ -268,7 +266,6 @@ export default function PortalPage() {
     const pdown  = (e: PointerEvent) => { if (isInteractive(e.target)) return; pointerDown = true; lastY = e.clientY; mark(); };
     const pup    = () => (pointerDown = false);
     const pmove  = (e: PointerEvent) => { if (!pointerDown || isInteractive(e.target)) return; const dy = e.clientY - lastY; lastY = e.clientY; scrollTarget += dy * MOTION.TOUCH_SPEED; };
-
     window.addEventListener("wheel", wheel, { passive: true });
     window.addEventListener("pointerdown", pdown, { passive: true });
     window.addEventListener("pointerup", pup, { passive: true });
@@ -276,6 +273,16 @@ export default function PortalPage() {
     window.addEventListener("pointermove", pmove, { passive: true });
     window.addEventListener("touchstart", mark, { passive: true });
     window.addEventListener("keydown",  mark, { passive: true });
+
+    // iOSの通常スクロールに追従（ヒーローが画面内にある間）
+    let prevScrollY = window.scrollY;
+    const onScroll = () => {
+      const dy = window.scrollY - prevScrollY;
+      prevScrollY = window.scrollY;
+      // スクロール量を内部の仮想ワールドに変換
+      scrollTarget += dy * (MOTION.SPEED * 1.0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     const tilt = { x: 0, y: 0 };
     const mouse = (e: MouseEvent) => {
@@ -296,7 +303,7 @@ export default function PortalPage() {
     };
     window.addEventListener("resize", onResize, { passive: true });
 
-    // ===== ループ =====
+    // ループ
     const clock = new THREE.Clock();
     const updateBand = (band: THREE.Group, worldYRaw: number) => {
       const ud = (band as any).userData;
@@ -312,22 +319,18 @@ export default function PortalPage() {
     let raf = 0;
     const loop = () => {
       const t = clock.getElapsedTime();
-
       scrollState += (scrollTarget - scrollState) * MOTION.INERTIA;
       const worldYRaw  = scrollState * MOTION.PX2WORLD;
       const worldYText = worldYRaw * TUNE.TEXT_SCROLL;
 
       const upd = (b: THREE.Group | null) => { if (b) updateBand(b, worldYRaw); };
-      upd(farBand1); upd(farBand2); upd(midBand1); upd(midBand2); upd(nearBand1); upd(nearBand2);
+      upd(farBand1); upd(farBand2); upd(midBand1); upd(midBand2); /* near1なし */ upd(nearBand2);
 
-      // 近景のフェードイン
+      // near フェードイン
       const progress = THREE.MathUtils.clamp(Math.abs(worldYRaw) / INTRO_NEAR.scrollWorldForMax, 0, 1);
       const allow = INTRO_NEAR.requireInteract ? userInteracted : true;
       const nearAlpha = allow ? INTRO_NEAR.startAlpha + (1 - INTRO_NEAR.startAlpha) * progress : 0.0;
-
-      const setA = (b: THREE.Group | null, a: number) => { if (b) setBandOpacity(b, a); };
-      setA(nearBand1, nearAlpha); setA(nearBand2, nearAlpha);
-      setA(farBand1, 1); setA(farBand2, 1); setA(midBand1, 1); setA(midBand2, 1);
+      if (nearBand2) setBandOpacity(nearBand2, nearAlpha);
 
       // テキスト出現
       const centerY = -2;
@@ -350,20 +353,18 @@ export default function PortalPage() {
       camera.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG) + tilt.y * 0.35;
       camera.position.z  = CAMERA.Z + Math.sin(t * 0.25) * 0.6;
 
-      // ▼ 高さアニメ：基準＋揺れ幅
       island.position.y  = ISLAND_BASE_Y + Math.sin(t * 1.2) * ISLAND_SWAY;
-
-      if ((rays.material as any).uniforms) (rays.material as any).uniforms.uTime.value = t;
+      (rays as any).material.uniforms && ((rays as any).material.uniforms.uTime.value = t);
 
       renderer.render(scene, camera);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
-    // cleanup
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("wheel", wheel);
       window.removeEventListener("pointerdown", pdown);
       window.removeEventListener("pointerup", pup);

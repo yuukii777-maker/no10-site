@@ -1,8 +1,9 @@
+/* app/components/NavBar.tsx */
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, MouseEvent } from "react";
 import s from "./NavBar.module.css";
 
 const LINKS = [
@@ -12,20 +13,28 @@ const LINKS = [
   { label: "注意事項",     href: "/notes"    },
   { label: "メンバー紹介", href: "/teams"    },
   { label: "タイムライン", href: "/timeline" },
-  { label: "ゲリラ情報",         href: "/entry"    },
+  { label: "ゲリラ情報",   href: "/entry"    },
 ] as const;
+
+function fireLoading(e: MouseEvent<HTMLAnchorElement>) {
+  // 中クリック / 修飾キー / 新規タブは対象外
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+  // 同一ページ遷移はスキップ（任意）
+  const a = e.currentTarget as HTMLAnchorElement;
+  if (typeof window !== "undefined" && a.pathname === window.location.pathname) return;
+  window.dispatchEvent(new Event("volce-loading-show"));
+}
 
 export default function NavBar() {
   const raw = usePathname() || "/";
   const pathname = raw === "/" ? "/portal" : raw;
   const [open, setOpen] = useState(false);
-
   useEffect(() => { setOpen(false); }, [pathname]);
 
   return (
     <header className={s.nav} aria-label="メインメニュー">
       <div className={s.inner}>
-        <Link href="/portal" className={s.brand} aria-label="VOLCE トップへ">VOLCE</Link>
+        <Link href="/portal" className={s.brand} aria-label="VOLCE トップへ" onClick={fireLoading}>VOLCE</Link>
 
         <div className={s.spacer} />
 
@@ -45,8 +54,10 @@ export default function NavBar() {
               <Link
                 key={it.href}
                 href={it.href}
+                onClick={fireLoading}
                 className={`${s.link} ${active ? s.active : ""}`}
                 aria-current={active ? "page" : undefined}
+                prefetch
               >
                 {it.label}
               </Link>

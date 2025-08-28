@@ -1,4 +1,3 @@
-/* app/components/NavBar.tsx */
 "use client";
 
 import Link from "next/link";
@@ -7,19 +6,17 @@ import { useEffect, useState, MouseEvent } from "react";
 import s from "./NavBar.module.css";
 
 const LINKS = [
-  { label: "ポータル",     href: "/portal"   },
-  { label: "イベント",     href: "/events"   },
-  { label: "ルール",       href: "/rules"    },
-  { label: "注意事項",     href: "/notes"    },
-  { label: "メンバー紹介", href: "/teams"    },
+  { label: "ポータル", href: "/portal" },
+  { label: "イベント", href: "/events" },
+  { label: "ルール",   href: "/rules"  },
+  { label: "注意事項", href: "/notes"  },
+  { label: "メンバー紹介", href: "/teams" },
   { label: "タイムライン", href: "/timeline" },
-  { label: "ゲリラ情報",   href: "/entry"    },
+  { label: "ゲリラ情報",   href: "/entry" },
 ] as const;
 
 function fireLoading(e: MouseEvent<HTMLAnchorElement>) {
-  // 中クリック / 修飾キー / 新規タブは対象外
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-  // 同一ページ遷移はスキップ（任意）
   const a = e.currentTarget as HTMLAnchorElement;
   if (typeof window !== "undefined" && a.pathname === window.location.pathname) return;
   window.dispatchEvent(new Event("volce-loading-show"));

@@ -20,3 +20,6 @@ Thumbs.db
 .env*
 .next
 node_modules
+# ignore big archives
+*.zip
+site_review_*.zip

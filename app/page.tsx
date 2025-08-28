@@ -1,19 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import AudioController from './components/AudioController';
 
 export default function Page() {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [armed, setArmed] = useState(false); // 初回操作で音を鳴らす
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // 画像パス（ファイル名を変えてもここを書き換えるだけ）
+  // 画像パス（必要ならここだけ差し替え）
   const IMG = {
     sky:  '/background.png',
     far:  '/cloud_far.png',
     mid:  '/cloud_mid.png',
     near: '/cloud_near.png',
-    rays: '/rays.png'
+    rays: '/rays.png',
   };
 
   // スクロール/表示トリガー
@@ -26,44 +25,16 @@ export default function Page() {
     return () => io.disconnect();
   }, []);
 
-  // 最初のユーザー操作で音楽スタート（スクロール・クリック・タップいずれか）
-  useEffect(() => {
-    if (armed) return;
-    const kick = () => {
-      if (audioRef.current && !armed) {
-        audioRef.current.play().catch(() => {/* ブラウザ制限で無音でもOK */});
-        setArmed(true);
-      }
-      window.removeEventListener('scroll', kick);
-      window.removeEventListener('pointerdown', kick);
-      window.removeEventListener('keydown', kick);
-    };
-    window.addEventListener('scroll', kick, { once:true });
-    window.addEventListener('pointerdown', kick, { once:true });
-    window.addEventListener('keydown', kick, { once:true });
-    return () => {
-      window.removeEventListener('scroll', kick);
-      window.removeEventListener('pointerdown', kick);
-      window.removeEventListener('keydown', kick);
-    };
-  }, [armed]);
-
   return (
     <main ref={rootRef}>
-      {/* ===== ヒーロー（文字は出さず、スクロールで下から出てくる） ===== */}
+      {/* ===== ヒーロー ===== */}
       <section className="parallax" aria-label="Hero">
         <div data-layer="sky"  style={{ backgroundImage:`url(${IMG.sky})` }} />
         <div data-layer="far"  style={{ backgroundImage:`url(${IMG.far})` }} />
         <div data-layer="mid"  style={{ backgroundImage:`url(${IMG.mid})` }} />
         <div data-layer="near" style={{ backgroundImage:`url(${IMG.near})` }} />
         <div data-layer="rays" style={{ backgroundImage:`url(${IMG.rays})` }} />
-        <div className="hero-center">
-          {/* ここにロゴ／島のSVGや画像があるなら配置 */}
-          {/* <img src="/island.png" alt="" style={{ width:'min(56vw,780px)' }} /> */}
-        </div>
-
-        {/* 非表示のオーディオ（/public/audio/ に mp3 を置く） */}
-        <audio ref={audioRef} src="/audio/megami.mp3" preload="auto" />
+        <div className="hero-center">{/* ロゴ等あればここ */}</div>
       </section>
 
       {/* ===== ステートメント ===== */}
@@ -84,7 +55,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* ===== セクション構成（短く、雲カードで可読性UP） ===== */}
+      {/* ===== セクション構成 ===== */}
       <section className="section" id="sections">
         <div className="cloud-card reveal">
           <h2>コンテンツ</h2>
@@ -97,13 +68,42 @@ export default function Page() {
         </div>
       </section>
 
-      {/* ===== ビジュアル指針（必要なら画像/アイコンを後で差す） ===== */}
+      {/* ===== ビジュアル指針 ===== */}
       <section className="section" id="visuals">
         <div className="cloud-card reveal">
           <h2>ビジュアル</h2>
           <p>火力＝稲妻/炎　エンジョイ＝明るい光　クリエイター/ライバー＝発光エフェクトと配信感。多様性をひとつの光で束ねる。</p>
         </div>
       </section>
+
+      {/* 無表示BGM：初回タップ/クリックでフェードイン再生（プリロード無し） */}
+      <AudioController src="/audio/megami.mp3" volume={0.55} startOnFirstInput />
+
+      {/* 必要最小の補助スタイル（既存CSSがあればそちらが優先） */}
+      <style jsx>{`
+        .parallax{position:relative; min-height:min(100svh,100dvh); overflow:hidden}
+        .parallax [data-layer]{position:absolute; inset:0; background-size:cover; background-position:center; pointer-events:none}
+        .parallax [data-layer="sky"]{z-index:0}
+        .parallax [data-layer="far"]{z-index:1}
+        .parallax [data-layer="mid"]{z-index:2}
+        .parallax [data-layer="near"]{z-index:3}
+        .parallax [data-layer="rays"]{z-index:4; mix-blend-mode:screen; opacity:.55}
+
+        .hero-center{position:absolute; inset:0; display:grid; place-items:center; z-index:5}
+
+        .section{padding:40px 16px}
+        .cloud-card{
+          background:rgba(255,255,255,.04);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:14px; padding:18px;
+          -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        }
+
+        .reveal{opacity:0; transform:translateY(10px); transition:opacity .6s ease, transform .6s ease}
+        .reveal.is-visible{opacity:1; transform:translateY(0)}
+        .reveal.delay-1{transition-delay:.08s}
+        .reveal.delay-2{transition-delay:.16s}
+      `}</style>
     </main>
   );
 }

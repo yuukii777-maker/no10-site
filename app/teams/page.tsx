@@ -384,7 +384,6 @@ export default function TeamsPage() {
         <div className="layer rays" data-depth="0.16" />
         {/* 中景〜近景雲（少し引き） */}
         <img className="layer cloud-mid" src="/sanctum/cloud_strip.png" alt="" data-depth="0.18" data-scale="0.42" />
-        <img className="layer near"  src="/sanctum/cloud_near.png"  alt="" data-depth="0.26" data-scale="0.95" />
         <img className="layer near2" src="/sanctum/cloud_near2.png" alt="" data-depth="0.30" data-scale="0.95" />
         <canvas ref={particles} className="spark-canvas" />
       </div>
@@ -428,7 +427,6 @@ export default function TeamsPage() {
         .celestial-bg .t-small{ opacity:.55; filter: blur(.2px) saturate(1.02) brightness(.96); }
         .celestial-bg .t-main{ opacity:.9; filter: drop-shadow(0 0 18px rgba(255,255,255,.06)); transform-origin:center 60%; }
         .celestial-bg .cloud-mid{ opacity:.65 }
-        .celestial-bg .near{ opacity:.9 }
         .celestial-bg .near2{ opacity:.95 }
 
         /* 光芒 */

@@ -1,407 +1,278 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef } from "react";
-import * as THREE from "three";
-import AudioController from "@/app/components/AudioController";
-import Idle from "@/app/components/Idle";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
-/* ====== 即表示する静止背景（public/ にある画像） ====== */
-const BACKGROUND_IMAGE = "/background2.png";
+/**
+ * ─────────────────────────────────────────────────────────────────────
+ *  VOLCE Portal – 超軽量版
+ *  ・Canvas 粒子のみ（Three.js 不使用）
+ *  ・ロゴ位置は数値（px/%）で調整可能
+ *  ・PC でスクロール時に紹介文がふわっと出現
+ *  ・Team/注意事項の画像は撤廃（テキストのみ）
+ *  ・レイアウトは Tailwind。重い画像や外部フォントは使わない前提
+ *  ・アニメは rAF + 省電力（タブ非表示/低FPS）
+ *  ・`prefers-reduced-motion` で自動的にアニメを弱める
+ *
+ *  使い方：このファイルを `app/portal/page.tsx` にそのまま保存
+ *  必要なら /public にロゴ画像 `portal/logo.png` を配置してください。
+ * ─────────────────────────────────────────────────────────────────────
+ */
 
-/* ====== カメラ & モーション ====== */
-const CAMERA = { FOV: 36, TILT_DEG: 24, ROLL_DEG: -1.6, Z: 80 } as const;
-const LOOP   = { COPIES: 8, STEP_RATIO: 0.84, EDGE_FADE: 0.16 } as const;
-const MOTION = { INERTIA: 0.1, PX2WORLD: 0.016, TILT_MAX: 5 } as const;
+/**
+ * ===== 調整用パラメータ（ここだけ数字を変えれば OK） =====
+ */
+const CFG = {
+  // ロゴ画像パス（/public 直下なら先頭はスラッシュから）
+  logoSrc: "/portal/logo.png", // 例: /portal/logo.png
 
-/* ====== 浮島(ロゴ) 距離感：ここを好きに調整 ====== */
-const ISLAND = {
-  SCALE: 0.75,   // ←小さくしたいなら 0.6〜0.8 など
-  BASE_Y: -22,   // ←下げたいなら -22〜-26 など
-  Z: -3,         // ←カメラからの距離。遠ざけるなら -3 → -4 など
-  SWAY: 2.2,     // 上下ゆらぎ
-} as const;
+  // ロゴの基準サイズ（幅 px）
+  logoWidth: 360,
 
-/* ====== テキスト ====== */
-const TUNE = {
-  TITLE_PX: 50, BODY_PX: 50,
-  TITLE_W: 70, TITLE_H: 16,
-  BODY_W: 70,  BODY_H: 16,
-  START_Y: 18, GAP_Y: 8, TEXT_SCROLL: 3.2, GROUP_Z: 12,
-} as const;
+  // 表示位置（画面左上を (0,0) として）
+  // 単位: px または % を文字列で（例: "12%" や 40）
+  logoOffsetX: "6%", // 左からの距離
+  logoOffsetY: 48,    // 上からの距離
 
-/* ====== 近景雲の初期非表示ガード ====== */
-const INTRO_NEAR = { startAlpha: 0.0, scrollWorldForMax: 26 } as const;
+  // スクロール出現のトリガー（要素が何割見えたら表示するか）
+  revealThreshold: 0.2,
 
-/* ====== 使用する雲の帯（near1は未使用＝cloud_near.png不要） ====== */
-const USE_BANDS = { FAR_1:true, FAR_2:true, MID_1:true, MID_2:false, NEAR_1:false, NEAR_2:true } as const;
-
-/* ====== 雲レイヤ設定 ====== */
-const LCONF = {
-  FAR_1:  { z: -130, width: 390, height: 220, speed: 0.16, tint: 0xf4efe2, opacity: 0.10, drift: 0.0025, yoff: +36,  type: "far"  },
-  FAR_2:  { z: -118, width: 380, height: 214, speed: 0.21, tint: 0xffffff, opacity: 0.20, drift: 0.0035, yoff: +22,  type: "far"  },
-  MID_1:  { z:  -64, width: 350, height: 196, speed: 0.30, tint: 0xfff2dc, opacity: 0.70, drift: 0.0055, yoff:  -6,  type: "mid"  },
-  MID_2:  { z:  -54, width: 336, height: 188, speed: 0.36, tint: 0xffffff, opacity: 0.15, drift: 0.0065, yoff: -20,  type: "mid"  },
-  NEAR_2: { z:   -6, width: 280, height: 170, speed: 0.66, tint: 0xffffff, opacity: 0.42, drift: 0.0000, yoff: -300, type: "near" },
-} as const;
-
-/* ====== テキスト行 ====== */
-const LINES = [
-  { kind: "title", text: "荒野行動を通じて多くの人に影響を与える" },
-  { kind: "body",  text: "VOLCEは、ゲリラ参加やイベントを中心に、荒野行動知名度アップを目指すクランです。" },
-  { kind: "body",  text: "実力ある火力枠はゲリラ優勝を狙い、エンジョイ枠は楽しく、クリエイター/ライバー枠は配信で拡げる。" },
-  { kind: "body",  text: "それぞれの強みを一つの力にし、現環境にもう一度“熱狂”を取り戻します。" },
-  { kind: "body",  text: "これらを目標に協力してくれるメンバーを募集しています。" },
-  { kind: "body",  text: "入隊したいかたはＸ→＠Char_god1へ志望枠を載せてDMください。" },
-] as const;
-
-/* ====== 画像→テクスチャ ====== */
-function makeSolidGlass(text: string, px: number) {
-  const scale = 2, W = 2400 * scale, H = 720 * scale;
-  const c = document.createElement("canvas"); c.width = W; c.height = H;
-  const g = c.getContext("2d")!;
-  g.textAlign = "center"; g.textBaseline = "middle";
-  g.font = `800 ${px * scale}px 'Noto Sans JP', system-ui, sans-serif`;
-  g.fillStyle = "rgba(255,255,255,.66)";
-  g.shadowColor = "rgba(0,0,0,.35)"; g.shadowBlur = 28 * scale;
-  g.fillText(text, W / 2, H / 2);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true;
-  return t;
-}
-function makeMask(text: string, px: number) {
-  const scale = 2, W = 2400 * scale, H = 720 * scale;
-  const c = document.createElement("canvas"); c.width = W; c.height = H;
-  const g = c.getContext("2d")!;
-  g.textAlign = "center"; g.textBaseline = "middle";
-  g.font = `900 ${px * scale}px 'Noto Sans JP', system-ui, sans-serif`;
-  g.fillStyle = "#fff"; g.fillText(text, W / 2, H / 2);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true;
-  return t;
-}
-function makeCloudEdgeMat(mask: THREE.Texture) {
-  return new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uText: { value: mask }, uTime: { value: 0 }, uAlpha: { value: 0.0 } },
-    vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
-    fragmentShader: `
-      precision mediump float; varying vec2 vUv; uniform sampler2D uText; uniform float uTime,uAlpha;
-      void main(){
-        vec2 px = vec2(1.0/2048.0, 1.0/2048.0);
-        float a  = texture2D(uText, vUv).a;
-        float ax = texture2D(uText, vUv+vec2(px.x,0.)).a - texture2D(uText, vUv-vec2(px.x,0.)).a;
-        float ay = texture2D(uText, vUv+vec2(0.,px.y)).a - texture2D(uText, vUv-vec2(0.,px.y)).a;
-        float edge = clamp(abs(ax)+abs(ay), 0.0, 1.0);
-        edge = smoothstep(0.05, 0.24, edge) * a;
-        vec3 gold = mix(vec3(1.0,0.97,0.90), vec3(1.0,0.92,0.65), 0.55);
-        float pulse = 0.75 + 0.25 * sin(uTime*1.15);
-        vec3 col = gold * pulse;
-        float alpha = edge * uAlpha;
-        if(alpha < 0.02) discard;
-        gl_FragColor = vec4(col, alpha);
-      }`,
-  });
-}
-function makeShadowTex(w=512,h=256,spread=0.42,soft=0.35){
-  const c=document.createElement("canvas"); c.width=w; c.height=h;
-  const g=c.getContext("2d")!;
-  const grd=g.createRadialGradient(w/2,h*0.55,1,w/2,h*0.55,Math.max(w,h)*0.55);
-  grd.addColorStop(0.0, `rgba(0,0,0,${spread})`);
-  grd.addColorStop(soft, `rgba(0,0,0,${spread*0.5})`);
-  grd.addColorStop(1.0, `rgba(0,0,0,0)`);
-  g.fillStyle = grd; g.fillRect(0,0,w,h);
-  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
-}
-
-/* ====== 雲マテリアル ====== */
-const makeCloudMat = (map: THREE.Texture, tint: THREE.ColorRepresentation, opacity=1, drift=0) =>
-  new THREE.ShaderMaterial({
-    transparent:true, depthWrite:false,
-    uniforms:{ uMap:{value:map}, uTint:{value:new THREE.Color(tint)}, uOpacity:{value:opacity},
-      uEdge:{value:LOOP.EDGE_FADE}, uTime:{value:0}, uDrift:{value:drift}, uWobble:{value:new THREE.Vector2(0.0018,0.0012)} },
-    vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-    fragmentShader:`
-      precision mediump float; varying vec2 vUv;
-      uniform sampler2D uMap; uniform vec3 uTint; uniform float uOpacity,uEdge,uTime,uDrift; uniform vec2 uWobble;
-      float n21(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
-      void main(){
-        vec2 uv=vUv; uv.y = fract(uv.y + uTime*uDrift);
-        vec2 q = uv*vec2(2.0,1.6)+uTime*0.015; uv += (vec2(n21(q), n21(q+7.3))-0.5)*uWobble;
-        vec4 c = texture2D(uMap, uv); c.rgb*=uTint;
-        float ft=smoothstep(0.0,uEdge,uv.y), fb=1.0-smoothstep(1.0-uEdge,1.0,uv.y); c.a *= min(ft,fb)*uOpacity;
-        if(c.a<0.003) discard; gl_FragColor=c;
-      }`,
-  });
-
-const makePlane=(map:THREE.Texture,w:number,h:number,z:number,tint:THREE.ColorRepresentation,opacity:number,drift=0)=>{
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h), makeCloudMat(map,tint,opacity,drift));
-  m.position.set(0,0,z);
-  m.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG);
-  m.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG);
-  return m;
-};
-const makeBand=(map:THREE.Texture,conf:any)=>{
-  const g=new THREE.Group(); const step=conf.height*LOOP.STEP_RATIO;
-  for(let i=0;i<LOOP.COPIES;i++){
-    const p=makePlane(map,conf.width,conf.height,conf.z,conf.tint,conf.opacity,conf.drift);
-    (p.material as THREE.ShaderMaterial).uniforms.uWobble.value.set(0.0016+conf.speed*0.001, 0.0011+conf.speed*0.0007);
-    p.position.y=i*step; g.add(p);
-  }
-  g.position.y = conf.yoff || 0;
-  (g as any).userData={ speed:conf.speed, step, mats:g.children.map(m=>(m as any).material), baseOpacity: conf.opacity, type: conf.type || 'mid' };
-  return g;
+  // 粒子の設定（軽量）
+  particles: {
+    count: 90,          // 個数（PC）
+    countMobile: 55,    // 個数（モバイル）
+    maxSpeed: 0.25,     // px/frame
+    size: [1, 2.4],     // [min, max] px
+    color: "rgba(255,255,255,0.6)",
+    linkDist: 110,      // 近い粒子同士を薄い線でつなぐ距離
+    linkAlpha: 0.12,
+    fpsCap: 42,         // 上限 FPS（省電力）
+  },
 };
 
-export default function PortalPage() {
-  const mountRef = useRef<HTMLDivElement>(null);
+/**
+ * 省モーションの OS 設定を尊重
+ */
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mql.addEventListener?.("change", onChange);
+    return () => mql.removeEventListener?.("change", onChange);
+  }, []);
+  return reduced;
+}
+
+/** 粒子アニメーション（軽量 Canvas 实装） */
+function ParticleCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
-    const container = mountRef.current!;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
 
-    // --- iOS判定 & DPR制限 / FPS間引き ---
-    const IS_IOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
-    const DPR_LIMIT = IS_IOS ? 1.25 : 1.75;
-    const TARGET_FPS = IS_IOS ? 30 : 60;
-
-    const { width: cw, height: ch } = container.getBoundingClientRect();
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, DPR_LIMIT));
-    renderer.setSize(cw, ch);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    container.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(CAMERA.FOV, cw / ch, 0.1, 2000);
-    camera.position.set(0, 22, CAMERA.Z);
-    camera.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG);
-    camera.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x324454, 0.88));
-    const dir = new THREE.DirectionalLight(0xffffff, 0.95); dir.position.set(-20, 28, 12); scene.add(dir);
-
-    // --- テクスチャ ---
-    const loader = new THREE.TextureLoader();
-    const load = (src: string) => loader.load(src);
-    const tex = {
-      far1:  load("/cloud_far.png"),
-      far2:  load("/cloud_far2.png"),
-      mid1:  load("/cloud_mid.png"),
-      mid2:  load("/cloud_mid2.png"),
-      // near1: load("/cloud_near.png"), // ←未使用
-      near2: load("/cloud_near2.png"),
-      island: load("/island.png"),
-      rays:   load("/rays.png"),
-    } as const;
-
-    Object.values(tex).forEach((t:any) => {
-      if (!t) return;
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.minFilter = THREE.LinearMipmapLinearFilter;
-      t.magFilter = THREE.LinearFilter;
-      t.generateMipmaps = true;
-    });
-
-    // --- 雲の帯 ---
-    const farBand1  = USE_BANDS.FAR_1  ? makeBand(tex.far1,  LCONF.FAR_1)  : null; if (farBand1)  scene.add(farBand1);
-    const farBand2  = USE_BANDS.FAR_2  ? makeBand(tex.far2,  LCONF.FAR_2)  : null; if (farBand2)  scene.add(farBand2);
-    const midBand1  = USE_BANDS.MID_1  ? makeBand(tex.mid1,  LCONF.MID_1)  : null; if (midBand1)  scene.add(midBand1);
-    const midBand2  = USE_BANDS.MID_2  ? makeBand(tex.mid2,  LCONF.MID_2)  : null; if (midBand2)  scene.add(midBand2);
-    const nearBand2 = USE_BANDS.NEAR_2 ? makeBand(tex.near2, LCONF.NEAR_2) : null; if (nearBand2) scene.add(nearBand2);
-
-    // --- 浮島（ロゴ） ---
-    const island = new THREE.Mesh(
-      new THREE.PlaneGeometry(58, 58),
-      new THREE.MeshBasicMaterial({ map: tex.island, transparent: true, depthWrite: false })
-    );
-    island.position.set(0, ISLAND.BASE_Y, ISLAND.Z);
-    island.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG);
-    island.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG);
-    island.scale.set(ISLAND.SCALE, ISLAND.SCALE, 1);
-    scene.add(island);
-
-    // --- 光 ---
-    const rays = (tex.rays as any).image
-      ? new THREE.Mesh(
-          new THREE.PlaneGeometry(260, 160),
-          new THREE.MeshBasicMaterial({ map: tex.rays, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.62 })
-        )
-      : new THREE.Mesh(
-          new THREE.PlaneGeometry(260, 160),
-          new THREE.ShaderMaterial({
-            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-            uniforms: { uTime: { value: 0 }, uOpacity: { value: 0.26 } },
-            vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
-            fragmentShader: `
-              precision mediump float; varying vec2 vUv; uniform float uTime,uOpacity;
-              void main(){ vec2 p=vUv-vec2(0.5,0.25); float a=atan(p.y,p.x), r=length(p);
-                float beams=0.6+0.4*sin(10.5*a+uTime*0.8); float glow=smoothstep(0.96,0.0,r);
-                float col=beams*glow; gl_FragColor=vec4(vec3(1.0,0.98,0.88)*col, col*uOpacity);} `,
-          })
-        );
-    rays.position.set(0, ISLAND.BASE_Y + 4, -7);
-    rays.rotation.x = island.rotation.x;
-    rays.rotation.z = island.rotation.z;
-    rays.scale.set(ISLAND.SCALE, ISLAND.SCALE, 1);
-    scene.add(rays);
-
-    // --- テキスト ---
-    type Item = { solid: THREE.Mesh; edge: THREE.Mesh; shadow: THREE.Mesh; baseY: number; speed: number };
-    const items: Item[] = [];
-    const shadowTex = makeShadowTex();
-    LINES.forEach((ln, i) => {
-      const px = ln.kind === "title" ? TUNE.TITLE_PX : TUNE.BODY_PX;
-      const w  = ln.kind === "title" ? TUNE.TITLE_W  : TUNE.BODY_W;
-      const h  = ln.kind === "title" ? TUNE.TITLE_H  : TUNE.BODY_H;
-
-      const solid  = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: makeSolidGlass(ln.text, px), transparent: true, depthWrite: false, opacity: 0 }));
-      const edge   = new THREE.Mesh(new THREE.PlaneGeometry(w, h), makeCloudEdgeMat(makeMask(ln.text, px)));
-      const shadow = new THREE.Mesh(new THREE.PlaneGeometry(w*1.12, h*0.85), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, opacity: 0 }));
-
-      const y = TUNE.START_Y + i * TUNE.GAP_Y;
-      [solid, edge, shadow].forEach(m => {
-        m.position.set(0, y, TUNE.GROUP_Z + 3.0);
-        m.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG);
-        m.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG);
-        scene.add(m);
-      });
-      shadow.position.z = TUNE.GROUP_Z + 3.4;
-      items.push({ solid, edge, shadow, baseY: y, speed: 0.72 });
-    });
-
-    /* ---------- iPhoneでも確実に動くスクロール駆動 ---------- */
-    // ヒーロー開始位置（ページ座標）を常に正しく持つ
-    let heroStart = 0, heroHeight = 0;
-    const measure = () => {
-      const r = container.getBoundingClientRect();
-      heroStart = r.top + window.scrollY;
-      heroHeight = r.height;
+    let dpr = Math.max(1, window.devicePixelRatio || 1);
+    const resize = () => {
+      const { innerWidth: w, innerHeight: h } = window;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    measure();
+    resize();
+    window.addEventListener("resize", resize);
 
-    let scrollState = 0;
-    const clock = new THREE.Clock();
-    let raf = 0, acc = 0;
+    // 粒子生成
+    const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
+    const N = isMobile() ? CFG.particles.countMobile : CFG.particles.count;
+    const parts = Array.from({ length: N }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vx: (Math.random() - 0.5) * CFG.particles.maxSpeed * 2,
+      vy: (Math.random() - 0.5) * CFG.particles.maxSpeed * 2,
+      r: CFG.particles.size[0] + Math.random() * (CFG.particles.size[1] - CFG.particles.size[0]),
+    }));
 
-    const updateBand = (band: THREE.Group, worldYRaw: number) => {
-      const ud = (band as any).userData;
-      const base = ((worldYRaw * ud.speed) % ud.step + ud.step) % ud.step;
-      band.children.forEach((m, i) => (((m as THREE.Mesh).position.y = i * ud.step - base), 0));
-      (ud.mats as THREE.ShaderMaterial[]).forEach((m) => (m.uniforms.uTime.value = clock.getElapsedTime()));
-    };
-    const setBandOpacity = (band: THREE.Group, alpha: number) => {
-      const ud = (band as any).userData;
-      (ud.mats as THREE.ShaderMaterial[]).forEach((m) => { m.uniforms.uOpacity.value = ud.baseOpacity * alpha; });
+    let raf = 0;
+    let last = performance.now();
+    const interval = 1000 / CFG.particles.fpsCap; // fps 制限
+
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const now = performance.now();
+      if (now - last < interval) return; // fps 上限
+      last = now;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 線（近い粒子を接続）
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(255,255,255,${CFG.particles.linkAlpha})`;
+      for (let i = 0; i < parts.length; i++) {
+        for (let j = i + 1; j < parts.length; j++) {
+          const a = parts[i];
+          const b = parts[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < CFG.particles.linkDist * CFG.particles.linkDist) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // 粒子を更新＋描画
+      ctx.fillStyle = CFG.particles.color;
+      for (const p of parts) {
+        p.x += p.vx;
+        p.y += p.vy;
+        // 端でバウンド
+        if (p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
+        if (p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
     };
 
-    const loop = () => {
-      const dt = clock.getDelta();
-      acc += dt;
-      // iOSはFPS間引き
-      if (acc < 1 / TARGET_FPS) { raf = requestAnimationFrame(loop); return; }
-      acc = 0;
+    if (!reduced) raf = requestAnimationFrame(tick);
 
-      // いまのページスクロール量から「ヒーロー内の進み」を算出
-      const yWithin = THREE.MathUtils.clamp(window.scrollY - heroStart, 0, Math.max(1, heroHeight));
-      const scrollTarget = yWithin; // px単位
-      scrollState += (scrollTarget - scrollState) * MOTION.INERTIA;
-
-      const worldYRaw  = scrollState * MOTION.PX2WORLD;
-      const worldYText = worldYRaw * TUNE.TEXT_SCROLL;
-
-      // 雲更新
-      const upd = (b: THREE.Group | null) => { if (b) updateBand(b, worldYRaw); };
-      upd(farBand1); upd(farBand2); upd(midBand1); upd(midBand2); upd(nearBand2);
-
-      // 近景フェード
-      const progress = THREE.MathUtils.clamp(Math.abs(worldYRaw) / INTRO_NEAR.scrollWorldForMax, 0, 1);
-      if (nearBand2) setBandOpacity(nearBand2, INTRO_NEAR.startAlpha + (1 - INTRO_NEAR.startAlpha) * progress);
-
-      // テキスト出現
-      const tAbs = clock.getElapsedTime();
-      const centerY = -2;
-      items.forEach(({ solid, edge, shadow, baseY, speed }) => {
-        const y = baseY - worldYText * speed;
-        solid.position.set(0, y, TUNE.GROUP_Z + 3.0);
-        edge.position.set(0, y, TUNE.GROUP_Z + 3.01);
-        shadow.position.set(0, y - 1.4, TUNE.GROUP_Z + 3.4);
-        const d = Math.abs(y - centerY);
-        const boost = THREE.MathUtils.clamp(1.8 - d * 0.10, 0, 1);
-        const gate  = THREE.MathUtils.clamp((boost - 0.15) / 0.45, 0, 1);
-        (edge.material as THREE.ShaderMaterial).uniforms.uTime.value  = tAbs;
-        (edge.material as THREE.ShaderMaterial).uniforms.uAlpha.value = 0.95 * gate;
-        (solid.material as THREE.MeshBasicMaterial).opacity  = gate * (0.12 + 0.88 * boost);
-        (shadow.material as THREE.MeshBasicMaterial).opacity = gate * (0.15 + 0.35 * boost);
-      });
-
-      // 微動
-      camera.position.z  = CAMERA.Z + Math.sin(tAbs * 0.25) * 0.6;
-      island.position.y  = ISLAND.BASE_Y + Math.sin(tAbs * 1.2) * ISLAND.SWAY;
-
-      renderer.render(scene, camera);
-      raf = requestAnimationFrame(loop);
+    // タブ非表示で停止 → 復帰で再開
+    const onVis = () => {
+      if (document.hidden || reduced) {
+        cancelAnimationFrame(raf);
+      } else {
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
     };
-    raf = requestAnimationFrame(loop);
-
-    // リサイズ等
-    const onResize = () => {
-      const r = container.getBoundingClientRect();
-      renderer.setSize(r.width, r.height);
-      camera.aspect = r.width / r.height;
-      camera.updateProjectionMatrix();
-      measure();
-    };
-    window.addEventListener("resize", onResize, { passive: true });
-    window.addEventListener("orientationchange", onResize, { passive: true });
+    document.addEventListener("visibilitychange", onVis);
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-      renderer.dispose();
-      container.removeChild(renderer.domElement);
-      scene.traverse((o:any) => {
-        o.geometry?.dispose?.();
-        const m = (o as any).material;
-        if (m) Array.isArray(m) ? m.forEach((mm:any)=>mm.dispose?.()) : m.dispose?.();
-      });
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [reduced]);
 
   return (
-    <>
-      <style>{`
-        :root { color-scheme: dark; }
-        .stage{
-          position:relative;
-          width:100%;
-          /* iPhoneのアドレスバー問題対策：dvh を使用 */
-          height:min(92dvh, 820px);
-          min-height:640px;
-          border-radius:20px; overflow:hidden; isolation:isolate;
-          box-shadow:0 24px 60px rgba(0,0,0,.38);
-          background-image:url('${BACKGROUND_IMAGE}');
-          background-size:cover; background-position:center; background-repeat:no-repeat;
-          z-index:1;
-        }
-        .stage::before{
-          content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
-          background: radial-gradient(30% 20% at 50% -10%, rgba(255,245,210,.22), transparent 40%);
-          mix-blend-mode:soft-light;
-        }
-        .webgl{ position:absolute; inset:0; z-index:1; }
-      `}</style>
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 -z-10 w-full h-full bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
+      aria-hidden
+    />
+  );
+}
 
-      <section id="hero" className="stage" aria-label="Sky Parallax Portal">
-        {/* 静止画は上のCSSで即表示。WebGLはアイドル時に起動 */}
-        <Idle after={500}>
-          <div className="webgl" ref={mountRef} />
-        </Idle>
+/** スクロールでふわっと表示するユーティリティ */
+function useReveal(threshold = 0.2) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (ents) => {
+        ents.forEach((e) => e.isIntersecting && setShow(true));
+      },
+      { threshold }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [threshold]);
+  return { ref, show } as const;
+}
+
+export default function PortalPage() {
+  // スクロール出現（クラン紹介）
+  const intro = useReveal(CFG.revealThreshold);
+
+  return (
+    <main className="relative min-h-screen text-neutral-200">
+      {/* 粒子BG */}
+      <ParticleCanvas />
+
+      {/* ヘッダー（軽量） */}
+      <header className="sticky top-0 z-20 bg-transparent backdrop-blur-sm supports-[backdrop-filter]:bg-black/10">
+        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-semibold tracking-widest text-white/80">VOLCE PORTAL</span>
+          <nav className="hidden md:flex gap-6 text-sm text-white/70">
+            <a href="#intro" className="hover:text-white">紹介</a>
+            <a href="#team" className="hover:text-white">チーム</a>
+            <a href="#notice" className="hover:text-white">注意事項</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* ヒーロー（ロゴのみ / 数字で位置調整） */}
+      <section className="relative h-[86vh] md:h-[92vh]">
+        <div
+          className="absolute"
+          style={{
+            left: typeof CFG.logoOffsetX === "number" ? `${CFG.logoOffsetX}px` : CFG.logoOffsetX,
+            top: typeof CFG.logoOffsetY === "number" ? `${CFG.logoOffsetY}px` : CFG.logoOffsetY,
+          }}
+        >
+          <Image
+            src={CFG.logoSrc}
+            width={CFG.logoWidth}
+            height={Math.round(CFG.logoWidth * 0.35)}
+            alt="VOLCE Logo"
+            priority
+            className="drop-shadow-[0_0_24px_rgba(255,255,255,0.25)] select-none"
+          />
+        </div>
+
+        {/* ヒーロー下部の軽いグラデ影 */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-black/40" />
       </section>
 
-      <AudioController src="/audio/megami.mp3" volume={0.5} />
-    </>
+      {/* 紹介（PC スクロールで出現） */}
+      <section id="intro" className="mx-auto max-w-4xl px-5 py-16 md:py-24">
+        <div
+          ref={intro.ref}
+          className={`transition-all duration-700 will-change-transform ${
+            intro.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
+          <h2 className="text-2xl md:text-3xl font-bold tracking-wide mb-4">VOLCE クラン紹介</h2>
+          <p className="leading-relaxed text-white/85">
+            VOLCE は、火力枠・エンジョイ枠・クリエイター/ライバー枠など、
+            それぞれの強みを活かして成長していくクランです。イベント運営や配信連携も含め、
+            誰もが参加しやすく、かつ本気で戦える環境を整えています。
+          </p>
+        </div>
+      </section>
+
+      {/* チーム（画像撤廃、粒子 BG のみ、簡素テキスト） */}
+      <section id="team" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+        <h3 className="text-xl md:text-2xl font-semibold mb-4">Team</h3>
+        <p className="text-white/80 max-w-3xl">
+          主要メンバーのビジュアル画像は表示を停止しています。現在は軽量化のため、背景の粒子のみを残したモードで運用中です。
+        </p>
+      </section>
+
+      {/* 注意事項（画像廃止） */}
+      <section id="notice" className="mx-auto max-w-5xl px-5 pb-24">
+        <h3 className="text-xl md:text-2xl font-semibold mb-4">注意事項</h3>
+        <ul className="list-disc pl-6 space-y-2 text-white/85">
+          <li>参加規約・禁止事項を遵守してください。</li>
+          <li>個人情報やアカウント共有に関するトラブルは当クランでは責任を負いかねます。</li>
+          <li>イベントのルールは告知ページの最新情報を参照してください。</li>
+        </ul>
+      </section>
+
+      {/* フッター */}
+      <footer className="border-t border-white/10 py-8 text-center text-sm text-white/60">
+        © {new Date().getFullYear()} VOLCE
+      </footer>
+    </main>
   );
 }

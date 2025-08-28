@@ -117,3 +117,17 @@ label:has(input[type="checkbox"]){grid-auto-flow: column; grid-template-columns:
   .site-nav::-webkit-scrollbar{ display:none }
   .site-actions{ display:none }
 }
+
+/* === iPhone安定化 追加（最小パッチ／デザイン変更なし） === */
+:root { color-scheme: dark; }
+
+/* タップ時の青ハイライトを抑制（iOS） */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* iOS 100vh 問題対策（dvhが使える環境では自動切替） */
+:root { --vh: 1vh; }
+@supports (height: 100dvh) { :root { --vh: 1dvh; } }
+.min-h-\[100dvh\] { min-height: calc(var(--vh) * 100); }
+
+/* blur のベンダー前提クラス（必要な要素に任意で付与可能） */
+.backdrop-blur-sm { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }

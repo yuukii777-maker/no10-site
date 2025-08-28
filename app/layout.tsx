@@ -1,35 +1,19 @@
+// app/layout.tsx
 import "./globals.css";
-import type { Metadata, Viewport } from "next";
-import NavBar from "@/app/components/NavBar";
-import LoadingOverlay from "@/app/components/LoadingOverlay";
+import type { ReactNode } from "react";
+import AudioController from "./components/AudioController";
 
-export const metadata: Metadata = {
-  title: "VOLCE",
-  description: "VOLCE official site",
-};
+// もし以前に metadata / viewport を定義していた場合は、下の2つを戻して使ってOKです。
+// export const metadata = { title: "VOLCE", description: "..." };
+// export const viewport = { themeColor: "#0a101a" };
 
-export const viewport: Viewport = {
-  themeColor: "#0b0f18",
-  colorScheme: "dark",
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
-      <head>
-        {/* Drive サムネを使う場合の予接続 */}
-        <link rel="preconnect" href="https://lh3.googleusercontent.com" crossOrigin="" />
-        {/* 初画で必要な画像の先読み（安全） */}
-        <link rel="preload" as="image" href="/sanctum/background_sky.png" />
-        <link rel="preload" as="image" href="/sanctum/temple_main.png" />
-        <link rel="preload" as="image" href="/sanctum/cloud_strip.png" />
-        <link rel="preload" as="image" href="/RULE/bg_base.jpg" />
-        <link rel="preload" as="image" href="/RULE/volce-logo-3d.png" />
-      </head>
       <body>
-        <NavBar />
         {children}
-        <LoadingOverlay />
+        {/* 画面UIは出さず、初回タップ/クリック後に静かに再生（iOS制限回避 & プリロード0） */}
+        <AudioController src="/audio/megami.mp3" volume={0.55} startOnFirstInput />
       </body>
     </html>
   );

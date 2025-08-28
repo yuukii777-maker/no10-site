@@ -1,17 +1,4 @@
-/* app/components/navBar.module.css */
-
-:root{
-  --nav-bg: color-mix(in oklab, #0a0e15 86%, transparent);
-  --nav-border: rgba(255,255,255,.10);
-  --text: #e9edf3;
-
-  --gold-1: #e4c77a;
-  --gold-2: #c9a86a;
-
-  --brand-top: #fff6cc;
-  --brand-mid: #ffe39c;
-  --brand-btm: #caa45a;
-}
+/* app/components/NavBar.module.css */
 
 .nav{
   position: sticky; top: 0; z-index: 1000;

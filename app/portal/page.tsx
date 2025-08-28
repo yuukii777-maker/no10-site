@@ -4,38 +4,48 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import AudioController from "@/app/components/AudioController";
+import Idle from "@/app/components/Idle";
 
+/* ====== 即表示する静止背景（public/ にある画像） ====== */
 const BACKGROUND_IMAGE = "/background2.png";
 
-/* ===== 調整ノブ ===== */
-const CAMERA = { FOV: 36, TILT_DEG: 24, ROLL_DEG: -1.6, Z: 80 };
-const LOOP   = { COPIES: 8, STEP_RATIO: 0.84, EDGE_FADE: 0.16 };
-const MOTION = { INERTIA: 0.1, SPEED: 1.0, TOUCH_SPEED: 1.0, PX2WORLD: 0.016, TILT_MAX: 5 };
+/* ====== カメラ & モーション ====== */
+const CAMERA = { FOV: 36, TILT_DEG: 24, ROLL_DEG: -1.6, Z: 80 } as const;
+const LOOP   = { COPIES: 8, STEP_RATIO: 0.84, EDGE_FADE: 0.16 } as const;
+const MOTION = { INERTIA: 0.1, PX2WORLD: 0.016, TILT_MAX: 5 } as const;
 
-/* 岩＋ロゴ スケールと高さ */
-const ISLAND_SCALE = 0.85;
-const ISLAND_BASE_Y = -19;
-const ISLAND_SWAY   = 2.2;
+/* ====== 浮島(ロゴ) 距離感：ここを好きに調整 ====== */
+const ISLAND = {
+  SCALE: 0.75,   // ←小さくしたいなら 0.6〜0.8 など
+  BASE_Y: -22,   // ←下げたいなら -22〜-26 など
+  Z: -3,         // ←カメラからの距離。遠ざけるなら -3 → -4 など
+  SWAY: 2.2,     // 上下ゆらぎ
+} as const;
 
-/* ===== テキスト ===== */
-const TUNE = { TITLE_PX: 50, BODY_PX: 50, TITLE_W: 70, TITLE_H: 16, BODY_W: 70, BODY_H: 16, START_Y: 18, GAP_Y: 8, TEXT_SCROLL: 3.2, GROUP_Z: 12 };
+/* ====== テキスト ====== */
+const TUNE = {
+  TITLE_PX: 50, BODY_PX: 50,
+  TITLE_W: 70, TITLE_H: 16,
+  BODY_W: 70,  BODY_H: 16,
+  START_Y: 18, GAP_Y: 8, TEXT_SCROLL: 3.2, GROUP_Z: 12,
+} as const;
 
-/* ===== 近景雲の初期非表示ガード ===== */
-const INTRO_NEAR = { startAlpha: 0.0, scrollWorldForMax: 26, requireInteract: false };
+/* ====== 近景雲の初期非表示ガード ====== */
+const INTRO_NEAR = { startAlpha: 0.0, scrollWorldForMax: 26 } as const;
 
-/* ===== 使用バンド（near1を無効＝cloud_near.pngは未使用） ===== */
-const USE_BANDS = { FAR_1: true, FAR_2: true, MID_1: true, MID_2: false, NEAR_1: false, NEAR_2: true } as const;
+/* ====== 使用する雲の帯（near1は未使用＝cloud_near.png不要） ====== */
+const USE_BANDS = { FAR_1:true, FAR_2:true, MID_1:true, MID_2:false, NEAR_1:false, NEAR_2:true } as const;
 
-/* ===== 雲レイヤ設定 ===== */
+/* ====== 雲レイヤ設定 ====== */
 const LCONF = {
   FAR_1:  { z: -130, width: 390, height: 220, speed: 0.16, tint: 0xf4efe2, opacity: 0.10, drift: 0.0025, yoff: +36,  type: "far"  },
   FAR_2:  { z: -118, width: 380, height: 214, speed: 0.21, tint: 0xffffff, opacity: 0.20, drift: 0.0035, yoff: +22,  type: "far"  },
   MID_1:  { z:  -64, width: 350, height: 196, speed: 0.30, tint: 0xfff2dc, opacity: 0.70, drift: 0.0055, yoff:  -6,  type: "mid"  },
   MID_2:  { z:  -54, width: 336, height: 188, speed: 0.36, tint: 0xffffff, opacity: 0.15, drift: 0.0065, yoff: -20,  type: "mid"  },
   NEAR_2: { z:   -6, width: 280, height: 170, speed: 0.66, tint: 0xffffff, opacity: 0.42, drift: 0.0000, yoff: -300, type: "near" },
-};
+} as const;
 
-/* ===== テキスト行 ===== */
+/* ====== テキスト行 ====== */
 const LINES = [
   { kind: "title", text: "荒野行動を通じて多くの人に影響を与える" },
   { kind: "body",  text: "VOLCEは、ゲリラ参加やイベントを中心に、荒野行動知名度アップを目指すクランです。" },
@@ -45,7 +55,7 @@ const LINES = [
   { kind: "body",  text: "入隊したいかたはＸ→＠Char_god1へ志望枠を載せてDMください。" },
 ] as const;
 
-/* ===== テクスチャ生成ユーティリティ（省略なし） ===== */
+/* ====== 画像→テクスチャ ====== */
 function makeSolidGlass(text: string, px: number) {
   const scale = 2, W = 2400 * scale, H = 720 * scale;
   const c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -104,7 +114,7 @@ function makeShadowTex(w=512,h=256,spread=0.42,soft=0.35){
   const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
 }
 
-/* ===== 雲マテリアル生成 ===== */
+/* ====== 雲マテリアル ====== */
 const makeCloudMat = (map: THREE.Texture, tint: THREE.ColorRepresentation, opacity=1, drift=0) =>
   new THREE.ShaderMaterial({
     transparent:true, depthWrite:false,
@@ -148,10 +158,17 @@ export default function PortalPage() {
 
   useEffect(() => {
     const container = mountRef.current!;
-    const { width: cw, height: ch } = container.getBoundingClientRect();
 
+    // --- iOS判定 & DPR制限 / FPS間引き ---
+    const IS_IOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+    const DPR_LIMIT = IS_IOS ? 1.25 : 1.75;
+    const TARGET_FPS = IS_IOS ? 30 : 60;
+
+    const { width: cw, height: ch } = container.getBoundingClientRect();
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, DPR_LIMIT));
     renderer.setSize(cw, ch);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
@@ -164,6 +181,7 @@ export default function PortalPage() {
     scene.add(new THREE.HemisphereLight(0xffffff, 0x324454, 0.88));
     const dir = new THREE.DirectionalLight(0xffffff, 0.95); dir.position.set(-20, 28, 12); scene.add(dir);
 
+    // --- テクスチャ ---
     const loader = new THREE.TextureLoader();
     const load = (src: string) => loader.load(src);
     const tex = {
@@ -171,7 +189,7 @@ export default function PortalPage() {
       far2:  load("/cloud_far2.png"),
       mid1:  load("/cloud_mid.png"),
       mid2:  load("/cloud_mid2.png"),
-      // near1: load("/cloud_near.png"), // ←使わない（ファイルがあっても無視されます）
+      // near1: load("/cloud_near.png"), // ←未使用
       near2: load("/cloud_near2.png"),
       island: load("/island.png"),
       rays:   load("/rays.png"),
@@ -186,26 +204,25 @@ export default function PortalPage() {
       t.generateMipmaps = true;
     });
 
-    // バンド作成
+    // --- 雲の帯 ---
     const farBand1  = USE_BANDS.FAR_1  ? makeBand(tex.far1,  LCONF.FAR_1)  : null; if (farBand1)  scene.add(farBand1);
     const farBand2  = USE_BANDS.FAR_2  ? makeBand(tex.far2,  LCONF.FAR_2)  : null; if (farBand2)  scene.add(farBand2);
     const midBand1  = USE_BANDS.MID_1  ? makeBand(tex.mid1,  LCONF.MID_1)  : null; if (midBand1)  scene.add(midBand1);
     const midBand2  = USE_BANDS.MID_2  ? makeBand(tex.mid2,  LCONF.MID_2)  : null; if (midBand2)  scene.add(midBand2);
-    // const nearBand1 = USE_BANDS.NEAR_1 ? makeBand(tex.near1, LCONF.NEAR_1) : null;
     const nearBand2 = USE_BANDS.NEAR_2 ? makeBand(tex.near2, LCONF.NEAR_2) : null; if (nearBand2) scene.add(nearBand2);
 
-    // 浮島（ロゴ）
+    // --- 浮島（ロゴ） ---
     const island = new THREE.Mesh(
       new THREE.PlaneGeometry(58, 58),
       new THREE.MeshBasicMaterial({ map: tex.island, transparent: true, depthWrite: false })
     );
-    island.position.set(0, ISLAND_BASE_Y, -2);
+    island.position.set(0, ISLAND.BASE_Y, ISLAND.Z);
     island.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG);
     island.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG);
-    island.scale.set(ISLAND_SCALE, ISLAND_SCALE, 1);
+    island.scale.set(ISLAND.SCALE, ISLAND.SCALE, 1);
     scene.add(island);
 
-    // 光
+    // --- 光 ---
     const rays = (tex.rays as any).image
       ? new THREE.Mesh(
           new THREE.PlaneGeometry(260, 160),
@@ -224,13 +241,13 @@ export default function PortalPage() {
                 float col=beams*glow; gl_FragColor=vec4(vec3(1.0,0.98,0.88)*col, col*uOpacity);} `,
           })
         );
-    rays.position.set(0, ISLAND_BASE_Y + 4, -7);
+    rays.position.set(0, ISLAND.BASE_Y + 4, -7);
     rays.rotation.x = island.rotation.x;
     rays.rotation.z = island.rotation.z;
-    rays.scale.set(ISLAND_SCALE, ISLAND_SCALE, 1);
+    rays.scale.set(ISLAND.SCALE, ISLAND.SCALE, 1);
     scene.add(rays);
 
-    // テキスト
+    // --- テキスト ---
     type Item = { solid: THREE.Mesh; edge: THREE.Mesh; shadow: THREE.Mesh; baseY: number; speed: number };
     const items: Item[] = [];
     const shadowTex = makeShadowTex();
@@ -254,57 +271,20 @@ export default function PortalPage() {
       items.push({ solid, edge, shadow, baseY: y, speed: 0.72 });
     });
 
-    // 入力 & スクロール（iPhone対応）
-    const isInteractive = (t: EventTarget | null) =>
-      t instanceof Element && t.closest('a, button, [role="button"], input, textarea, select, summary, details');
-
-    let scrollTarget = 0, scrollState = 0, pointerDown = false, lastY = 0;
-    let userInteracted = false;
-    const mark = () => { userInteracted = true; };
-
-    const wheel  = (e: WheelEvent) => { if (isInteractive(e.target)) return; scrollTarget += e.deltaY * MOTION.SPEED; mark(); };
-    const pdown  = (e: PointerEvent) => { if (isInteractive(e.target)) return; pointerDown = true; lastY = e.clientY; mark(); };
-    const pup    = () => (pointerDown = false);
-    const pmove  = (e: PointerEvent) => { if (!pointerDown || isInteractive(e.target)) return; const dy = e.clientY - lastY; lastY = e.clientY; scrollTarget += dy * MOTION.TOUCH_SPEED; };
-    window.addEventListener("wheel", wheel, { passive: true });
-    window.addEventListener("pointerdown", pdown, { passive: true });
-    window.addEventListener("pointerup", pup, { passive: true });
-    window.addEventListener("pointercancel", pup, { passive: true });
-    window.addEventListener("pointermove", pmove, { passive: true });
-    window.addEventListener("touchstart", mark, { passive: true });
-    window.addEventListener("keydown",  mark, { passive: true });
-
-    // iOSの通常スクロールに追従（ヒーローが画面内にある間）
-    let prevScrollY = window.scrollY;
-    const onScroll = () => {
-      const dy = window.scrollY - prevScrollY;
-      prevScrollY = window.scrollY;
-      // スクロール量を内部の仮想ワールドに変換
-      scrollTarget += dy * (MOTION.SPEED * 1.0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    const tilt = { x: 0, y: 0 };
-    const mouse = (e: MouseEvent) => {
-      if (isInteractive(e.target)) return;
+    /* ---------- iPhoneでも確実に動くスクロール駆動 ---------- */
+    // ヒーロー開始位置（ページ座標）を常に正しく持つ
+    let heroStart = 0, heroHeight = 0;
+    const measure = () => {
       const r = container.getBoundingClientRect();
-      const nx = (e.clientX - r.left) / r.width - 0.5;
-      const ny = (e.clientY - r.top) / r.height - 0.5;
-      tilt.x = THREE.MathUtils.degToRad(MOTION.TILT_MAX) * ny;
-      tilt.y = THREE.MathUtils.degToRad(MOTION.TILT_MAX) * -nx;
+      heroStart = r.top + window.scrollY;
+      heroHeight = r.height;
     };
-    window.addEventListener("mousemove", mouse, { passive: true });
+    measure();
 
-    const onResize = () => {
-      const r = container.getBoundingClientRect();
-      renderer.setSize(r.width, r.height);
-      camera.aspect = r.width / r.height;
-      camera.updateProjectionMatrix();
-    };
-    window.addEventListener("resize", onResize, { passive: true });
-
-    // ループ
+    let scrollState = 0;
     const clock = new THREE.Clock();
+    let raf = 0, acc = 0;
+
     const updateBand = (band: THREE.Group, worldYRaw: number) => {
       const ud = (band as any).userData;
       const base = ((worldYRaw * ud.speed) % ud.step + ud.step) % ud.step;
@@ -316,23 +296,31 @@ export default function PortalPage() {
       (ud.mats as THREE.ShaderMaterial[]).forEach((m) => { m.uniforms.uOpacity.value = ud.baseOpacity * alpha; });
     };
 
-    let raf = 0;
     const loop = () => {
-      const t = clock.getElapsedTime();
+      const dt = clock.getDelta();
+      acc += dt;
+      // iOSはFPS間引き
+      if (acc < 1 / TARGET_FPS) { raf = requestAnimationFrame(loop); return; }
+      acc = 0;
+
+      // いまのページスクロール量から「ヒーロー内の進み」を算出
+      const yWithin = THREE.MathUtils.clamp(window.scrollY - heroStart, 0, Math.max(1, heroHeight));
+      const scrollTarget = yWithin; // px単位
       scrollState += (scrollTarget - scrollState) * MOTION.INERTIA;
+
       const worldYRaw  = scrollState * MOTION.PX2WORLD;
       const worldYText = worldYRaw * TUNE.TEXT_SCROLL;
 
+      // 雲更新
       const upd = (b: THREE.Group | null) => { if (b) updateBand(b, worldYRaw); };
-      upd(farBand1); upd(farBand2); upd(midBand1); upd(midBand2); /* near1なし */ upd(nearBand2);
+      upd(farBand1); upd(farBand2); upd(midBand1); upd(midBand2); upd(nearBand2);
 
-      // near フェードイン
+      // 近景フェード
       const progress = THREE.MathUtils.clamp(Math.abs(worldYRaw) / INTRO_NEAR.scrollWorldForMax, 0, 1);
-      const allow = INTRO_NEAR.requireInteract ? userInteracted : true;
-      const nearAlpha = allow ? INTRO_NEAR.startAlpha + (1 - INTRO_NEAR.startAlpha) * progress : 0.0;
-      if (nearBand2) setBandOpacity(nearBand2, nearAlpha);
+      if (nearBand2) setBandOpacity(nearBand2, INTRO_NEAR.startAlpha + (1 - INTRO_NEAR.startAlpha) * progress);
 
       // テキスト出現
+      const tAbs = clock.getElapsedTime();
       const centerY = -2;
       items.forEach(({ solid, edge, shadow, baseY, speed }) => {
         const y = baseY - worldYText * speed;
@@ -342,45 +330,42 @@ export default function PortalPage() {
         const d = Math.abs(y - centerY);
         const boost = THREE.MathUtils.clamp(1.8 - d * 0.10, 0, 1);
         const gate  = THREE.MathUtils.clamp((boost - 0.15) / 0.45, 0, 1);
-        (edge.material as THREE.ShaderMaterial).uniforms.uTime.value  = t;
+        (edge.material as THREE.ShaderMaterial).uniforms.uTime.value  = tAbs;
         (edge.material as THREE.ShaderMaterial).uniforms.uAlpha.value = 0.95 * gate;
         (solid.material as THREE.MeshBasicMaterial).opacity  = gate * (0.12 + 0.88 * boost);
         (shadow.material as THREE.MeshBasicMaterial).opacity = gate * (0.15 + 0.35 * boost);
       });
 
       // 微動
-      camera.rotation.x = -THREE.MathUtils.degToRad(CAMERA.TILT_DEG) + tilt.x * 0.35;
-      camera.rotation.z =  THREE.MathUtils.degToRad(CAMERA.ROLL_DEG) + tilt.y * 0.35;
-      camera.position.z  = CAMERA.Z + Math.sin(t * 0.25) * 0.6;
-
-      island.position.y  = ISLAND_BASE_Y + Math.sin(t * 1.2) * ISLAND_SWAY;
-      (rays as any).material.uniforms && ((rays as any).material.uniforms.uTime.value = t);
+      camera.position.z  = CAMERA.Z + Math.sin(tAbs * 0.25) * 0.6;
+      island.position.y  = ISLAND.BASE_Y + Math.sin(tAbs * 1.2) * ISLAND.SWAY;
 
       renderer.render(scene, camera);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
+    // リサイズ等
+    const onResize = () => {
+      const r = container.getBoundingClientRect();
+      renderer.setSize(r.width, r.height);
+      camera.aspect = r.width / r.height;
+      camera.updateProjectionMatrix();
+      measure();
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("orientationchange", onResize, { passive: true });
+
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("wheel", wheel);
-      window.removeEventListener("pointerdown", pdown);
-      window.removeEventListener("pointerup", pup);
-      window.removeEventListener("pointercancel", pup);
-      window.removeEventListener("pointermove", pmove);
-      window.removeEventListener("touchstart", mark);
-      window.removeEventListener("keydown",  mark);
-      window.removeEventListener("mousemove", mouse);
+      window.removeEventListener("orientationchange", onResize);
       renderer.dispose();
       container.removeChild(renderer.domElement);
       scene.traverse((o:any) => {
         o.geometry?.dispose?.();
-        if (o.material) {
-          const m = o.material;
-          Array.isArray(m) ? m.forEach((mm:any)=>mm.dispose?.()) : m.dispose?.();
-        }
+        const m = (o as any).material;
+        if (m) Array.isArray(m) ? m.forEach((mm:any)=>mm.dispose?.()) : m.dispose?.();
       });
     };
   }, []);
@@ -390,12 +375,16 @@ export default function PortalPage() {
       <style>{`
         :root { color-scheme: dark; }
         .stage{
-          position:relative; width:100%; height:92vh; min-height:680px;
+          position:relative;
+          width:100%;
+          /* iPhoneのアドレスバー問題対策：dvh を使用 */
+          height:min(92dvh, 820px);
+          min-height:640px;
           border-radius:20px; overflow:hidden; isolation:isolate;
           box-shadow:0 24px 60px rgba(0,0,0,.38);
           background-image:url('${BACKGROUND_IMAGE}');
           background-size:cover; background-position:center; background-repeat:no-repeat;
-          z-index: 1;
+          z-index:1;
         }
         .stage::before{
           content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
@@ -406,7 +395,10 @@ export default function PortalPage() {
       `}</style>
 
       <section id="hero" className="stage" aria-label="Sky Parallax Portal">
-        <div className="webgl" ref={mountRef} />
+        {/* 静止画は上のCSSで即表示。WebGLはアイドル時に起動 */}
+        <Idle after={500}>
+          <div className="webgl" ref={mountRef} />
+        </Idle>
       </section>
 
       <AudioController src="/audio/megami.mp3" volume={0.5} />

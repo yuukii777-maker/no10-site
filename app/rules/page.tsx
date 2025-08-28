@@ -39,7 +39,7 @@ export default function RulePage() {
       <main className="content">
         {/* 見出し：クランルール */}
         <header className="hero reveal" data-reveal>
-         <h1 className="title title--gothic">ルール</h1>
+         <h1 className={`${biz.className} title`}>ルール</h1>
           <p className={`${noto.className} tagline`}>秩序を守り、仲間と共に楽しむために。</p>
         </header>
 

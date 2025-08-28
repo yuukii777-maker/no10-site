@@ -1,3 +1,18 @@
+/* app/components/navBar.module.css */
+
+:root{
+  --nav-bg: color-mix(in oklab, #0a0e15 86%, transparent);
+  --nav-border: rgba(255,255,255,.10);
+  --text: #e9edf3;
+
+  --gold-1: #e4c77a;
+  --gold-2: #c9a86a;
+
+  --brand-top: #fff6cc;
+  --brand-mid: #ffe39c;
+  --brand-btm: #caa45a;
+}
+
 .nav{
   position: sticky; top: 0; z-index: 1000;
   padding-top: env(safe-area-inset-top, 0);
@@ -5,6 +20,7 @@
   -webkit-backdrop-filter: blur(10px) saturate(120%);
   background: var(--nav-bg);
   border-bottom: 1px solid var(--nav-border);
+  color: var(--text);
 }
 .inner{
   max-width: 1240px; margin: 0 auto; padding: 10px 14px;

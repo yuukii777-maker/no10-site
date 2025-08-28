@@ -1,6 +1,6 @@
+// app/rules/page.tsx
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { BIZ_UDPGothic, Noto_Sans_JP } from "next/font/google";
 
@@ -8,9 +8,9 @@ import { BIZ_UDPGothic, Noto_Sans_JP } from "next/font/google";
 const biz = BIZ_UDPGothic({ weight: ["700"], subsets: ["latin"], display: "swap" });
 const noto = Noto_Sans_JP({ weight: ["400", "700"], subsets: ["latin"], display: "swap" });
 
-// 背景（固定）＆ ロゴ（安定回転）
-const Stage3D = dynamic(() => import("./Stage3DFrozen"), { ssr: false });
-const LogoSpin = dynamic(() => import("./LogoSpinStable"), { ssr: false });
+// 背景（固定）＆ ロゴ（安定回転）※SSRで即描画させる
+import Stage3D from "./Stage3DFrozen";
+import LogoSpin from "./LogoSpinStable";
 
 export default function RulePage() {
   // 省動作
@@ -30,7 +30,7 @@ export default function RulePage() {
   }, []);
 
   return (
-    <div className="wrap">
+    <div className="wrap" id="rules">
       <Stage3D />
       <LogoSpin />
       {/* 背景上部のボケ文字を覆って“消す”帯 */}
@@ -39,7 +39,7 @@ export default function RulePage() {
       <main className="content">
         {/* 見出し：クランルール */}
         <header className="hero reveal" data-reveal>
-         <h1 className={`${biz.className} title`}>ルール</h1>
+          <h1 className={`${biz.className} title`}>ルール</h1>
           <p className={`${noto.className} tagline`}>秩序を守り、仲間と共に楽しむために。</p>
         </header>
 

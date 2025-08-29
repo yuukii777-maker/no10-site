@@ -5,54 +5,36 @@ import Image from "next/image";
 
 /**
  * ─────────────────────────────────────────────────────────────────────
- *  VOLCE Portal – 超軽量版
- *  ・Canvas 粒子のみ（Three.js 不使用）
- *  ・ロゴ位置は数値（px/%）で調整可能
+ *  VOLCE Portal – 超軽量版（最小修正済み）
+ *  ・Three.js 不使用の粒子BG
+ *  ・ロゴ位置は数値（px/%）で調整
  *  ・PC でスクロール時に紹介文がふわっと出現
  *  ・Team/注意事項の画像は撤廃（テキストのみ）
- *  ・レイアウトは Tailwind。重い画像や外部フォントは使わない前提
- *  ・アニメは rAF + 省電力（タブ非表示/低FPS）
- *  ・`prefers-reduced-motion` で自動的にアニメを弱める
- *
- *  使い方：このファイルを `app/portal/page.tsx` にそのまま保存
- *  必要なら /public にロゴ画像 `portal/logo.png` を配置してください。
+ *  ・Tailwind 前提。外部フォント無し
+ *  ・prefers-reduced-motion に対応
  * ─────────────────────────────────────────────────────────────────────
  */
 
-/**
- * ===== 調整用パラメータ（ここだけ数字を変えれば OK） =====
- */
+/** 調整用パラメータ */
 const CFG = {
-  // ロゴ画像パス（/public 直下なら先頭はスラッシュから）
-  logoSrc: "/portal/logo.png", // 例: /portal/logo.png
-
-  // ロゴの基準サイズ（幅 px）
+  logoSrc: "/portal/logo.png",
   logoWidth: 360,
-
-  // 表示位置（画面左上を (0,0) として）
-  // 単位: px または % を文字列で（例: "12%" や 40）
-  logoOffsetX: "6%", // 左からの距離
-  logoOffsetY: 48,    // 上からの距離
-
-  // スクロール出現のトリガー（要素が何割見えたら表示するか）
+  logoOffsetX: "6%" as string | number,
+  logoOffsetY: 48 as string | number,
   revealThreshold: 0.2,
-
-  // 粒子の設定（軽量）
   particles: {
-    count: 90,          // 個数（PC）
-    countMobile: 55,    // 個数（モバイル）
-    maxSpeed: 0.25,     // px/frame
-    size: [1, 2.4],     // [min, max] px
+    count: 90,
+    countMobile: 55,
+    maxSpeed: 0.25,
+    size: [1, 2.4] as [number, number],
     color: "rgba(255,255,255,0.6)",
-    linkDist: 110,      // 近い粒子同士を薄い線でつなぐ距離
+    linkDist: 110,
     linkAlpha: 0.12,
-    fpsCap: 42,         // 上限 FPS（省電力）
+    fpsCap: 42,
   },
 };
 
-/**
- * 省モーションの OS 設定を尊重
- */
+/** 省モーションの OS 設定を尊重 */
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -65,7 +47,7 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-/** 粒子アニメーション（軽量 Canvas 实装） */
+/** 粒子アニメーション（軽量 Canvas 実装） */
 function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reduced = usePrefersReducedMotion();
@@ -73,8 +55,8 @@ function ParticleCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-
     let dpr = Math.max(1, window.devicePixelRatio || 1);
+
     const resize = () => {
       const { innerWidth: w, innerHeight: h } = window;
       canvas.style.width = "100%";
@@ -99,12 +81,12 @@ function ParticleCanvas() {
 
     let raf = 0;
     let last = performance.now();
-    const interval = 1000 / CFG.particles.fpsCap; // fps 制限
+    const interval = 1000 / CFG.particles.fpsCap;
 
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const now = performance.now();
-      if (now - last < interval) return; // fps 上限
+      if (now - last < interval) return;
       last = now;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -133,7 +115,6 @@ function ParticleCanvas() {
       for (const p of parts) {
         p.x += p.vx;
         p.y += p.vy;
-        // 端でバウンド
         if (p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
         if (p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
         ctx.beginPath();
@@ -165,8 +146,8 @@ function ParticleCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 w-full h-full bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
-      aria-hidden
+      className="fixed inset-0 -z-10 w-full h-full pointer-events-none bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
+      aria-hidden={true}
     />
   );
 }
@@ -179,9 +160,7 @@ function useReveal(threshold = 0.2) {
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      (ents) => {
-        ents.forEach((e) => e.isIntersecting && setShow(true));
-      },
+      (ents) => ents.forEach((e) => e.isIntersecting && setShow(true)),
       { threshold }
     );
     io.observe(el);
@@ -191,7 +170,6 @@ function useReveal(threshold = 0.2) {
 }
 
 export default function PortalPage() {
-  // スクロール出現（クラン紹介）
   const intro = useReveal(CFG.revealThreshold);
 
   return (

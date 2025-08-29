@@ -11,8 +11,8 @@
   --radius:14px; --radius-sm:10px;
   --shadow:0 16px 40px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25);
 
-  /* 背景 */
-  --bg-image:url('/bg.jpg');
+  /* 背景（ここだけ修正） */
+  --bg-image:url('/portal/background2.webp');
   --bg-overlay:linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55)),
                radial-gradient(1200px 800px at 10% -10%, rgba(79,106,229,.15), transparent),
                radial-gradient(1200px 800px at 110% 10%, rgba(79,106,229,.12), transparent);

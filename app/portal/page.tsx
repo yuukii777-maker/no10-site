@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/** ==== 追加：デプロイごとに変わるクエリを付与（強キャッシュ回避） ==== */
+const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || "").toString().slice(0, 8);
+const Q = SHA ? `?v=${SHA}` : "";
+
 /** <img> フォールバック（最初のパスが 404 なら次へ） */
 function ImgFallback({
   sources,
@@ -30,20 +34,20 @@ function ImgFallback({
 /** 設定（ロゴ位置や雲の動き） */
 const CFG = {
   logo: {
-    // ロゴは /portal/logo.png → /loading/logo.png → /logo.png の順で探す
-    sources: ["/portal/logo.png", "/loading/logo.png", "/logo.png"],
+    // ロゴは /portal/logo.png → /loading/logo.png → /logo.png の順で探す（★ 末尾に Q）
+    sources: ["/portal/logo.png" + Q, "/loading/logo.png" + Q, "/logo.png" + Q],
     width: 360,
     x: "6%" as string | number,  // left
     y: 48 as string | number,    // top
   },
   revealThreshold: 0.2,
   clouds: {
-    // 画像は /portal/* → / の順で探す（手元の配置どちらでもOK）
-    sky: ["/portal/background2.png", "/portal/sky.jpg", "/background2.png"],
-    rays: ["/portal/rays.png", "/rays.png"],
-    far: ["/portal/cloud_far.png", "/cloud_far.png"],
-    mid: ["/portal/cloud_mid.png", "/portal/cloud_mid2.png", "/cloud_mid.png", "/cloud_mid2.png"],
-    near: ["/portal/cloud_near.png", "/cloud_near.png"],
+    // 画像は /portal/* → / の順で探す（★ 末尾に Q）
+    sky:  ["/portal/background2.png" + Q, "/portal/sky.jpg" + Q, "/background2.png" + Q],
+    rays: ["/portal/rays.png" + Q, "/rays.png" + Q],
+    far:  ["/portal/cloud_far.png" + Q, "/cloud_far.png" + Q],
+    mid:  ["/portal/cloud_mid.png" + Q, "/portal/cloud_mid2.png" + Q, "/cloud_mid.png" + Q, "/cloud_mid2.png" + Q],
+    near: ["/portal/cloud_near.png" + Q, "/cloud_near.png" + Q],
     speed: { rays: 0.02, far: 0.05, mid: 0.10, near: 0.18 },
   },
 };
@@ -144,8 +148,11 @@ function CloudHero() {
           src={CFG.logo.sources[0]}
           onError={(e) => {
             const el = e.currentTarget;
-            const next = CFG.logo.sources.find((s) => s !== el.src.replace(location.origin, ""));
-            if (next) el.src = next;
+            // いまの src が何番目かを突き止めて次へ
+            const current = el.src.replace(location.origin, "");
+            const idx = CFG.logo.sources.findIndex((s) => s === current);
+            const next = CFG.logo.sources[Math.min(idx + 1, CFG.logo.sources.length - 1)];
+            if (next && next !== current) el.src = next;
           }}
           alt="VOLCE Logo"
           width={CFG.logo.width}

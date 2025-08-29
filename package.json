@@ -17,6 +17,7 @@
     "three": "^0.179.1"
   },
   "devDependencies": {
+    "@squoosh/cli": "^0.7.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20.12.12",
     "@types/react": "^18.3.3",

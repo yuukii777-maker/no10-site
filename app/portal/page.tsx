@@ -1,17 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState, ComponentProps } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
-/** 任意の複数パスを順に試すフォールバック画像 */
-type ImgProps = Omit<ComponentProps<typeof Image>, "src"> & { srcs: string[] };
-function FallbackImage({ srcs, ...rest }: ImgProps) {
+/** <img> フォールバック（最初のパスが 404 なら次へ） */
+function ImgFallback({
+  sources,
+  className = "",
+  alt = "",
+  style,
+}: {
+  sources: string[];
+  className?: string;
+  alt?: string;
+  style?: React.CSSProperties;
+}) {
   const [i, setI] = useState(0);
   return (
-    <Image
-      src={srcs[Math.min(i, srcs.length - 1)]}
-      onError={() => setI((v) => v + 1)}
-      {...rest}
+    <img
+      src={sources[Math.min(i, sources.length - 1)]}
+      onError={() => setI((v) => Math.min(v + 1, sources.length - 1))}
+      alt={alt}
+      draggable={false}
+      className={`absolute inset-0 w-full h-full object-cover select-none ${className}`}
+      style={style}
     />
   );
 }
@@ -19,25 +30,24 @@ function FallbackImage({ srcs, ...rest }: ImgProps) {
 /** 設定（ロゴ位置や雲の動き） */
 const CFG = {
   logo: {
-    // ロゴは /public/portal/logo.png /public/loading/logo.png /public/logo.png の順に探す
-    srcs: ["/portal/logo.png", "/loading/logo.png", "/logo.png"],
+    // ロゴは /portal/logo.png → /loading/logo.png → /logo.png の順で探す
+    sources: ["/portal/logo.png", "/loading/logo.png", "/logo.png"],
     width: 360,
-    x: "6%" as string | number, // left
-    y: 48 as string | number,   // top
+    x: "6%" as string | number,  // left
+    y: 48 as string | number,    // top
   },
   revealThreshold: 0.2,
   clouds: {
-    // それぞれ /portal/* → / 直下の順で探す
-    sky:  ["/portal/sky.jpg", "/portal/background2.png", "/background2.png"],
+    // 画像は /portal/* → / の順で探す（手元の配置どちらでもOK）
+    sky: ["/portal/background2.png", "/portal/sky.jpg", "/background2.png"],
     rays: ["/portal/rays.png", "/rays.png"],
-    far:  ["/portal/cloud_far.png", "/cloud_far.png"],
-    mid:  ["/portal/cloud_mid.png", "/portal/cloud_mid2.png", "/cloud_mid.png", "/cloud_mid2.png"],
+    far: ["/portal/cloud_far.png", "/cloud_far.png"],
+    mid: ["/portal/cloud_mid.png", "/portal/cloud_mid2.png", "/cloud_mid.png", "/cloud_mid2.png"],
     near: ["/portal/cloud_near.png", "/cloud_near.png"],
     speed: { rays: 0.02, far: 0.05, mid: 0.10, near: 0.18 },
   },
 };
 
-/** 省モーション尊重 */
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -50,7 +60,6 @@ function useReducedMotion() {
   return reduced;
 }
 
-/** スクロールでふわっと表示 */
 function useReveal(threshold = 0.2) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [show, setShow] = useState(false);
@@ -67,7 +76,7 @@ function useReveal(threshold = 0.2) {
   return { ref, show } as const;
 }
 
-/** 雲パララックス（粒子なし） */
+/** 雲パララックス（粒子なし・確実表示） */
 function CloudHero() {
   const reduced = useReducedMotion();
   const raysRef = useRef<HTMLDivElement | null>(null);
@@ -98,65 +107,28 @@ function CloudHero() {
 
   return (
     <section className="relative h-[86vh] md:h-[92vh] overflow-hidden">
-      {/* 背景の保険グラデ（最背面） */}
-      <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-[#05070b] to-[#0a0f1a]" aria-hidden />
+      {/* 最背面の保険グラデ */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
+        aria-hidden
+      />
 
-      {/* 雲レイヤー（z-0：親背景の上） */}
+      {/* 雲レイヤー（z-0：背景の上に出す） */}
       <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
         <div className="absolute inset-0">
-          <FallbackImage
-            srcs={CFG.clouds.sky}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover select-none"
-            draggable={false}
-          />
+          <ImgFallback sources={CFG.clouds.sky} alt="" />
         </div>
         <div ref={raysRef} className="absolute inset-0 opacity-70">
-          <FallbackImage
-            srcs={CFG.clouds.rays}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover select-none"
-            draggable={false}
-          />
+          <ImgFallback sources={CFG.clouds.rays} alt="" />
         </div>
         <div ref={farRef} className="absolute inset-0">
-          <FallbackImage
-            srcs={CFG.clouds.far}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover select-none"
-            draggable={false}
-          />
+          <ImgFallback sources={CFG.clouds.far} alt="" />
         </div>
         <div ref={midRef} className="absolute inset-0">
-          <FallbackImage
-            srcs={CFG.clouds.mid}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover select-none"
-            draggable={false}
-          />
+          <ImgFallback sources={CFG.clouds.mid} alt="" />
         </div>
         <div ref={nearRef} className="absolute inset-0">
-          <FallbackImage
-            srcs={CFG.clouds.near}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover select-none"
-            draggable={false}
-          />
+          <ImgFallback sources={CFG.clouds.near} alt="" />
         </div>
       </div>
 
@@ -168,12 +140,16 @@ function CloudHero() {
           top:  typeof CFG.logo.y === "number" ? `${CFG.logo.y}px` : CFG.logo.y,
         }}
       >
-        <FallbackImage
-          srcs={CFG.logo.srcs}
+        <img
+          src={CFG.logo.sources[0]}
+          onError={(e) => {
+            const el = e.currentTarget;
+            const next = CFG.logo.sources.find((s) => s !== el.src.replace(location.origin, ""));
+            if (next) el.src = next;
+          }}
+          alt="VOLCE Logo"
           width={CFG.logo.width}
           height={Math.round(CFG.logo.width * 0.35)}
-          alt="VOLCE Logo"
-          priority
           draggable={false}
         />
       </div>

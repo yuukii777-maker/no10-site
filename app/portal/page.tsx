@@ -6,31 +6,45 @@ import Image from "next/image";
 /**
  * ─────────────────────────────────────────────────────────────────────
  *  VOLCE Portal – 超軽量版（最小修正済み）
- *  ・Three.js 不使用の粒子BG
- *  ・ロゴ位置は数値（px/%）で調整
+ *  ・Canvas 粒子のみ（Three.js 不使用）
+ *  ・ロゴ位置は数値（px/%）で調整可能
  *  ・PC でスクロール時に紹介文がふわっと出現
  *  ・Team/注意事項の画像は撤廃（テキストのみ）
- *  ・Tailwind 前提。外部フォント無し
- *  ・prefers-reduced-motion に対応
+ *  ・レイアウトは Tailwind。重い画像や外部フォントは使わない前提
+ *  ・アニメは rAF + 省電力（タブ非表示/低FPS）
+ *  ・`prefers-reduced-motion` で自動的にアニメを弱める
+ *
+ *  使い方：このファイルを `app/portal/page.tsx` にそのまま保存
+ *  必要なら /public にロゴ画像 `portal/logo.png` を配置してください。
  * ─────────────────────────────────────────────────────────────────────
  */
 
-/** 調整用パラメータ */
+/** ===== 調整用パラメータ ===== */
 const CFG = {
+  // ロゴ画像パス（/public 直下なら先頭はスラッシュから）
   logoSrc: "/portal/logo.png",
+
+  // ロゴの基準サイズ（幅 px）
   logoWidth: 360,
-  logoOffsetX: "6%" as string | number,
-  logoOffsetY: 48 as string | number,
+
+  // 表示位置（画面左上を (0,0) として）
+  // 単位: px または % を文字列で（例: "12%" や 40）
+  logoOffsetX: "6%", // 左からの距離
+  logoOffsetY: 48,   // 上からの距離
+
+  // スクロール出現のトリガー（要素が何割見えたら表示するか）
   revealThreshold: 0.2,
+
+  // 粒子の設定（軽量）
   particles: {
-    count: 90,
-    countMobile: 55,
-    maxSpeed: 0.25,
-    size: [1, 2.4] as [number, number],
+    count: 90,          // 個数（PC）
+    countMobile: 55,    // 個数（モバイル）
+    maxSpeed: 0.25,     // px/frame
+    size: [1, 2.4] as [number, number], // [min, max] px
     color: "rgba(255,255,255,0.6)",
-    linkDist: 110,
+    linkDist: 110,      // 近い粒子同士を薄い線でつなぐ距離
     linkAlpha: 0.12,
-    fpsCap: 42,
+    fpsCap: 42,         // 上限 FPS（省電力）
   },
 };
 
@@ -55,8 +69,8 @@ function ParticleCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    let dpr = Math.max(1, window.devicePixelRatio || 1);
 
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
     const resize = () => {
       const { innerWidth: w, innerHeight: h } = window;
       canvas.style.width = "100%";
@@ -76,17 +90,19 @@ function ParticleCanvas() {
       y: Math.random() * window.innerHeight,
       vx: (Math.random() - 0.5) * CFG.particles.maxSpeed * 2,
       vy: (Math.random() - 0.5) * CFG.particles.maxSpeed * 2,
-      r: CFG.particles.size[0] + Math.random() * (CFG.particles.size[1] - CFG.particles.size[0]),
+      r:
+        CFG.particles.size[0] +
+        Math.random() * (CFG.particles.size[1] - CFG.particles.size[0]),
     }));
 
     let raf = 0;
     let last = performance.now();
-    const interval = 1000 / CFG.particles.fpsCap;
+    const interval = 1000 / CFG.particles.fpsCap; // fps 制限
 
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const now = performance.now();
-      if (now - last < interval) return;
+      if (now - last < interval) return; // fps 上限
       last = now;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -115,6 +131,7 @@ function ParticleCanvas() {
       for (const p of parts) {
         p.x += p.vx;
         p.y += p.vy;
+        // 端でバウンド
         if (p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
         if (p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
         ctx.beginPath();
@@ -160,7 +177,9 @@ function useReveal(threshold = 0.2) {
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      (ents) => ents.forEach((e) => e.isIntersecting && setShow(true)),
+      (ents) => {
+        ents.forEach((e) => e.isIntersecting && setShow(true));
+      },
       { threshold }
     );
     io.observe(el);
@@ -170,6 +189,7 @@ function useReveal(threshold = 0.2) {
 }
 
 export default function PortalPage() {
+  // スクロール出現（クラン紹介）
   const intro = useReveal(CFG.revealThreshold);
 
   return (
@@ -180,11 +200,19 @@ export default function PortalPage() {
       {/* ヘッダー（軽量） */}
       <header className="sticky top-0 z-20 bg-transparent backdrop-blur-sm supports-[backdrop-filter]:bg-black/10">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-widest text-white/80">VOLCE PORTAL</span>
+          <span className="text-sm font-semibold tracking-widest text-white/80">
+            VOLCE PORTAL
+          </span>
           <nav className="hidden md:flex gap-6 text-sm text-white/70">
-            <a href="#intro" className="hover:text-white">紹介</a>
-            <a href="#team" className="hover:text-white">チーム</a>
-            <a href="#notice" className="hover:text-white">注意事項</a>
+            <a href="#intro" className="hover:text-white">
+              紹介
+            </a>
+            <a href="#team" className="hover:text-white">
+              チーム
+            </a>
+            <a href="#notice" className="hover:text-white">
+              注意事項
+            </a>
           </nav>
         </div>
       </header>
@@ -194,8 +222,14 @@ export default function PortalPage() {
         <div
           className="absolute"
           style={{
-            left: typeof CFG.logoOffsetX === "number" ? `${CFG.logoOffsetX}px` : CFG.logoOffsetX,
-            top: typeof CFG.logoOffsetY === "number" ? `${CFG.logoOffsetY}px` : CFG.logoOffsetY,
+            left:
+              typeof CFG.logoOffsetX === "number"
+                ? `${CFG.logoOffsetX}px`
+                : CFG.logoOffsetX,
+            top:
+              typeof CFG.logoOffsetY === "number"
+                ? `${CFG.logoOffsetY}px`
+                : CFG.logoOffsetY,
           }}
         >
           <Image
@@ -213,14 +247,19 @@ export default function PortalPage() {
       </section>
 
       {/* 紹介（PC スクロールで出現） */}
-      <section id="intro" className="mx-auto max-w-4xl px-5 py-16 md:py-24">
+      <section
+        id="intro"
+        className="mx-auto max-w-4xl px-5 py-16 md:py-24 scroll-mt-24"
+      >
         <div
           ref={intro.ref}
           className={`transition-all duration-700 will-change-transform ${
             intro.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <h2 className="text-2xl md:text-3xl font-bold tracking-wide mb-4">VOLCE クラン紹介</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-wide mb-4">
+            VOLCE クラン紹介
+          </h2>
           <p className="leading-relaxed text-white/85">
             VOLCE は、火力枠・エンジョイ枠・クリエイター/ライバー枠など、
             それぞれの強みを活かして成長していくクランです。イベント運営や配信連携も含め、
@@ -230,7 +269,10 @@ export default function PortalPage() {
       </section>
 
       {/* チーム（画像撤廃、粒子 BG のみ、簡素テキスト） */}
-      <section id="team" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <section
+        id="team"
+        className="mx-auto max-w-6xl px-5 py-14 md:py-20 scroll-mt-24"
+      >
         <h3 className="text-xl md:text-2xl font-semibold mb-4">Team</h3>
         <p className="text-white/80 max-w-3xl">
           主要メンバーのビジュアル画像は表示を停止しています。現在は軽量化のため、背景の粒子のみを残したモードで運用中です。
@@ -238,7 +280,10 @@ export default function PortalPage() {
       </section>
 
       {/* 注意事項（画像廃止） */}
-      <section id="notice" className="mx-auto max-w-5xl px-5 pb-24">
+      <section
+        id="notice"
+        className="mx-auto max-w-5xl px-5 pb-24 scroll-mt-24"
+      >
         <h3 className="text-xl md:text-2xl font-semibold mb-4">注意事項</h3>
         <ul className="list-disc pl-6 space-y-2 text-white/85">
           <li>参加規約・禁止事項を遵守してください。</li>

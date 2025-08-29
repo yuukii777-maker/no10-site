@@ -92,7 +92,13 @@ function pickFirstReachable(urls: string[]): Promise<string | undefined> {
 }
 
 /** 3Dロゴはクライアントだけで読ませる */
-const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), { ssr: false });
+const ThreeHeroLazy = dynamic(
+  () =>
+    import("./ThreeHero")
+      .then((m) => ({ default: m.default }))
+      .catch(() => ({ default: () => null })), // ← 失敗時は no-op
+  { ssr: false }
+);
 
 function CloudHero({ enable3D }: { enable3D: boolean }) {
   const reduced = useReducedMotion();

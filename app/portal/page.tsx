@@ -3,21 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-/** 画像は /public/portal に配置してください */
+/** 画像パスは /public 直下の実在ファイルに合わせてあります */
 const CFG = {
   logo: {
-    src: "/portal/logo.png",
+    src: "/portal/logo.png",            // ロゴは /public/portal/logo.png を利用
     width: 360,
-    x: "6%" as string | number, // left
-    y: 48 as string | number,   // top
+    x: "6%" as string | number,         // left
+    y: 48 as string | number,           // top
   },
   revealThreshold: 0.2,
   clouds: {
-    sky:  "/portal/sky.jpg",
-    rays: "/portal/rays.png",
-    far:  "/portal/cloud_far.png",
-    mid:  "/portal/cloud_mid.png",
-    near: "/portal/cloud_near.png",
+    sky:  "/background2.png",           // ← /public/background2.png（スクショと同名）
+    rays: "/rays.png",                   // ← /public/rays.png
+    far:  "/cloud_far.png",              // ← /public/cloud_far.png
+    mid:  "/cloud_mid.png",              // ← /public/cloud_mid.png
+    near: "/cloud_near.png",             // ← /public/cloud_near.png
     speed: { rays: 0.02, far: 0.05, mid: 0.10, near: 0.18 }, // パララックス係数
   },
 };
@@ -50,7 +50,7 @@ function useReveal(threshold = 0.2) {
   return { ref, show } as const;
 }
 
-/** ===== 雲パララックス・ヒーロー ===== */
+/** 雲パララックス・ヒーロー（粒子なし） */
 function CloudHero() {
   const reduced = useReducedMotion();
   const raysRef = useRef<HTMLDivElement | null>(null);
@@ -65,10 +65,10 @@ function CloudHero() {
     const onScroll = () => {
       raf = requestAnimationFrame(() => {
         const y = window.scrollY || 0;
-        raysRef.current && (raysRef.current.style.transform = `translate3d(0, ${y * CFG.clouds.speed.rays}px, 0)`);
-        farRef.current  && (farRef.current.style.transform  = `translate3d(0, ${y * CFG.clouds.speed.far }px, 0)`);
-        midRef.current  && (midRef.current.style.transform  = `translate3d(0, ${y * CFG.clouds.speed.mid }px, 0)`);
-        nearRef.current && (nearRef.current.style.transform = `translate3d(0, ${y * CFG.clouds.speed.near}px, 0)`);
+        if (raysRef.current) raysRef.current.style.transform = `translate3d(0, ${y * CFG.clouds.speed.rays}px, 0)`;
+        if (farRef.current)  farRef.current.style.transform  = `translate3d(0, ${y * CFG.clouds.speed.far }px, 0)`;
+        if (midRef.current)  midRef.current.style.transform  = `translate3d(0, ${y * CFG.clouds.speed.mid }px, 0)`;
+        if (nearRef.current) nearRef.current.style.transform = `translate3d(0, ${y * CFG.clouds.speed.near}px, 0)`;
       });
     };
     onScroll();
@@ -81,22 +81,71 @@ function CloudHero() {
 
   return (
     <section className="relative h-[86vh] md:h-[92vh] overflow-hidden">
+      {/* 画像が無い場合の保険グラデ */}
+      <div
+        className="absolute inset-0 -z-10 pointer-events-none bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
+        aria-hidden
+      />
+
       {/* 背景レイヤー（クリック阻害しない） */}
       <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
+        {/* sky（最背面） */}
         <div className="absolute inset-0">
-          <Image src={CFG.clouds.sky} alt="" fill priority sizes="100vw" className="object-cover select-none" />
+          <Image
+            src={CFG.clouds.sky}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover select-none"
+            draggable={false}
+          />
         </div>
+        {/* rays */}
         <div ref={raysRef} className="absolute inset-0 opacity-70">
-          <Image src={CFG.clouds.rays} alt="" fill priority sizes="100vw" className="object-cover select-none" />
+          <Image
+            src={CFG.clouds.rays}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover select-none"
+            draggable={false}
+          />
         </div>
+        {/* far / mid / near */}
         <div ref={farRef} className="absolute inset-0">
-          <Image src={CFG.clouds.far} alt="" fill priority sizes="100vw" className="object-cover select-none" />
+          <Image
+            src={CFG.clouds.far}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover select-none"
+            draggable={false}
+          />
         </div>
         <div ref={midRef} className="absolute inset-0">
-          <Image src={CFG.clouds.mid} alt="" fill priority sizes="100vw" className="object-cover select-none" />
+          <Image
+            src={CFG.clouds.mid}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover select-none"
+            draggable={false}
+          />
         </div>
         <div ref={nearRef} className="absolute inset-0">
-          <Image src={CFG.clouds.near} alt="" fill priority sizes="100vw" className="object-cover select-none" />
+          <Image
+            src={CFG.clouds.near}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover select-none"
+            draggable={false}
+          />
         </div>
       </div>
 
@@ -114,6 +163,7 @@ function CloudHero() {
           height={Math.round(CFG.logo.width * 0.35)}
           alt="VOLCE Logo"
           priority
+          draggable={false}
         />
       </div>
 
@@ -137,13 +187,10 @@ function CloudHero() {
   );
 }
 
-/** ===== ページ本体 ===== */
+/** ページ本体（ヘッダーは出しません。Nav は layout.tsx 側） */
 export default function PortalPage() {
   return (
     <main className="relative min-h-screen text-neutral-200">
-      {/* グローバルNavは layout.tsx 側にあるので、ここでは出さない */}
-
-      {/* ヒーロー：雲＋ロゴ＋白コピー */}
       <CloudHero />
 
       {/* 紹介 */}

@@ -2,32 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/** ==== 追加：ビルドごとに変わるクエリで強キャッシュ回避 ==== */
+/** ==== 強キャッシュ回避（コミットSHA） ==== */
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || "").toString().slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
 
-/** <img> フォールバック（最初のパスが 404 なら次へ） */
+/** <img> フォールバック（最初が404なら次へ） */
 function ImgFallback({
   sources,
   className = "",
   alt = "",
   style,
+  onLoad,
 }: {
   sources: string[];
   className?: string;
   alt?: string;
   style?: React.CSSProperties;
+  onLoad?: () => void;
 }) {
   const [i, setI] = useState(0);
   const src = sources[Math.min(i, sources.length - 1)];
-
   return (
     <img
       src={src}
       onError={() => {
+        // ログっておく：画像が来てないときの特定に役立つ
         console.warn("[ImgFallback] failed:", src);
         setI((v) => Math.min(v + 1, sources.length - 1));
       }}
+      onLoad={onLoad}
       alt={alt}
       draggable={false}
       className={`absolute inset-0 w-full h-full object-cover select-none ${className}`}
@@ -36,23 +39,32 @@ function ImgFallback({
   );
 }
 
-/** 設定（ロゴ位置や雲の動き） */
+/** 設定（最小で効くものだけ） */
 const CFG = {
+  heroH: "92vh", // ヒーロー高さ
   logo: {
+    // ロゴは /portal -> /loading -> / の順で探す
     sources: ["/portal/logo.png" + Q, "/loading/logo.png" + Q, "/logo.png" + Q],
-    width: 360,
+    width: 380,
+    // ★ 中央に“浮かせる”
+    center: { x: "50%", y: "18vh" }, // 位置はお好みで（yはvh指定が扱いやすい）
+    // もし手動で置きたいなら下2行を使う（center を無視）
     x: "6%" as string | number,
     y: 48 as string | number,
+    glow: "drop-shadow(0 0 24px rgba(255,255,255,0.35)) drop-shadow(0 4px 24px rgba(0,0,0,0.6))",
   },
   revealThreshold: 0.2,
   clouds: {
-    // 両ディレクトリを試す（末尾に Q）
+    // 透明PNGレイヤー（/portal と / の両方対応）
     sky:  ["/portal/background2.png" + Q, "/portal/sky.jpg" + Q, "/background2.png" + Q],
     rays: ["/portal/rays.png" + Q, "/rays.png" + Q],
     far:  ["/portal/cloud_far.png" + Q, "/cloud_far.png" + Q],
     mid:  ["/portal/cloud_mid.png" + Q, "/portal/cloud_mid2.png" + Q, "/cloud_mid.png" + Q, "/cloud_mid2.png" + Q],
     near: ["/portal/cloud_near.png" + Q, "/cloud_near.png" + Q],
+    // パララックス係数（下へ行くほど大きく＝近い雲が速く動く）
     speed: { rays: 0.02, far: 0.05, mid: 0.10, near: 0.18 },
+    // 可視性を上げるための不透明度（素材が薄い環境でも見える）
+    opacity: { rays: 0.7, far: 0.45, mid: 0.6, near: 0.9 },
   },
 };
 
@@ -84,29 +96,23 @@ function useReveal(threshold = 0.2) {
   return { ref, show } as const;
 }
 
-/** 最初に到達可能なURLを選ぶ（img要素で実検証） */
+/** “最初に到達できた”URLを拾ってCSS背景に当てる（表示の保険） */
 function pickFirstReachable(urls: string[]): Promise<string | undefined> {
   return new Promise((resolve) => {
     let i = 0;
-    const tryNext = () => {
+    const next = () => {
       if (i >= urls.length) return resolve(undefined);
       const url = urls[i++];
       const img = new Image();
-      img.onload = () => {
-        console.info("[reach] ok:", url);
-        resolve(url);
-      };
-      img.onerror = () => {
-        console.warn("[reach] fail:", url);
-        tryNext();
-      };
+      img.onload = () => resolve(url);
+      img.onerror = () => next();
       img.src = url;
     };
-    tryNext();
+    next();
   });
 }
 
-/** 雲パララックス（粒子なし・確実表示） */
+/** ヒーロー（雲パララックス＋中央ロゴ） */
 function CloudHero() {
   const reduced = useReducedMotion();
   const raysRef = useRef<HTMLDivElement | null>(null);
@@ -115,14 +121,13 @@ function CloudHero() {
   const nearRef = useRef<HTMLDivElement | null>(null);
   const intro   = useReveal(CFG.revealThreshold);
 
-  /** ★ CSS 背景のフェイルセーフ用 URL */
+  // CSS背景の保険
   const [bgUrl, setBgUrl] = useState<string | undefined>(undefined);
-
   useEffect(() => {
-    // sky 候補から「実際にロードできるもの」を1つ選んで CSS 背景に当てる
-    pickFirstReachable(CFG.clouds.sky).then((u) => setBgUrl(u));
+    pickFirstReachable(CFG.clouds.sky).then(setBgUrl);
   }, []);
 
+  // パララックス
   useEffect(() => {
     if (reduced) return;
     let raf = 0;
@@ -145,50 +150,60 @@ function CloudHero() {
 
   return (
     <section
-      className="relative h-[86vh] md:h-[92vh] overflow-hidden"
-      style={
-        bgUrl
-          ? {
-              backgroundImage: `url("${bgUrl}")`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }
-          : undefined
-      }
+      className="relative overflow-hidden"
+      style={{
+        height: CFG.heroH,
+        // CSS背景（最背面）。画像が来なくても下のグラデで黒つぶれ回避
+        backgroundImage: bgUrl ? `url("${bgUrl}")` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
     >
-      {/* 最背面の保険グラデ */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
-        aria-hidden
-      />
+      {/* 最背面グラデ（黒つぶれ防止） */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-[#090d12] to-[#0a0f1a]" aria-hidden />
 
-      {/* 雲レイヤー（失敗しても上の CSS 背景が残る） */}
+      {/* 雲レイヤー：透明PNGを重ねる（素材が薄い環境のために opacity を明示） */}
       <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
+        {/* sky は CSS 背景でも出るが、ここでも重ねておくと発色が安定 */}
         <div className="absolute inset-0">
-          <ImgFallback sources={CFG.clouds.sky} alt="" />
+          <ImgFallback sources={CFG.clouds.sky} alt="" className="opacity-90" />
         </div>
-        <div ref={raysRef} className="absolute inset-0 opacity-70">
+
+        <div ref={raysRef} className="absolute inset-0" style={{ opacity: CFG.clouds.opacity.rays, mixBlendMode: "screen" as any }}>
           <ImgFallback sources={CFG.clouds.rays} alt="" />
         </div>
-        <div ref={farRef} className="absolute inset-0">
+
+        <div ref={farRef} className="absolute inset-0" style={{ opacity: CFG.clouds.opacity.far }}>
           <ImgFallback sources={CFG.clouds.far} alt="" />
         </div>
-        <div ref={midRef} className="absolute inset-0">
+
+        <div ref={midRef} className="absolute inset-0" style={{ opacity: CFG.clouds.opacity.mid }}>
           <ImgFallback sources={CFG.clouds.mid} alt="" />
         </div>
-        <div ref={nearRef} className="absolute inset-0">
+
+        <div ref={nearRef} className="absolute inset-0" style={{ opacity: CFG.clouds.opacity.near }}>
           <ImgFallback sources={CFG.clouds.near} alt="" />
         </div>
       </div>
 
-      {/* ロゴ（前景） */}
+      {/* ロゴ（中央に“浮かせる”） */}
       <div
-        className="absolute z-10 select-none drop-shadow-[0_0_24px_rgba(255,255,255,0.25)]"
-        style={{
-          left: typeof CFG.logo.x === "number" ? `${CFG.logo.x}px` : CFG.logo.x,
-          top:  typeof CFG.logo.y === "number" ? `${CFG.logo.y}px` : CFG.logo.y,
-        }}
+        className="absolute z-10 select-none"
+        style={
+          CFG.logo.center
+            ? {
+                left: CFG.logo.center.x,
+                top:  CFG.logo.center.y,
+                transform: "translate(-50%, -50%)", // 中央基準
+                filter: CFG.logo.glow,
+              }
+            : {
+                left: typeof CFG.logo.x === "number" ? `${CFG.logo.x}px` : CFG.logo.x,
+                top:  typeof CFG.logo.y === "number" ? `${CFG.logo.y}px` : CFG.logo.y,
+                filter: CFG.logo.glow,
+              }
+        }
       >
         <img
           src={CFG.logo.sources[0]}
@@ -197,23 +212,21 @@ function CloudHero() {
             const current = el.src.replace(location.origin, "");
             const idx = CFG.logo.sources.findIndex((s) => s === current);
             const next = CFG.logo.sources[Math.min(idx + 1, CFG.logo.sources.length - 1)];
-            console.warn("[logo] fail:", current, "->", next);
             if (next && next !== current) el.src = next;
           }}
           alt="VOLCE Logo"
           width={CFG.logo.width}
           height={Math.round(CFG.logo.width * 0.35)}
           draggable={false}
+          style={{ userSelect: "none" }}
         />
       </div>
 
-      {/* 白コピー（前景） */}
+      {/* 白コピー */}
       <div className="absolute inset-x-0 bottom-10 md:bottom-16 z-10">
         <div
-          ref={intro.ref}
-          className={`mx-auto max-w-3xl px-6 text-center transition-all duration-700 will-change-transform ${
-            intro.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
+          className="mx-auto max-w-3xl px-6 text-center transition-all duration-700 will-change-transform"
+          style={{ opacity: 1, transform: "translateY(0)" }}
         >
           <p className="text-white/90 text-base md:text-lg leading-relaxed">
             雲の上で集う、VOLCE。スクロールして、私たちの世界へ。
@@ -221,13 +234,13 @@ function CloudHero() {
         </div>
       </div>
 
-      {/* 切り返しグラデ */}
+      {/* 下端グラデ（本文へのつなぎ） */}
       <div className="absolute inset-x-0 bottom-0 h-32 z-10 bg-gradient-to-b from-transparent to-black/60" />
     </section>
   );
 }
 
-/** ページ本体 */
+/** 本文 */
 export default function PortalPage() {
   return (
     <main className="relative min-h-screen text-neutral-200">

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/** ==== 追加：デプロイごとに変わるクエリを付与（強キャッシュ回避） ==== */
+/** ==== 追加：ビルドごとに変わるクエリで強キャッシュ回避 ==== */
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || "").toString().slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
 
@@ -19,10 +19,15 @@ function ImgFallback({
   style?: React.CSSProperties;
 }) {
   const [i, setI] = useState(0);
+  const src = sources[Math.min(i, sources.length - 1)];
+
   return (
     <img
-      src={sources[Math.min(i, sources.length - 1)]}
-      onError={() => setI((v) => Math.min(v + 1, sources.length - 1))}
+      src={src}
+      onError={() => {
+        console.warn("[ImgFallback] failed:", src);
+        setI((v) => Math.min(v + 1, sources.length - 1));
+      }}
       alt={alt}
       draggable={false}
       className={`absolute inset-0 w-full h-full object-cover select-none ${className}`}
@@ -34,15 +39,14 @@ function ImgFallback({
 /** 設定（ロゴ位置や雲の動き） */
 const CFG = {
   logo: {
-    // ロゴは /portal/logo.png → /loading/logo.png → /logo.png の順で探す（★ 末尾に Q）
     sources: ["/portal/logo.png" + Q, "/loading/logo.png" + Q, "/logo.png" + Q],
     width: 360,
-    x: "6%" as string | number,  // left
-    y: 48 as string | number,    // top
+    x: "6%" as string | number,
+    y: 48 as string | number,
   },
   revealThreshold: 0.2,
   clouds: {
-    // 画像は /portal/* → / の順で探す（★ 末尾に Q）
+    // 両ディレクトリを試す（末尾に Q）
     sky:  ["/portal/background2.png" + Q, "/portal/sky.jpg" + Q, "/background2.png" + Q],
     rays: ["/portal/rays.png" + Q, "/rays.png" + Q],
     far:  ["/portal/cloud_far.png" + Q, "/cloud_far.png" + Q],
@@ -80,6 +84,28 @@ function useReveal(threshold = 0.2) {
   return { ref, show } as const;
 }
 
+/** 最初に到達可能なURLを選ぶ（img要素で実検証） */
+function pickFirstReachable(urls: string[]): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    let i = 0;
+    const tryNext = () => {
+      if (i >= urls.length) return resolve(undefined);
+      const url = urls[i++];
+      const img = new Image();
+      img.onload = () => {
+        console.info("[reach] ok:", url);
+        resolve(url);
+      };
+      img.onerror = () => {
+        console.warn("[reach] fail:", url);
+        tryNext();
+      };
+      img.src = url;
+    };
+    tryNext();
+  });
+}
+
 /** 雲パララックス（粒子なし・確実表示） */
 function CloudHero() {
   const reduced = useReducedMotion();
@@ -88,6 +114,14 @@ function CloudHero() {
   const midRef  = useRef<HTMLDivElement | null>(null);
   const nearRef = useRef<HTMLDivElement | null>(null);
   const intro   = useReveal(CFG.revealThreshold);
+
+  /** ★ CSS 背景のフェイルセーフ用 URL */
+  const [bgUrl, setBgUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // sky 候補から「実際にロードできるもの」を1つ選んで CSS 背景に当てる
+    pickFirstReachable(CFG.clouds.sky).then((u) => setBgUrl(u));
+  }, []);
 
   useEffect(() => {
     if (reduced) return;
@@ -110,14 +144,26 @@ function CloudHero() {
   }, [reduced]);
 
   return (
-    <section className="relative h-[86vh] md:h-[92vh] overflow-hidden">
+    <section
+      className="relative h-[86vh] md:h-[92vh] overflow-hidden"
+      style={
+        bgUrl
+          ? {
+              backgroundImage: `url("${bgUrl}")`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }
+          : undefined
+      }
+    >
       {/* 最背面の保険グラデ */}
       <div
         className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-[#05070b] to-[#0a0f1a]"
         aria-hidden
       />
 
-      {/* 雲レイヤー（z-0：背景の上に出す） */}
+      {/* 雲レイヤー（失敗しても上の CSS 背景が残る） */}
       <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
         <div className="absolute inset-0">
           <ImgFallback sources={CFG.clouds.sky} alt="" />
@@ -148,10 +194,10 @@ function CloudHero() {
           src={CFG.logo.sources[0]}
           onError={(e) => {
             const el = e.currentTarget;
-            // いまの src が何番目かを突き止めて次へ
             const current = el.src.replace(location.origin, "");
             const idx = CFG.logo.sources.findIndex((s) => s === current);
             const next = CFG.logo.sources[Math.min(idx + 1, CFG.logo.sources.length - 1)];
+            console.warn("[logo] fail:", current, "->", next);
             if (next && next !== current) el.src = next;
           }}
           alt="VOLCE Logo"
@@ -181,7 +227,7 @@ function CloudHero() {
   );
 }
 
-/** ページ本体（ページ内ヘッダーは出さない。Nav は layout.tsx 側） */
+/** ページ本体 */
 export default function PortalPage() {
   return (
     <main className="relative min-h-screen text-neutral-200">

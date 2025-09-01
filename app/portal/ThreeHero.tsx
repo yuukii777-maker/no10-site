@@ -6,25 +6,21 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Float, Sparkles, useTexture } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 
-type Props = {
-  deviceIsMobile?: boolean;
-  onContextLost?: () => void;
-};
+type Props = { deviceIsMobile?: boolean; onContextLost?: () => void };
 
 function LogoIsland({ isMobile }: { isMobile: boolean }) {
   const tex = useTexture("/portal/logo.webp");
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
-  tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
   tex.transparent = true;
 
   const size = useMemo(() => {
-    const w = 3.6; // 基準幅
+    const w = 3.6;
     // @ts-ignore
-    const aspect =
-      (tex.source?.data?.naturalWidth || 1024) / (tex.source?.data?.naturalHeight || 1024);
+    const aspect = (tex.source?.data?.naturalWidth || 1024) / (tex.source?.data?.naturalHeight || 1024);
     return [w, w / aspect] as [number, number];
   }, [tex]);
 
@@ -32,11 +28,10 @@ function LogoIsland({ isMobile }: { isMobile: boolean }) {
   const target = useRef({ rx: 0, ry: 0 });
   const { pointer } = useThree();
 
-  // マウス・タッチ位置に少し追従（-1..1）
   useFrame((_, dt) => {
     const px = THREE.MathUtils.clamp(pointer.x, -1, 1);
     const py = THREE.MathUtils.clamp(pointer.y, -1, 1);
-    const maxTilt = isMobile ? 0.18 : 0.22; // ラジアン
+    const maxTilt = isMobile ? 0.18 : 0.22;
     target.current.ry = -px * maxTilt;
     target.current.rx = py * maxTilt * 0.8;
 
@@ -55,7 +50,7 @@ function LogoIsland({ isMobile }: { isMobile: boolean }) {
         </mesh>
       </Float>
 
-      {/* ロゴ真下の淡い影（奥行き感） */}
+      {/* 薄影 */}
       <mesh position={[0, -size[1] * 0.48, -0.01]}>
         <planeGeometry args={[size[0] * 0.75, size[1] * 0.08]} />
         <meshBasicMaterial color={"black"} transparent opacity={0.18} blending={THREE.MultiplyBlending} />
@@ -65,7 +60,7 @@ function LogoIsland({ isMobile }: { isMobile: boolean }) {
 }
 
 export default function ThreeHero({ deviceIsMobile = false, onContextLost }: Props) {
-  const cameraZ = deviceIsMobile ? 9.5 : 8.5; // iPhoneは遠目
+  const cameraZ = deviceIsMobile ? 9.5 : 8.5;
   const fov = deviceIsMobile ? 46 : 45;
 
   const onCreated = ({ gl }: { gl: THREE.WebGLRenderer }) => {
@@ -89,15 +84,11 @@ export default function ThreeHero({ deviceIsMobile = false, onContextLost }: Pro
       data-r3f="1"
       onCreated={onCreated as any}
     >
-      {/* やわらかい環境光 */}
       <ambientLight intensity={0.65} />
       <directionalLight position={[3, 5, 6]} intensity={1.1} castShadow={false} color={0xfff1e0} />
       <directionalLight position={[-3, 2, -2]} intensity={0.35} color={0xa0c0ff} />
-
-      {/* 雲に馴染むフォグ */}
       <fog attach="fog" args={["#1a1f2a", 14, 26]} />
 
-      {/* 空気中の微粒子（控えめ） */}
       <Sparkles count={deviceIsMobile ? 60 : 90} size={deviceIsMobile ? 2 : 2.5} speed={0.18} scale={[12, 6.5, 8]} opacity={0.12} />
 
       <LogoIsland isMobile={deviceIsMobile} />

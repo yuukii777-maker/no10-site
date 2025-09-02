@@ -108,6 +108,29 @@ function useWrap() {
   return { refs, setH, setPos };
 }
 
+/* 汎用：親ラッパ（レイヤ固定） */
+const layer = (z: number): React.CSSProperties => ({
+  position: "absolute",
+  inset: 0,
+  zIndex: z,
+  pointerEvents: "none",
+});
+
+/* 子imgの共通スタイル */
+function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
+  return {
+    position: "absolute",
+    inset: "-6% -4% -2% -4%",
+    width: "108%",
+    height: "104%",
+    objectFit: "cover",
+    zIndex: z, // 同一レイヤ内での前後
+    pointerEvents: "none",
+    transform: "translate3d(0,0,0)",
+    ...more,
+  };
+}
+
 /* ===================== Main ===================== */
 export default function PortalClient() {
   const reduced = useReducedMotion();
@@ -229,67 +252,68 @@ export default function PortalClient() {
           isolation: "isolate",
         }}
       >
-        {/* 光／フレア */}
-        <img ref={(el) => (flareWide.refs.current.a = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
-        <img ref={(el) => (flareWide.refs.current.b = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
-        <img ref={(el) => (flareCore.refs.current.a = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
-        <img ref={(el) => (flareCore.refs.current.b = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
-        <img ref={(el) => (rays.refs.current.a = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
-        <img ref={(el) => (rays.refs.current.b = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
+        {/* ① 背景・雲・光（z:10） */}
+        <div style={layer(10)}>
+          {/* 光／フレア */}
+          <img ref={(el) => (flareWide.refs.current.a = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
+          <img ref={(el) => (flareWide.refs.current.b = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
+          <img ref={(el) => (flareCore.refs.current.a = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
+          <img ref={(el) => (flareCore.refs.current.b = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
+          <img ref={(el) => (rays.refs.current.a = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
+          <img ref={(el) => (rays.refs.current.b = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
 
-        {/* 雲 */}
-        <img ref={(el) => (far.refs.current.a = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
-        <img ref={(el) => (far.refs.current.b = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
-        <img ref={(el) => (mid.refs.current.a = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
-        <img ref={(el) => (mid.refs.current.b = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
-        <img ref={(el) => (mid2.refs.current.a = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
-        <img ref={(el) => (mid2.refs.current.b = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
-        <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
-        <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
+          {/* 雲 */}
+          <img ref={(el) => (far.refs.current.a = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
+          <img ref={(el) => (far.refs.current.b = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
+          <img ref={(el) => (mid.refs.current.a = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
+          <img ref={(el) => (mid.refs.current.b = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
+          <img ref={(el) => (mid2.refs.current.a = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
+          <img ref={(el) => (mid2.refs.current.b = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
+          <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
+          <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
+        </div>
 
-        {/* 粒子ベール（ロゴより下） */}
-        <div aria-hidden style={{
-          position: "absolute", inset: 0, zIndex: 9, pointerEvents: "none", opacity: 0.22,
-          backgroundImage:
-            "radial-gradient(circle at 20% 30%, rgba(255,255,255,.06) 0 1px, transparent 1px), radial-gradient(circle at 80% 70%, rgba(255,255,255,.05) 0 1px, transparent 1px)",
-          backgroundSize: "3px 3px, 3px 3px", mixBlendMode: "screen",
-        }} />
-
-        {/* 3D or 2D ロゴ（最前面） */}
-        {!use2D ? (
-           <div
-    style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 30 }}
-  >
-    <ThreeHeroLazy
-              deviceIsMobile={isMobile}
-              scrollY={scrollY}
-              onContextLost={() => setThreeHardError(true)}
+        {/* ② ロゴ（z:20 最前面） */}
+        <div style={layer(20)}>
+          {!use2D ? (
+            <div className="absolute inset-0 pointer-events-none">
+              <ThreeHeroLazy
+                deviceIsMobile={isMobile}
+                scrollY={scrollY}
+                onContextLost={() => setThreeHardError(true)}
+              />
+            </div>
+          ) : (
+            <img
+              src={ASSETS.logo + Q}
+              alt="VOLCE Logo"
+              style={{
+                position: "absolute",
+                left: "50%", top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: isMobile ? 220 : 320,
+                height: "auto",
+                filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))",
+                opacity: 0.98,
+              }}
             />
-          </div>
-        ) : (
-          <img
-            src={ASSETS.logo + Q}
-            alt="VOLCE Logo"
-            style={{
-              position: "absolute",
-              left: "50%", top: "50%",
-              transform: "translate(-50%, -50%)",
-              width: isMobile ? 220 : 320,
-              height: "auto",
-              zIndex: 30,
-              pointerEvents: "none",
-              filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))",
-              opacity: 0.98,
-            }}
-          />
-        )}
+          )}
+        </div>
 
-        {/* 上下の締めグラデ — ロゴより下にする */}
-        <div aria-hidden style={{
-          position: "absolute", inset: 0, zIndex: 11, pointerEvents: "none",
-          background:
-            "linear-gradient(to bottom, rgba(5,8,15,.55) 0%, rgba(5,8,15,0) 28%, rgba(5,8,15,0) 72%, rgba(5,8,15,.35) 100%)",
-        }} />
+        {/* ③ ベール & グラデ（z:12 ロゴより下） */}
+        <div style={layer(12)}>
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, opacity: 0.22, pointerEvents: "none",
+            backgroundImage:
+              "radial-gradient(circle at 20% 30%, rgba(255,255,255,.06) 0 1px, transparent 1px), radial-gradient(circle at 80% 70%, rgba(255,255,255,.05) 0 1px, transparent 1px)",
+            backgroundSize: "3px 3px, 3px 3px", mixBlendMode: "screen",
+          }} />
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background:
+              "linear-gradient(to bottom, rgba(5,8,15,.55) 0%, rgba(5,8,15,0) 28%, rgba(5,8,15,0) 72%, rgba(5,8,15,.35) 100%)",
+          }} />
+        </div>
       </section>
 
       {/* ===== COPY ===== */}
@@ -339,19 +363,4 @@ export default function PortalClient() {
       `}</style>
     </main>
   );
-}
-
-/** wrap 汎用スタイル */
-function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
-  return {
-    position: "absolute",
-    inset: "-6% -4% -2% -4%",
-    width: "108%",
-    height: "104%",
-    objectFit: "cover",
-    zIndex: z,
-    pointerEvents: "none",
-    transform: "translate3d(0,0,0)",
-    ...more,
-  };
 }

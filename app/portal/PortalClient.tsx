@@ -23,31 +23,29 @@ const ASSETS = {
   logo: "/portal/logo.webp",
 } as const;
 
-/** copy（必要なら好きに編集OK） */
+/** copy */
 const MESSAGES = [
-  { id: "m1", title: "VOLCE",       body: "雲を抜け、はじまりへ。" },
-  { id: "m2", title: "Gathering",   body: "仲間と、想いと、景色をひとつに。" },
-  { id: "m3", title: "Into the Sky",body: "ここから上へ——物語のつづきへ。" },
+  { id: "m1", title: "VOLCE",        body: "雲を抜け、はじまりへ。" },
+  { id: "m2", title: "Gathering",    body: "仲間と、想いと、景色をひとつに。" },
+  { id: "m3", title: "Into the Sky", body: "ここから上へ——物語のつづきへ。" },
 ] as const;
 
-/** パラメータ */
+/** config */
 const CFG = {
   heroH: { desktop: 760, mobile: 560 },
-  // 縦主体：大きいほど速く流れる
   speed: {
     rays: 0.12,
     far: 0.18,
     mid: 0.32,
     mid2: 0.45,
-    near: 0.70,
-    flareWide: 0.50,
+    near: 0.7,
+    flareWide: 0.5,
     flareCore: 0.62,
   },
-  // 横ブレは最小限（px）
-  tiltMaxX: 6,
+  tiltMaxX: 6, // 横ブレ最大px（控えめ）
 } as const;
 
-/* ===== hooks（ローカル完結） ===== */
+/* ===== hooks ===== */
 function useReducedMotion() {
   const [reduced, set] = useState(false);
   useEffect(() => {
@@ -95,7 +93,7 @@ const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), {
   loading: () => null,
 });
 
-/* ===== 2枚でラップ表示（無限スクロール風） ===== */
+/* ===== wrap（2枚で無限スクロール風） ===== */
 type WrapRefs = { a: HTMLImageElement | null; b: HTMLImageElement | null; h: number };
 function useWrap() {
   const refs = useRef<WrapRefs>({ a: null, b: null, h: 0 });
@@ -119,10 +117,9 @@ export default function PortalClient() {
   const [threeHardError, setThreeHardError] = useState(false);
   const [skyUrl, setSkyUrl] = useState<string | undefined>();
 
-  // hero 高さ（ラップ高さに使う）
   const heroRef = useRef<HTMLElement | null>(null);
 
-  // 各レイヤ（2枚でラップ）
+  // 各レイヤ
   const rays = useWrap();
   const far = useWrap();
   const mid = useWrap();
@@ -131,7 +128,7 @@ export default function PortalClient() {
   const flareWide = useWrap();
   const flareCore = useWrap();
 
-  // 3Dロゴ用のスクロール量
+  // 3Dロゴ用
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -147,15 +144,13 @@ export default function PortalClient() {
 
     const motionScale = reduced ? 0.15 : 1;
 
-    let mx = 0;
-    let tmx = 0;
+    let mx = 0, tmx = 0;
     const lerp = (a: number, b: number, n: number) => a + (b - a) * n;
 
     const tick = () => {
       const y = window.scrollY || 0;
       setScrollY(y);
 
-      // 縦：無限ラップ
       rays.setPos(y * CFG.speed.rays * motionScale);
       far.setPos(y * CFG.speed.far * motionScale);
       mid.setPos(y * CFG.speed.mid * motionScale);
@@ -164,7 +159,7 @@ export default function PortalClient() {
       flareWide.setPos(y * CFG.speed.flareWide * motionScale);
       flareCore.setPos(y * CFG.speed.flareCore * motionScale);
 
-      // 横：控えめ（全レイヤ一律）
+      // 横ブレは全レイヤ同じ微移動
       tmx = lerp(tmx, mx, 0.08);
       const setX = (el: HTMLElement | null) => {
         if (!el) return;
@@ -181,7 +176,7 @@ export default function PortalClient() {
 
     const onPointer = (e: PointerEvent) => {
       const w = window.innerWidth || 1;
-      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX; // 最大 6px
+      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX; // max 6px
     };
     const onOrient = (e: DeviceOrientationEvent) => {
       if (e.gamma == null) return;
@@ -203,7 +198,7 @@ export default function PortalClient() {
   const use2D = reduced || !webglOk || threeHardError;
   const heroHeight = isMobile ? CFG.heroH.mobile : CFG.heroH.desktop;
 
-  // ===== コピーのフェードイン進行度 =====
+  // コピーのフェードイン進行
   const [msgProgress, setMsgProgress] = useState(0);
   const msgRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -221,7 +216,7 @@ export default function PortalClient() {
 
   return (
     <main className="relative min-h-[300vh] text-neutral-200">
-      {/* ====== HERO（雲＆ロゴ） ====== */}
+      {/* ===== HERO ===== */}
       <section
         ref={heroRef}
         className="relative overflow-hidden"
@@ -234,7 +229,7 @@ export default function PortalClient() {
           isolation: "isolate",
         }}
       >
-        {/* フレア／光（wrap） */}
+        {/* 光／フレア */}
         <img ref={(el) => (flareWide.refs.current.a = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
         <img ref={(el) => (flareWide.refs.current.b = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
         <img ref={(el) => (flareCore.refs.current.a = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
@@ -242,7 +237,7 @@ export default function PortalClient() {
         <img ref={(el) => (rays.refs.current.a = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
         <img ref={(el) => (rays.refs.current.b = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
 
-        {/* 雲（wrap） */}
+        {/* 雲 */}
         <img ref={(el) => (far.refs.current.a = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
         <img ref={(el) => (far.refs.current.b = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
         <img ref={(el) => (mid.refs.current.a = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
@@ -252,25 +247,17 @@ export default function PortalClient() {
         <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
         <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
 
-        {/* 粒子ベール（うっすら） */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 9,
-            pointerEvents: "none",
-            opacity: 0.22,
-            backgroundImage:
-              "radial-gradient(circle at 20% 30%, rgba(255,255,255,.06) 0 1px, transparent 1px), radial-gradient(circle at 80% 70%, rgba(255,255,255,.05) 0 1px, transparent 1px)",
-            backgroundSize: "3px 3px, 3px 3px",
-            mixBlendMode: "screen",
-          }}
-        />
+        {/* 粒子ベール（ロゴより下） */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0, zIndex: 9, pointerEvents: "none", opacity: 0.22,
+          backgroundImage:
+            "radial-gradient(circle at 20% 30%, rgba(255,255,255,.06) 0 1px, transparent 1px), radial-gradient(circle at 80% 70%, rgba(255,255,255,.05) 0 1px, transparent 1px)",
+          backgroundSize: "3px 3px, 3px 3px", mixBlendMode: "screen",
+        }} />
 
-        {/* ロゴ：3D or 2D（ど真ん中固定） */}
+        {/* 3D or 2D ロゴ（最前面） */}
         {!use2D ? (
-          <div className="absolute inset-0 z-10 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-[30]">
             <ThreeHeroLazy
               deviceIsMobile={isMobile}
               scrollY={scrollY}
@@ -283,12 +270,11 @@ export default function PortalClient() {
             alt="VOLCE Logo"
             style={{
               position: "absolute",
-              left: "50%",
-              top: "50%",
+              left: "50%", top: "50%",
               transform: "translate(-50%, -50%)",
               width: isMobile ? 220 : 320,
               height: "auto",
-              zIndex: 10,
+              zIndex: 30,
               pointerEvents: "none",
               filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))",
               opacity: 0.98,
@@ -296,21 +282,15 @@ export default function PortalClient() {
           />
         )}
 
-        {/* 上下を締めるグラデ */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 12,
-            pointerEvents: "none",
-            background:
-              "linear-gradient(to bottom, rgba(5,8,15,.55) 0%, rgba(5,8,15,0) 28%, rgba(5,8,15,0) 72%, rgba(5,8,15,.35) 100%)",
-          }}
-        />
+        {/* 上下の締めグラデ — ロゴより下にする */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0, zIndex: 11, pointerEvents: "none",
+          background:
+            "linear-gradient(to bottom, rgba(5,8,15,.55) 0%, rgba(5,8,15,0) 28%, rgba(5,8,15,0) 72%, rgba(5,8,15,.35) 100%)",
+        }} />
       </section>
 
-      {/* ===== コピー（雲の上に浮かび上がる） ===== */}
+      {/* ===== COPY ===== */}
       <section
         ref={msgRef}
         className="relative"
@@ -344,12 +324,8 @@ export default function PortalClient() {
                   transition: "opacity .25s linear, transform .25s linear",
                 }}
               >
-                <div style={{ fontSize: "clamp(24px, 5vw, 60px)", fontWeight: 800, letterSpacing: ".04em" }}>
-                  {m.title}
-                </div>
-                <div style={{ opacity: 0.85, marginTop: 10, fontSize: "clamp(14px, 2.6vw, 20px)" }}>
-                  {m.body}
-                </div>
+                <div style={{ fontSize: "clamp(24px, 5vw, 60px)", fontWeight: 800, letterSpacing: ".04em" }}>{m.title}</div>
+                <div style={{ opacity: .85, marginTop: 10, fontSize: "clamp(14px, 2.6vw, 20px)" }}>{m.body}</div>
               </div>
             );
           })}
@@ -357,17 +333,13 @@ export default function PortalClient() {
       </section>
 
       <style jsx>{`
-        section img {
-          user-select: none;
-          -webkit-user-drag: none;
-          will-change: transform, opacity;
-        }
+        section img { user-select: none; -webkit-user-drag: none; will-change: transform, opacity; }
       `}</style>
     </main>
   );
 }
 
-/** 共通：2枚重ねラップ用スタイル */
+/** wrap 汎用スタイル */
 function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
   return {
     position: "absolute",

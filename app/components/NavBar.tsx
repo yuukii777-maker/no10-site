@@ -16,6 +16,7 @@ const LINKS = [
 ] as const;
 
 function fireLoading(e: MouseEvent<HTMLAnchorElement>) {
+  // 新規タブ/修飾キー/同一パスは無視
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
   const a = e.currentTarget as HTMLAnchorElement;
   if (typeof window !== "undefined" && a.pathname === window.location.pathname) return;
@@ -25,26 +26,39 @@ function fireLoading(e: MouseEvent<HTMLAnchorElement>) {
 export default function NavBar() {
   const raw = usePathname() || "/";
   const pathname = raw === "/" ? "/portal" : raw;
+
   const [open, setOpen] = useState(false);
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => { setOpen(false); }, [pathname]); // 画面遷移で自動クローズ
 
   return (
     <header className={s.nav} aria-label="メインメニュー">
       <div className={s.inner}>
-        <Link href="/portal" className={s.brand} aria-label="VOLCE トップへ" onClick={fireLoading}>VOLCE</Link>
+        <Link
+          href="/portal"
+          className={s.brand}
+          aria-label="VOLCE トップへ"
+          onClick={fireLoading}
+          prefetch
+        >
+          VOLCE
+        </Link>
 
         <div className={s.spacer} />
 
+        {/* モバイル用メニューボタン */}
         <button
           className={s.menuBtn}
           onClick={() => setOpen(v => !v)}
           aria-expanded={open}
           aria-controls="main-nav"
+          aria-label="メニュー"
         >
-          {open ? "閉じる" : "メニュー"}
+          <span className={s.menuIcon} aria-hidden />
+          <span className={s.menuText}>{open ? "閉じる" : "メニュー"}</span>
         </button>
 
-        <nav id="main-nav" className={`${s.links} ${open ? "" : s.isCollapsed}`} aria-label="サイト内リンク">
+        {/* リンク群 */}
+        <nav id="main-nav" className={`${s.links} ${open ? s.isOpen : s.isCollapsed}`} aria-label="サイト内リンク">
           {LINKS.map(it => {
             const active = pathname === it.href || (it.href !== "/portal" && pathname.startsWith(it.href));
             return (

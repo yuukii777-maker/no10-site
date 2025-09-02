@@ -1,8 +1,7 @@
 /* ====== ナビ全体（常に最前面） ====== */
 .nav{
-  /* sticky だと親の stacking に影響されるので固定を推奨 */
   position: fixed; top: 0; left: 0; right: 0;
-  z-index: 60;            /* Portal の前景(z:40/50)より上に */
+  z-index: 60;                    /* Portal の前景(z:40/50)より上に */
   pointer-events: auto;
 
   padding-top: env(safe-area-inset-top, 0);
@@ -22,10 +21,6 @@
   padding:10px 14px;
   display:flex; align-items:center; gap:12px;
 }
-
-/* ページ本文がヘッダーの下に潜らないように
-   body/top マージンを JS で取らない場合は、上部にパディングを足しておくと安全（任意）
-*/
 
 /* ====== ロゴ（ブランド） ====== */
 .brand{
@@ -87,14 +82,9 @@
 .menuIcon::before{ top:-6px } .menuIcon::after{ top:6px }
 .menuText{ font-size:13px }
 
-/* ====== 折りたたみ状態（TSX 側の isOpen / isCollapsed で切替） ====== */
-.isCollapsed{ max-height:0; opacity:0; overflow:hidden }
-.isOpen{ max-height:60vh; opacity:1 }
-
-/* ====== モバイル（860px 以下） ====== */
+/* ====== モバイル（860px 以下）だけ折り畳む ====== */
 @media (max-width:860px){
   .inner{ height:56px }
-
   .menuBtn{ display:inline-flex }
 
   /* メニューはヘッダー直下にドロップ */
@@ -111,7 +101,11 @@
     border-bottom: 1px solid rgba(255,255,255,.08);
   }
   .link{ width:100%; padding:10px 6px }
-  .link::after{ left:6px; right:6px; bottom:2px } /* モバイルは短めの下線 */
+  .link::after{ left:6px; right:6px; bottom:2px }
+
+  /* ← 折りたたみはモバイル時のみ適用 */
+  .isCollapsed{ max-height:0; opacity:0; overflow:hidden }
+  .isOpen{ max-height:60vh; opacity:1 }
 }
 
 /* ====== モーション軽減 ====== */

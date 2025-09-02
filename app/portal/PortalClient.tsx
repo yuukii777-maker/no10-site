@@ -6,13 +6,12 @@ import React, { useEffect, useRef, useState } from "react";
 
 /** ===== 調整値 ===== */
 const CFG = {
-  stageHeightVH: 900,
-  // 縦パララックス速度（横ドリフトは完全に0へ）
+  stageHeightVH: 220,      // ← 900 から短縮。これで文章ゾーンが出てきます
   speedY: { sky: 0.06, rays: 0.12, far: 0.18, mid: 0.32, near: 0.70, flareWide: 0.50, flareCore: 0.62 },
-  tiltMaxX: 0,                     // 横ブレ無し
+  tiltMaxX: 0,
   HERO_DESKTOP: 760,
   HERO_MOBILE: 560,
-  COPY_FONT_SCALE: 0.92,           // ← 文字サイズの全体倍率（重なり時は下げる）
+  COPY_FONT_SCALE: 0.40,   // ← 大きすぎる場合はここで微調整
 };
 
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")

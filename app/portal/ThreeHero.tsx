@@ -7,7 +7,7 @@ import { useMemo, useRef } from "react";
 
 type Props = {
   deviceIsMobile?: boolean;
-  scrollY?: number;
+  scrollY?: number;                 // 親からスクロール量を受け取って縦パララックスに反映
   onContextLost?: () => void;
 };
 
@@ -18,26 +18,27 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
 
   const g = useRef<THREE.Group>(null!);
 
-  const baseScale = deviceIsMobile ? 1.35 : 1.8;
-  const yFactor   = deviceIsMobile ? 0.0009 : 0.0011;  // 縦パララックス
-  const floatAmp  = deviceIsMobile ? 0.10 : 0.12;      // 浮遊の振幅
-  const yawAmp    = 0.025;
-  const pitchAmp  = 0.018;
+  const baseScale = deviceIsMobile ? 1.4 : 1.9;      // 遠目に浮いて見えるサイズ感
+  const yFactor = deviceIsMobile ? 0.0008 : 0.001;   // 縦パララックス係数（控えめ）
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (!g.current) return;
-    g.current.position.y = -scrollY * yFactor + Math.sin(t * 1.15) * floatAmp;
-    g.current.rotation.y = Math.sin(t * 0.6) * yawAmp;
-    g.current.rotation.x = Math.sin(t * 0.35) * pitchAmp;
+    // スクロールでゆっくり上下 + うなり（ゆっくり）
+    const float = Math.sin(t * 1.1) * 0.08;
+    g.current.position.y = -scrollY * yFactor + float;   // 縦主体のフロート
+    g.current.rotation.x = Math.sin(t * 0.35) * 0.02;
+    g.current.rotation.y = Math.sin(t * 0.25) * 0.02;    // 横はかなり控えめ
   });
 
+  // 透明WEBPを平面へ
   return (
     <group ref={g}>
       <mesh>
         <planeGeometry args={[2.4 * baseScale, 2.4 * baseScale]} />
         <meshBasicMaterial map={tex} transparent depthWrite={false} />
       </mesh>
+      {/* 影っぽい落とし（うっすら） */}
       <mesh position={[0, -1.1 * baseScale, -0.01]}>
         <planeGeometry args={[1.6 * baseScale, 0.6 * baseScale]} />
         <meshBasicMaterial color="#000" transparent opacity={0.12} />
@@ -57,6 +58,7 @@ export default function ThreeHero(props: Props) {
       onCreated={({ gl }) => {
         gl.domElement.addEventListener("webglcontextlost", props.onContextLost ?? (() => {}), false);
       }}
+      data-r3f="1"
     >
       <LogoBillboard {...props} />
     </Canvas>

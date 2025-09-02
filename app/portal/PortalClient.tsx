@@ -257,8 +257,10 @@ export default function PortalClient() {
 
         {/* 3D or 2D ロゴ（最前面） */}
         {!use2D ? (
-          <div className="absolute inset-0 pointer-events-none z-[30]">
-            <ThreeHeroLazy
+           <div
+    style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 30 }}
+  >
+    <ThreeHeroLazy
               deviceIsMobile={isMobile}
               scrollY={scrollY}
               onContextLost={() => setThreeHardError(true)}

@@ -65,7 +65,7 @@ export default function LogoSpinStable() {
     let raf = 0;
     const tick = () => {
       const k = document.documentElement.classList.contains("reduced") ? 0 : 1;
-      group.rotation.y += ROT_SPEED * k;
+      group.rotation.y += ROT_SPEED * k;              // 中心自転（外周回り廃止）
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };

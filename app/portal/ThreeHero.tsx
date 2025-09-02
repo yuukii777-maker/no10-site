@@ -8,17 +8,21 @@ import { useMemo, useRef } from "react";
 type Props = {
   deviceIsMobile?: boolean;
   scrollY?: number;
+  onContextLost?: () => void;
 };
 
 function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
   const tex = useLoader(THREE.TextureLoader, "/portal/logo.webp");
-  tex.minFilter = THREE.LinearFilter; tex.magFilter = THREE.LinearFilter; tex.anisotropy = 8;
-  tex.colorSpace = THREE.SRGBColorSpace; tex.transparent = true;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.transparent = true;
 
   const g = useRef<THREE.Group>(null!);
 
   const baseScale = deviceIsMobile ? 1.4 : 1.9;
-  const yFactor = deviceIsMobile ? 0.0008 : 0.001;
+  const yFactor  = deviceIsMobile ? 0.0008 : 0.001;
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
@@ -34,10 +38,7 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
         <planeGeometry args={[2.4 * baseScale, 2.4 * baseScale]} />
         <meshBasicMaterial map={tex} transparent depthWrite={false} />
       </mesh>
-      <mesh position={[0, -1.1 * baseScale, -0.01]}>
-        <planeGeometry args={[1.6 * baseScale, 0.6 * baseScale]} />
-        <meshBasicMaterial color="#000" transparent opacity={0.12} />
-      </mesh>
+      {/* 影プレーンは削除 */}
     </group>
   );
 }
@@ -49,7 +50,11 @@ export default function ThreeHero(props: Props) {
       dpr={[1, 2]}
       camera={{ position: [0, 0, cameraZ], fov: 45 }}
       gl={{ alpha: true, antialias: true }}
-      style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1000 }}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener("webglcontextlost", props.onContextLost ?? (() => {}), false);
+      }}
+      data-r3f="1"
     >
       <LogoBillboard {...props} />
     </Canvas>

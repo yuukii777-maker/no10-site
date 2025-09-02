@@ -1,228 +1,289 @@
 /* eslint-disable @next/next/no-img-element */
+// app/teams/page.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-/** Drive helpers */
+/* =========================================
+   データ
+   - 幹部：団長(=代表)・副団長のみ
+   - 主力：Loz / Killer / Jun の3名
+   - それ以外はメンバー
+========================================= */
+type Person = {
+  id: string;       // Google Drive thumbnail id
+  name: string;
+  role?: string;    // 表示用バッジ（例：団長 / 副団長）
+};
+
+type CategoryKey = "leader" | "core" | "creator" | "liver" | "member";
+
 const drive = (id: string, w = 512) =>
   `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
 
-type Group = "火力枠" | "クリエイター枠" | "ライバー枠" | "メンバー";
-const GROUPS: Group[] = ["火力枠", "クリエイター枠", "ライバー枠", "メンバー"];
-
-type Person = { id: string; name: string; group: Group };
-const DATA: Person[] = [
-  { id: "1S8MKLZEhekE25zmlMOlGDIWlrz4IC9RN", name: "VolceLozGOD", group: "火力枠" },
-  { id: "10f0Sy9lPfavOMc0BKbvqsder7Q8m9JmE", name: "VolceKillerGOD", group: "火力枠" },
-  { id: "1LNgsTIc5WBYbFp2bydpLO4_sJmDyc3Td", name: "VolceJunGOD", group: "火力枠" },
-
-  { id: "15Lmehli_MZTEQG7IZ-vcz15KLth-rsOx", name: "VolceReyGOD", group: "メンバー" },
-  { id: "1GjhePWk7knqKjAI8CjpSqujXKxw8Hbg1", name: "VolceSharGOD", group: "メンバー" },
-  { id: "14Y9U97vFVNkzS81F9qotCfpq3DgjCcSL", name: "VolceTenGOD", group: "メンバー" },
-
-  { id: "1qqEt12-1MLapP8ERIPKPrz4zYWxtE66h", name: "VolceE1GOD", group: "メンバー" },
-  { id: "1lPuNE44kWml-LLeX7mV10KhPmOA17mFW", name: "VolceLoaGOD", group: "メンバー" },
-  { id: "1GGBvKxCCMzX78HMw2uGnzs9F0i3PkFtm", name: "VolceDelaGOD", group: "メンバー" },
-  { id: "1SuriOFvJ1TtLUmCcsl7S65kjN_jMSL0-", name: "VolcedarkGOD", group: "メンバー" },
-  { id: "1lRX_TqkZI9NGin-peJJCul9G4cuovvHK", name: "VolceZelaGOD", group: "メンバー" },
-  { id: "1rG-M39BfXRnQkqvPgMcpPIvSm_Bdd1nA", name: "VolcePIPIGOD", group: "メンバー" },
-  { id: "1beUsCNzBzsJjwEQiPs_bAdddpbQkvX2z", name: "VolceRyzGOD", group: "メンバー" },
-  { id: "1QnfZ2jueRWiv8e6eFWhMwzhnUjDAtzxP", name: "VolceTeruGOD", group: "メンバー" },
-  { id: "1hOe7DENon23mdYMSKN7n-1Frqko1kuIt", name: "VolceRezGOD", group: "メンバー" },
+const leaders: Person[] = [
+  { id: "1GjhePWk7knqKjAI8CjpSqujXKxw8Hbg1", name: "VolceSharGOD", role: "団長" },     // 代表=団長
+  { id: "15Lmehli_MZTEQG7IZ-vcz15KLth-rsOx", name: "VolceReyGOD",  role: "副団長" },   // 副団長
 ];
 
-/* ---------- UI parts ---------- */
-function Card({ p }: { p: Person }) {
-  return (
-    <figure className="card" title={p.name}>
-      <div className="thumb-wrap">
-        <img className="thumb" src={drive(p.id, 512)} alt={p.name} loading="lazy" referrerPolicy="no-referrer" />
-      </div>
-      <figcaption className="name">{p.name}</figcaption>
+const core: Person[] = [
+  { id: "1S8MKLZEhekE25zmlMOlGDIWlrz4IC9RN", name: "VolceLozGOD"  },
+  { id: "10f0Sy9lPfavOMc0BKbvqsder7Q8m9JmE", name: "VolceKillerGOD" },
+  { id: "1LNgsTIc5WBYbFp2bydpLO4_sJmDyc3Td", name: "VolceJunGOD"  },
+];
 
-      <style jsx>{`
-        .card {
-          display: grid;
-          justify-items: center;
-          gap: 10px;
-          padding: 14px 10px 16px;
-          border-radius: 14px;
-          background: transparent;
-          transition: transform 120ms ease, filter 200ms ease;
-          will-change: transform, filter;
-        }
-        .card:hover { transform: translateY(-2px); }
+const others: Person[] = [
+  // 幹部に含めなかった副代表 Ten はメンバーに
+  { id: "14Y9U97vFVNkzS81F9qotCfpq3DgjCcSL", name: "VolceTenGOD" },
+  { id: "1qqEt12-1MLapP8ERIPKPrz4zYWxtE66h", name: "VolceE1GOD" },
+  { id: "1lPuNE44kWml-LLeX7mV10KhPmOA17mFW", name: "VolceLoaGOD" },
+  { id: "1GGBvKxCCMzX78HMw2uGnzs9F0i3PkFtm", name: "VolceDelaGOD" },
+  { id: "1SuriOFvJ1TtLUmCcsl7S65kjN_jMSL0-", name: "VolcedarkGOD" },
+  { id: "1lRX_TqkZI9NGin-peJJCul9G4cuovvHK", name: "VolceZelaGOD" },
+  { id: "1rG-M39BfXRnQkqvPgMcpPIvSm_Bdd1nA", name: "VolcePIPIGOD" },
+  { id: "1beUsCNzBzsJjwEQiPs_bAdddpbQkvX2z", name: "VolceRyzGOD" },
+  { id: "1QnfZ2jueRWiv8e6eFWhMwzhnUjDAtzxP", name: "VolceTeruGOD" },
+  { id: "1hOe7DENon23mdYMSKN7n-1Frqko1kuIt", name: "VolceRezGOD" },
+  { id: "1GGBvKxCCMzX78HMw2uGnzs9F0i3PkFtm__ZEO", name: "VolceZeoGOD" },
+];
 
-        .thumb-wrap {
-          position: relative;
-          width: clamp(92px, 10.8vw, 136px);
-          aspect-ratio: 1/1;
-          display: grid; place-items: center;
-          isolation: isolate;
-        }
+/* いまは Creator / Liver の個別データが未定なので空配列。
+   追加が決まったらここに push すればOK。 */
+const creators: Person[] = [];
+const livers: Person[] = [];
 
-        /* ゴールドリング（下地） */
-        .thumb-wrap::before{
-          content:"";
-          position:absolute; inset:-8% -8% auto -8%;
-          height:58%; top:64%;
-          border-radius:50%;
-          background:
-            radial-gradient(60% 48% at 50% 60%,
-              rgba(255, 215, 120, .55),
-              rgba(255, 180,  60, .28) 40%,
-              rgba(255, 140,  20, .08) 60%,
-              rgba(255, 140,  20, 0)   72%);
-          filter: blur(3px); transform: translateY(6%);
-          mix-blend-mode: screen; z-index:0;
-        }
-        .thumb-wrap::after{
-          content:"";
-          position:absolute; inset:14% 14% 0 14%;
-          top:62%; height:2px; border-radius:999px;
-          box-shadow:0 0 10px rgba(255,210,120,.7),0 0 24px rgba(255,190,90,.5);
-          background:linear-gradient(90deg,rgba(255,240,180,.9),rgba(255,200,90,.84),rgba(255,240,180,.9));
-          filter:blur(.6px); opacity:.75; mix-blend-mode:screen;
-        }
+/* =========================================
+   タブ（黒×金・角丸なしの長方形）
+========================================= */
+const TABS: { key: CategoryKey; label: string }[] = [
+  { key: "leader",  label: "幹部" },
+  { key: "core",    label: "主力" },
+  { key: "creator", label: "クリエイター" },
+  { key: "liver",   label: "ライバー" },
+  { key: "member",  label: "メンバー" },
+];
 
-        .thumb{
-          width:100%; height:100%;
-          border-radius:50%; object-fit:cover; z-index:1;
-          box-shadow:0 6px 14px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
-          transition: filter 160ms ease, box-shadow 160ms ease;
-        }
-        .card:hover .thumb{ box-shadow:0 8px 18px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.1) inset; }
-
-        .name{ font-weight:800; font-size:14px; letter-spacing:.02em; text-align:center; opacity:.96; }
-
-        @media (prefers-reduced-motion: reduce){
-          .card, .thumb{ transition:none !important; }
-        }
-      `}</style>
-    </figure>
-  );
-}
-
-/* ---------- Page ---------- */
+/* =========================================
+   ページ本体
+========================================= */
 export default function TeamsPage() {
-  const [group, setGroup] = useState<Group>("火力枠");
-  const list = useMemo(() => DATA.filter((p) => p.group === group), [group]);
+  // 初期タブ：幹部
+  const [tab, setTab] = useState<CategoryKey>("leader");
+
+  // タブ選択ごとの表示配列
+  const items = useMemo(() => {
+    switch (tab) {
+      case "leader":  return leaders;
+      case "core":    return core;
+      case "creator": return creators;
+      case "liver":   return livers;
+      case "member":  return others;
+    }
+  }, [tab]);
+
+  // iOS の 100vh 問題対策（任意）
+  useEffect(() => {
+    const set = () =>
+      document.documentElement.style.setProperty(
+        "--vh",
+        String((window.innerHeight || 800) * 0.01) + "px"
+      );
+    set();
+    addEventListener("resize", set, { passive: true });
+    addEventListener("orientationchange", set, { passive: true });
+    return () => {
+      removeEventListener("resize", set);
+      removeEventListener("orientationchange", set);
+    };
+  }, []);
 
   return (
-    <main className="wrap">
-      {/* 背景＆透かしロゴ */}
-      <div className="bg" aria-hidden>
-        <picture>
-          <source srcSet="/teams/volce-logo-3d.webp" type="image/webp" />
-          <img src="/RULE/volce-logo-3d.png" alt="" className="watermark" loading="eager" />
-        </picture>
-      </div>
+    <main className="teams-wrap">
+      {/* 背景：金のフレア（最背面）＋ 右下の大ロゴ（フォールバック込み） */}
+      <div className="bg" aria-hidden />
 
       {/* 見出し */}
-      <header className="header">
-        <h1 className="title">クラメンバー</h1>
-
-        {/* セグメント・タブ（黒金） */}
-        <div className="tabs-wrap" role="tablist" aria-label="カテゴリ切替">
-          {GROUPS.map((g) => (
-            <button
-              key={g}
-              role="tab"
-              aria-selected={group === g}
-              className={group === g ? "tab is-active" : "tab"}
-              onClick={() => setGroup(g)}
-            >
-              <span>{g}</span>
-            </button>
-          ))}
-        </div>
+      <header className="hero">
+        <h1>Volceクラン</h1>
       </header>
 
-      {/* メンバー（中央寄せ） */}
-      <section className="grid">
-        {list.length ? (
-          list.map((p) => <Card key={`${p.id}-${p.name}`} p={p} />)
-        ) : (
-          <p className="empty">このカテゴリにはまだメンバーがいません。</p>
+      {/* タブ（中央寄せ・黒金） */}
+      <nav className="tabs" role="tablist" aria-label="カテゴリ切替">
+        <div className="tabs-inner">
+          {TABS.map(({ key, label }) => {
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={active}
+                className={`tab ${active ? "is-active" : ""}`}
+                onClick={() => setTab(key)}
+              >
+                <span className="tab-label">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* メンバー一覧（中央寄せ・薄枠は削除） */}
+      <section className="grid" aria-live="polite">
+        {items.map((p, i) => (
+          <figure className="tile" key={`${p.id}-${p.name}-${i}`}>
+            <div className="avatar">
+              <img
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                src={drive(p.id, 512)}
+                alt={p.name}
+              />
+              {!!p.role && <span className="badge">{p.role}</span>}
+            </div>
+            <figcaption className="name">{p.name}</figcaption>
+          </figure>
+        ))}
+        {/* データがないカテゴリのときの空表示 */}
+        {!items.length && (
+          <div className="empty">準備中です</div>
         )}
       </section>
 
-      {/* Styles */}
+      {/* スタイル（このページ専用） */}
       <style jsx>{`
-        .wrap{
-          min-height:100vh; position:relative; color:#e8edf6; overflow:hidden;
-          background:
-            radial-gradient(1300px 800px at 10% -10%, rgba(79,106,229,.14), transparent 60%),
-            radial-gradient(1200px 800px at 110%  8%, rgba(79,106,229,.10), transparent 60%),
-            #0a0e14;
+        :root{
+          --ink:#e9edf3;
+          --muted:#a9b0bb;
+          --gold-1:#fff6cc;
+          --gold-2:#ffe39c;
+          --gold-3:#caa45a;
+          --panel:rgba(8,12,20,.72);
         }
+        .teams-wrap{
+          min-height: calc(var(--vh, 1vh) * 100);
+          position: relative;
+          color: var(--ink);
+          overflow-x: hidden;
+        }
+
+        /* ===== 背景 ===== */
         .bg{
-          position:fixed; inset:0; z-index:-1; pointer-events:none;
+          position: fixed; inset: 0; z-index: -1; pointer-events:none;
+          /* 1枚目：右下の大ロゴ（フォールバック2経路）
+             2枚目：金フレア（/teams → /effects の順にフォールバック）
+             最背面：濃い黒グラデーション */
           background:
+            url("/teams/volce-logo-3d.webp") bottom right/52vmin auto no-repeat,
+            url("/RULE/volce-logo-3d.png") bottom right/52vmin auto no-repeat,
             url("/teams/bg_goldflare.webp") center/cover no-repeat,
-            radial-gradient(70% 50% at 50% 0%, rgba(0,0,0,.0), rgba(0,0,0,.5) 90%),
-            #0a0e14;
-          filter:saturate(.9) brightness(.92) contrast(1.08);
-        }
-        .watermark{
-          position:fixed; right:-6vmin; bottom:-4vmin;
-          width:min(64vmin,860px); height:auto; opacity:.06;
-          transform:rotate(-12deg); filter:drop-shadow(0 8px 18px rgba(0,0,0,.4));
-          pointer-events:none; user-select:none; z-index:-1;
+            url("/effects/bg_goldflare.webp") center/cover no-repeat,
+            radial-gradient(1200px 800px at 110% 100%, rgba(255,255,255,.06), transparent 60%),
+            linear-gradient(#0b0f17, #0b0f17);
+          /* 右下ロゴはほんの少し傾ける */
+          transform-origin: 100% 100%;
+          transform: rotate(-6deg);
+          opacity: 0.98;
         }
 
-        .header{ max-width:1100px; margin:28px auto 18px; padding:0 16px; text-align:center; }
-        .title{
-          margin:6px 0 16px; font-weight:900; letter-spacing:.04em;
-          font-size:clamp(22px,3.2vw,34px);
-          background:linear-gradient(90deg,#ffe39c,#f2d64e 35%,#ffe39c 70%);
+        /* ===== 見出し：ナビに埋もれないよう下げる ===== */
+        .hero{
+          display:grid; place-items:center;
+          padding: clamp(84px, 12vh, 140px) 16px 10px;
+          text-align:center;
+        }
+        .hero h1{
+          margin:0;
+          letter-spacing:.08em;
+          font-weight:900;
+          font-size: clamp(24px, 4.8vw, 40px);
+          background: linear-gradient(90deg, var(--gold-1), var(--gold-2) 40%, var(--gold-3) 100%);
           -webkit-background-clip:text; background-clip:text; color:transparent;
-          text-shadow:0 1px 2px rgba(0,0,0,.35);
+          text-shadow: 0 0 20px rgba(255,230,150,.05);
         }
 
-        /* === 黒金セグメントバー === */
-        .tabs-wrap{
-          --gold1:#ffe9b0; --gold2:#f2d64e; --gold3:#caa45a;
-          --ink:#e8edf6;
-          display:inline-flex; gap:8px; justify-content:center; align-items:center;
-          padding:8px; border-radius:999px;
-          background:linear-gradient(180deg,rgba(16,22,38,.75),rgba(10,14,20,.75));
-          border:1px solid rgba(255,255,255,.14);
-          box-shadow:0 12px 36px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.05) inset;
-          -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+        /* ===== タブ：黒金の長方形（中央揃え） ===== */
+        .tabs{ display:grid; place-items:center; padding: 6px 0 18px; }
+        .tabs-inner{
+          display:flex; gap: 10px; padding: 8px;
+          border:1px solid rgba(255,255,255,.12);
+          background: rgba(10,14,21,.55);
+          border-radius: 14px;
+          backdrop-filter: blur(6px);
         }
         .tab{
-          position:relative; cursor:pointer; appearance:none;
-          padding:10px 16px; border-radius:999px; border:0;
-          font-weight:900; letter-spacing:.02em;
-          color:color-mix(in oklab, var(--gold1) 70%, #fff);
-          background:transparent;
-          transition: transform .08s ease, filter .14s ease, color .14s ease;
+          appearance:none; border:0; cursor:pointer;
+          padding: 12px 22px; border-radius: 8px; /* 角丸は最小限（＝ほぼ長方形） */
+          color:#d7deeb; font-weight:900; letter-spacing:.04em;
+          background: linear-gradient(180deg, rgba(20,24,34,.9), rgba(14,18,28,.9));
+          border:1px solid rgba(255,255,255,.14);
+          box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+          transition: transform .06s ease, filter .12s ease, box-shadow .12s ease;
         }
-        .tab:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+        .tab:hover{ filter:brightness(1.06) }
+        .tab:active{ transform: translateY(1px) }
         .tab.is-active{
           color:#1a1a1a;
-          background:linear-gradient(180deg, var(--gold1), var(--gold2) 60%, var(--gold3));
-          box-shadow:
-            0 8px 22px rgba(202,164,90,.40),
-            0 0 0 1px rgba(255,255,255,.18) inset;
-        }
-        .tab.is-active span{
-          text-shadow:0 1px 0 rgba(255,255,255,.55);
+          background: linear-gradient(180deg, #ffe39c, #caa45a);
+          border-color: rgba(255,255,255,.2);
+          box-shadow: 0 10px 28px rgba(202,164,90,.25);
         }
 
-        /* === メンバー一覧：中央寄せ（Flex） === */
+        /* ===== グリッド ===== */
         .grid{
-          max-width:1100px; margin:18px auto 64px; padding:0 16px;
-          display:flex; flex-wrap:wrap; gap:18px 16px; justify-content:center;
+          width: min(1180px, 92vw);
+          margin: 10px auto 80px;
+          display: grid;
+          justify-items: center;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 28px 28px;
         }
-        .empty{ opacity:.75; padding:14px 4px; }
 
-        @media (max-width:760px){
-          .header{ margin-top:18px; }
-          .watermark{ right:-14vmin; bottom:-10vmin; width:min(82vmin,780px); }
-          .tabs-wrap{ gap:6px; padding:6px; }
-          .tab{ padding:8px 12px; }
+        /* ===== 各タイル（薄枠は無し） ===== */
+        .tile{
+          display:grid; gap: 10px; justify-items:center; text-align:center;
+          padding: 10px;
+          /* 枠やカード感は消す。ホバーでほんの少しだけ光らせる */
+          border: 0; background: transparent; box-shadow:none;
+        }
+        .avatar{
+          position:relative; width: 200px; height: 200px;
+          display:grid; place-items:center;
+          border-radius: 50%;
+          transition: filter .2s ease, transform .2s ease;
+        }
+        .avatar img{
+          width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+          display:block;
+          filter: drop-shadow(0 12px 24px rgba(0,0,0,.45));
+        }
+        .tile:hover .avatar{ transform: translateY(-2px) }
+        .tile:hover .avatar img{
+          filter: drop-shadow(0 14px 28px rgba(0,0,0,.5)) drop-shadow(0 0 28px rgba(255,215,120,.15));
+        }
+        .badge{
+          position:absolute; right: 8px; top: 8px;
+          font-size: 12px; font-weight: 900; letter-spacing: .04em;
+          padding: 4px 10px; border-radius: 999px;
+          color:#1a1a1a;
+          background: linear-gradient(180deg, #ffe887, #f2d64e);
+          box-shadow: 0 6px 16px rgba(0,0,0,.35);
+        }
+        .name{
+          font-weight: 800; letter-spacing:.02em;
+          text-align:center; font-size: 14px;
+          text-shadow: 0 1px 2px rgba(0,0,0,.3);
+        }
+
+        .empty{
+          grid-column: 1 / -1;
+          opacity:.76; color: var(--muted);
+          padding: 40px 0; font-weight: 800;
+        }
+
+        @media (max-width: 760px){
+          .avatar{ width: 160px; height: 160px; }
+          .tabs-inner{ gap:8px; }
+          .tab{ padding: 10px 14px; }
         }
       `}</style>
     </main>

@@ -1,5 +1,5 @@
 // app/portal/page.tsx
-export const dynamic = "force-dynamic"; // ← SSGを止めて毎回最新
+export const dynamic = "force-dynamic";
 import PortalClient from "./PortalClient";
 
 export default function Page() {

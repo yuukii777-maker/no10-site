@@ -1,4 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
+
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
@@ -10,68 +12,128 @@ export default function Stage3DFrozen() {
     const wrap = wrapRef.current!;
     const canvas = canvasRef.current!;
 
-    // 即時CSS背景（読込タイムラグを消す）
-    const enableCss = () => {
-      wrap.style.backgroundImage =
-        "url(/RULE/bg_base.jpg), url(/RULE/pattern_overlay.png), url(/RULE/glow_rays.png)";
-      wrap.style.backgroundSize = "cover, 1200px, 1400px";
-      wrap.style.backgroundRepeat = "no-repeat,no-repeat,no-repeat";
-      wrap.style.backgroundPosition = "center, center, center";
-    };
-    enableCss();
+    // cache-busting
+    const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
+      .toString()
+      .slice(0, 8);
+    const Q = SHA ? `?v=${SHA}` : "";
 
+    // ===== 1) 即時CSS背景（読み込みラグをゼロに）
+    // WebP優先だが、未対応環境でもjpg/pngに落ちる
+    wrap.style.backgroundColor = "#0a0e15";
+    wrap.style.backgroundImage =
+      `url("/RULE/pattern_overlay.png${Q}"), url("/RULE/glow_rays.png${Q}"), image-set(` +
+      `url("/RULE/bg_base.webp${Q}") type("image/webp"),` +
+      `url("/RULE/bg_base.jpg${Q}") type("image/jpeg"),` +
+      `url("/RULE/bg_base.png${Q}") type("image/png"))`;
+    wrap.style.backgroundSize = "1200px, 1400px, cover";
+    wrap.style.backgroundRepeat = "no-repeat, no-repeat, no-repeat";
+    wrap.style.backgroundPosition = "center, center, center";
+
+    // ===== 2) WebGL サポート確認
     const hasWebGL = (() => {
-      try { const c=document.createElement("canvas"); return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl"))); }
-      catch { return false; }
+      try {
+        const c = document.createElement("canvas");
+        return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl")));
+      } catch {
+        return false;
+      }
     })();
-    if (!hasWebGL) return;
+    if (!hasWebGL) return; // CSS背景のまま使う
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, powerPreference:"high-performance" });
+    // ===== 3) Three.js セットアップ（静的レイヤー合成）
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance",
+    });
     renderer.setClearColor(0x000000, 0);
     (renderer as any).outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(0,0,8);
+    camera.position.set(0, 0, 8);
 
     const loader = new THREE.TextureLoader();
-    const load = (url:string) => new Promise<THREE.Texture>((res, rej)=>loader.load(url, res, undefined, rej));
-    const mk = (t:THREE.Texture, z:number, s=18, o=1) => {
-      const g=new THREE.PlaneGeometry(s,(s*9)/16);
-      const m=new THREE.MeshBasicMaterial({ map:t, transparent:true, opacity:o, depthWrite:false });
-      const mesh=new THREE.Mesh(g,m); mesh.position.z=z; return mesh;
+
+    // 指定した順にロードを試み、成功したものを返す（WebP→JPG→PNG）
+    const loadFirst = (paths: string[]) =>
+      new Promise<THREE.Texture>((resolve, reject) => {
+        const tryNext = (i: number) => {
+          if (i >= paths.length) return reject(new Error("all texture candidates failed"));
+          loader.load(
+            paths[i],
+            (tex) => resolve(tex),
+            undefined,
+            () => tryNext(i + 1)
+          );
+        };
+        tryNext(0);
+      });
+
+    const mk = (t: THREE.Texture, z: number, size = 18, opacity = 1) => {
+      const g = new THREE.PlaneGeometry(size, (size * 9) / 16);
+      const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity, depthWrite: false });
+      const mesh = new THREE.Mesh(g, m);
+      mesh.position.z = z;
+      return mesh;
     };
 
-    let ro:ResizeObserver|undefined;
+    let ro: ResizeObserver | undefined;
 
     (async () => {
       try {
+        // それぞれ WebP → JPG → PNG の順に試す
         const [baseT, patT, raysT, crestT, ornT] = await Promise.all([
-          load("/RULE/bg_base.jpg"),
-          load("/RULE/pattern_overlay.png"),
-          load("/RULE/glow_rays.png"),
-          load("/RULE/crest.png"),
-          load("/RULE/ornament.png"),
+          loadFirst([`/RULE/bg_base.webp${Q}`, `/RULE/bg_base.jpg${Q}`, `/RULE/bg_base.png${Q}`]),
+          loadFirst([`/RULE/pattern_overlay.webp${Q}`, `/RULE/pattern_overlay.png${Q}`]),
+          loadFirst([`/RULE/glow_rays.webp${Q}`, `/RULE/glow_rays.png${Q}`]),
+          loadFirst([`/RULE/crest.webp${Q}`, `/RULE/crest.png${Q}`]),
+          loadFirst([`/RULE/ornament.webp${Q}`, `/RULE/ornament.png${Q}`]),
         ]);
-        const aniso = (renderer.capabilities as any).getMaxAnisotropy?.() ?? 1;
-        for (const t of [baseT,patT,raysT,crestT,ornT]){ (t as any).colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; }
 
-        const base = mk(baseT, -6.0, 20, 1.0);
-        const pat  = mk(patT,  -5.8, 20, 0.10);
-        const rays = mk(raysT, -5.6, 20, 0.28);
-        const crest= mk(crestT,-5.4, 12, 0.18);
-        const orn  = mk(ornT,  -5.2, 22, 0.50);
+        // 品質設定
+        const aniso = (renderer.capabilities as any).getMaxAnisotropy?.() ?? 1;
+        for (const t of [baseT, patT, raysT, crestT, ornT]) {
+          (t as any).colorSpace = THREE.SRGBColorSpace;
+          t.anisotropy = aniso;
+          t.generateMipmaps = true;
+          t.minFilter = THREE.LinearMipmapLinearFilter;
+        }
+
+        // レイヤーの重なり（“二重見え”を避けるため透明度は控えめ）
+        const base  = mk(baseT,  -6.0, 20, 1.0);  // ベース
+        const pat   = mk(patT,   -5.8, 20, 0.10); // 細かな模様（ごく薄く）
+        const rays  = mk(raysT,  -5.6, 20, 0.28); // 光芒
+        const crest = mk(crestT, -5.4, 12, 0.18); // 紋章（控えめ）
+        const orn   = mk(ornT,   -5.2, 22, 0.50); // 装飾（縁取り）
+
         scene.add(base, pat, rays, crest, orn);
 
         const render = () => renderer.render(scene, camera);
-        const fit=()=>{const w=wrap.clientWidth,h=wrap.clientHeight;
-          renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); render();};
-        ro=new ResizeObserver(fit); ro.observe(wrap); fit();
-      } catch {/* 失敗時はCSS背景のまま */}
+
+        const fit = () => {
+          const w = wrap.clientWidth;
+          const h = wrap.clientHeight;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          render();
+        };
+        ro = new ResizeObserver(fit);
+        ro.observe(wrap);
+        fit();
+      } catch {
+        // 失敗時はCSS背景のまま（何もしない）
+      }
     })();
 
-    return ()=>{ ro?.disconnect(); renderer.dispose(); };
+    return () => {
+      ro?.disconnect();
+      renderer.dispose();
+    };
   }, []);
 
   return (
@@ -79,7 +141,10 @@ export default function Stage3DFrozen() {
       <div ref={wrapRef} className="stage" aria-hidden="true">
         <canvas ref={canvasRef} className="cv" />
       </div>
-      <style jsx>{`.stage{position:fixed; inset:0; z-index:0} .cv{width:100%; height:100%; display:block}`}</style>
+      <style jsx>{`
+        .stage { position: fixed; inset: 0; z-index: 7; pointer-events: none; }
+        .cv    { width: 100%; height: 100%; display: block; }
+      `}</style>
     </>
   );
 }

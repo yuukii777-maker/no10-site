@@ -10,6 +10,9 @@ const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT
   .slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
 
+/** === デバッグ用：一旦3Dを強制して挙動確認する === */
+const FORCE_3D = true;
+
 /** assets */
 const ASSETS = {
   sky: ["/portal/background2.webp"],
@@ -42,7 +45,7 @@ const CFG = {
     flareWide: 0.5,
     flareCore: 0.62,
   },
-  tiltMaxX: 6, // 横ブレ最大px（控えめ）
+  tiltMaxX: 6,
 } as const;
 
 /* ===== hooks ===== */
@@ -87,7 +90,7 @@ function canUseWebGL() {
   }
 }
 
-/** 3Dロゴはクライアント限定 */
+/** 3Dロゴ（クライアント限定） */
 const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), {
   ssr: false,
   loading: () => null,
@@ -108,7 +111,7 @@ function useWrap() {
   return { refs, setH, setPos };
 }
 
-/* 汎用：親ラッパ（レイヤ固定） */
+/* 親レイヤ（z-index固定） */
 const layer = (z: number): React.CSSProperties => ({
   position: "absolute",
   inset: 0,
@@ -116,7 +119,7 @@ const layer = (z: number): React.CSSProperties => ({
   pointerEvents: "none",
 });
 
-/* 子imgの共通スタイル */
+/* 子img共通 */
 function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
   return {
     position: "absolute",
@@ -124,7 +127,7 @@ function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
     width: "108%",
     height: "104%",
     objectFit: "cover",
-    zIndex: z, // 同一レイヤ内での前後
+    zIndex: z,
     pointerEvents: "none",
     transform: "translate3d(0,0,0)",
     ...more,
@@ -137,7 +140,6 @@ export default function PortalClient() {
   const isMobile = useIsMobile();
 
   const [webglOk, setWebglOk] = useState(false);
-  const [threeHardError, setThreeHardError] = useState(false);
   const [skyUrl, setSkyUrl] = useState<string | undefined>();
 
   const heroRef = useRef<HTMLElement | null>(null);
@@ -218,10 +220,17 @@ export default function PortalClient() {
     };
   }, [reduced]);
 
-  const use2D = reduced || !webglOk || threeHardError;
+  // ここで一時的に3Dを強制（不具合切り分け）
+  const use2D = FORCE_3D ? false : (reduced || !webglOk);
+  // デバッグラベル（開発時のみ視覚確認したい場合）
+  if (typeof window !== "undefined") {
+    // @ts-ignore
+    window.__volce_mode = use2D ? "2d" : "3d";
+  }
+
   const heroHeight = isMobile ? CFG.heroH.mobile : CFG.heroH.desktop;
 
-  // コピーのフェードイン進行
+  // コピーのフェードイン
   const [msgProgress, setMsgProgress] = useState(0);
   const msgRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -273,15 +282,11 @@ export default function PortalClient() {
           <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
         </div>
 
-        {/* ② ロゴ（z:20 最前面） */}
-        <div style={layer(20)}>
+        {/* ② ロゴ（z:1000 最前面） */}
+        <div style={layer(1000)}>
           {!use2D ? (
-            <div className="absolute inset-0 pointer-events-none">
-              <ThreeHeroLazy
-                deviceIsMobile={isMobile}
-                scrollY={scrollY}
-                onContextLost={() => setThreeHardError(true)}
-              />
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1000 }}>
+              <ThreeHeroLazy deviceIsMobile={isMobile} scrollY={scrollY} />
             </div>
           ) : (
             <img
@@ -300,8 +305,8 @@ export default function PortalClient() {
           )}
         </div>
 
-        {/* ③ ベール & グラデ（z:12 ロゴより下） */}
-        <div style={layer(12)}>
+        {/* ③ ベール & グラデ（z:15 ロゴより下） */}
+        <div style={layer(15)}>
           <div aria-hidden style={{
             position: "absolute", inset: 0, opacity: 0.22, pointerEvents: "none",
             backgroundImage:

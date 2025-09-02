@@ -12,7 +12,7 @@ const Q = SHA ? `?v=${SHA}` : "";
 
 /** assets */
 const ASSETS = {
-  sky: "/portal/background2.webp", // 固定の空
+  sky: "/portal/background2.webp",
   rays: "/portal/rays.webp",
   flareWide: "/portal/flare_wide.webp",
   flareCore: "/portal/flare_core.webp",
@@ -22,18 +22,37 @@ const ASSETS = {
   logo: "/portal/logo.webp",
 } as const;
 
-/** コピー */
+/** コピー（小さめ） */
 const MESSAGES = [
   { id: "m1", title: "VOLCE",        body: "雲を抜け、はじまりへ。" },
   { id: "m2", title: "Gathering",    body: "仲間と、想いと、景色をひとつに。" },
   { id: "m3", title: "Into the Sky", body: "ここから上へ——物語のつづきへ。" },
 ] as const;
 
-/** パラメータ（横ドリフトは廃止） */
+/** パラメータ */
 const CFG = {
   stageHeightVH: 1000,
-  speedY: { sky: 0.06, rays: 0.12, far: 0.18, mid: 0.32, near: 0.70, flareWide: 0.50, flareCore: 0.62 },
-  bob: { amp: 12, periodSec: 9 }, // 常時ゆらぎ（px）
+  speedY: {
+    sky: 0.06,
+    rays: 0.12,
+    far: 0.18,
+    mid: 0.32,
+    near: 0.70,
+    flareWide: 0.50,
+    flareCore: 0.62,
+  },
+  // ← sky の横ドリフトは 0 に（継ぎ目原因を断つ）
+  driftX: {
+    sky: 0,
+    rays: 0.006,
+    far: 0.009,
+    mid: 0.015,
+    near: 0.028,
+    flareWide: 0.010,
+    flareCore: 0.016,
+  },
+
+  tiltMaxX: 6,
   heroH: { desktop: 760, mobile: 560 },
 } as const;
 
@@ -43,7 +62,8 @@ function useReducedMotion() {
   useEffect(() => {
     const mq = matchMedia("(prefers-reduced-motion: reduce)");
     const on = () => set(mq.matches);
-    on(); mq.addEventListener?.("change", on);
+    on();
+    mq.addEventListener?.("change", on);
     return () => mq.removeEventListener?.("change", on);
   }, []);
   return reduced;
@@ -53,23 +73,27 @@ function useIsMobile() {
   useEffect(() => {
     const mq = matchMedia("(max-width: 640px)");
     const on = () => set(mq.matches);
-    on(); mq.addEventListener?.("change", on);
+    on();
+    mq.addEventListener?.("change", on);
     return () => mq.removeEventListener?.("change", on);
   }, []);
   return m;
 }
 
-/* ===== 2枚ラップで“無限スクロール風” ===== */
-type WrapRefs = { a: HTMLImageElement | null; b: HTMLImageElement | null; h: number };
+/* ===== 2枚ラップで“無限スクロール風”（2pxの重なりを持たせて継ぎ目解消） ===== */
+type WrapRefs = { a: HTMLImageElement | null; b: HTMLImageElement | null; h: number; overlap: number };
 function useWrap() {
-  const refs = useRef<WrapRefs>({ a: null, b: null, h: 0 });
+  const refs = useRef<WrapRefs>({ a: null, b: null, h: 0, overlap: 2 }); // 2px overlap
   const setH = (h: number) => (refs.current.h = h);
-  const setPos = (y: number) => {
-    const { a, b, h } = refs.current;
+
+  const setPos = (y: number, x: number) => {
+    const { a, b, h, overlap } = refs.current;
     if (!a || !b || !h) return;
-    const yk = ((y % h) + h) % h;
-    a.style.transform = `translate3d(0px, ${yk}px, 0)`;
-    b.style.transform = `translate3d(0px, ${yk - h}px, 0)`;
+    const span = h - overlap; // 重なり分だけ短く
+    const yk = ((y % span) + span) % span;
+    const tx = Math.round(x * 100) / 100; // サブピクセル丸め
+    a.style.transform = `translate3d(${tx}px, ${yk}px, 0)`;
+    b.style.transform = `translate3d(${tx}px, ${yk - span}px, 0)`;
   };
   return { refs, setH, setPos };
 }
@@ -97,7 +121,7 @@ export default function PortalClient() {
   const flareWide = useWrap();
   const flareCore = useWrap();
 
-  // 3Dロゴ用のスクロール量（ゆっくり）
+  // 3Dロゴ用のスクロール量
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -105,7 +129,9 @@ export default function PortalClient() {
       const c = document.createElement("canvas");
       // @ts-ignore
       setWebglOk(!!(c.getContext("webgl") || c.getContext("experimental-webgl")));
-    } catch { setWebglOk(false); }
+    } catch {
+      setWebglOk(false);
+    }
   }, []);
 
   // 初期高さセット
@@ -119,45 +145,77 @@ export default function PortalClient() {
     return () => window.removeEventListener("resize", setAllHeights);
   }, []);
 
-  // パララックス（縦）＋ 微小ボブ（縦のみ）。横移動は完全撤廃。
+  // パララックス（縦）＋ 自動ドリフト（横）＋ わずかな傾き
   useEffect(() => {
-    let t0 = performance.now();
+    let mx = 0, tmx = 0;
+
+    const lerp = (a: number, b: number, n: number) => a + (b - a) * n;
+
     const tick = (tNow: number) => {
       const y = window.scrollY || 0;
       setScrollY(y);
 
-      const scale = reduced ? 0.15 : 1;
-      const bob = reduced ? 0 : Math.sin((tNow - t0) / (CFG.bob.periodSec * 1000) * Math.PI * 2) * CFG.bob.amp;
+      // 自動ドリフトX（超ゆっくり）
+      const drift = (k: number) => (k * (tNow * 0.06)) % 1600;
 
-      const apply = (hook: ReturnType<typeof useWrap>, ky: number) => {
-        hook.setPos(y * ky * scale + bob * ky);
+      // ユーザー傾き（控えめ）
+      tmx = lerp(tmx, mx, 0.08);
+
+      const scale = reduced ? 0.15 : 1;
+
+      const apply = (hook: ReturnType<typeof useWrap>, ky: number, kx: number) => {
+        hook.setPos(y * ky * scale, drift(kx) + tmx);
       };
 
-      apply(sky, CFG.speedY.sky);
-      apply(rays, CFG.speedY.rays);
-      apply(far, CFG.speedY.far);
-      apply(mid, CFG.speedY.mid);
-      apply(near, CFG.speedY.near);
-      apply(flareWide, CFG.speedY.flareWide);
-      apply(flareCore, CFG.speedY.flareCore);
+      apply(sky, CFG.speedY.sky, CFG.driftX.sky);
+      apply(rays, CFG.speedY.rays, CFG.driftX.rays);
+      apply(far, CFG.speedY.far, CFG.driftX.far);
+      apply(mid, CFG.speedY.mid, CFG.driftX.mid);
+      apply(near, CFG.speedY.near, CFG.driftX.near);
+      apply(flareWide, CFG.speedY.flareWide, CFG.driftX.flareWide);
+      apply(flareCore, CFG.speedY.flareCore, CFG.driftX.flareCore);
 
       requestAnimationFrame(tick);
     };
+
+    const onPointer = (e: PointerEvent) => {
+      const w = window.innerWidth || 1;
+      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX;
+    };
+    const onOrient = (e: DeviceOrientationEvent) => {
+      if (e.gamma == null) return;
+      mx = (e.gamma / 45) * (CFG.tiltMaxX * 0.8);
+    };
+
     const id = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(id);
+    if (!reduced) {
+      window.addEventListener("pointermove", onPointer, { passive: true });
+      window.addEventListener("deviceorientation", onOrient as any, { passive: true });
+    }
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("deviceorientation", onOrient as any);
+    };
   }, [reduced]);
 
   const use2D = reduced || !webglOk || threeHardError;
-  const heroHeight = (isMobile ? CFG.heroH.mobile : CFG.heroH.desktop); // 使う場合に備え
+  const heroHeight = isMobile ? CFG.heroH.mobile : CFG.heroH.desktop; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   return (
     <main className="relative" style={{ minHeight: `${CFG.stageHeightVH}vh`, color: "#e5e7eb" }}>
-      {/* ===== sticky sky stage ===== */}
+      {/* ===== sticky sky stage（viewportに貼り付き） ===== */}
       <div
         ref={stageRef}
         style={{
-          position: "sticky", top: 0, height: "100vh", overflow: "hidden",
-          zIndex: 40, isolation: "isolate", pointerEvents: "none", background: "black",
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          overflow: "hidden",
+          zIndex: 15,              // ← コピーより下に
+          isolation: "isolate",
+          pointerEvents: "none",
+          background: "black",
         }}
       >
         {/* 背景（空）— wrap（無限） */}
@@ -180,7 +238,7 @@ export default function PortalClient() {
         <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)}/>
         <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)}/>
 
-        {/* ロゴ */}
+        {/* ロゴ：3D or 2D */}
         {!use2D ? (
           <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
             <ThreeHeroLazy
@@ -195,14 +253,15 @@ export default function PortalClient() {
             alt="VOLCE Logo"
             style={{
               position: "absolute", left: "50%", top: "50%",
-              transform: "translate(-50%, -50%)", width: isMobile ? 220 : 320,
+              transform: "translate(-50%, -50%)",
+              width: isMobile ? 220 : 320,
               height: "auto", zIndex: 30, pointerEvents: "none",
               filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))", opacity: 0.98,
             }}
           />
         )}
 
-        {/* 上下グラデ */}
+        {/* 上下を締めるグラデ（うっすら） */}
         <div aria-hidden style={{
           position: "absolute", inset: 0, zIndex: 12, pointerEvents: "none",
           background: "linear-gradient(to bottom, rgba(5,8,15,.40) 0%, rgba(5,8,15,0) 28%, rgba(5,8,15,0) 72%, rgba(5,8,15,.28) 100%)",
@@ -215,13 +274,15 @@ export default function PortalClient() {
         style={{
           minHeight: "220vh",
           background: "linear-gradient(to bottom, rgba(6,10,18,1) 0, rgba(6,10,18,0) 35%, rgba(6,10,18,0) 65%, rgba(6,10,18,1) 100%)",
-          zIndex: 10,
+          zIndex: 60, // ← ステージより前面
         }}
       >
         <CopyBlock />
       </section>
 
-      <style jsx>{` section img { user-select: none; -webkit-user-drag: none; will-change: transform, opacity; } `}</style>
+      <style jsx>{`
+        section img { user-select: none; -webkit-user-drag: none; will-change: transform, opacity; }
+      `}</style>
     </main>
   );
 }
@@ -243,12 +304,31 @@ function CopyBlock() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   return (
-    <div ref={ref} className="sticky" style={{ top: "18vh", height: "64vh", display: "grid", placeItems: "center", textAlign: "center", pointerEvents: "none" }}>
+    <div
+      ref={ref}
+      className="sticky"
+      style={{
+        top: "18vh",
+        height: "64vh",
+        display: "grid",
+        placeItems: "center",
+        textAlign: "center",
+        pointerEvents: "none",
+      }}
+    >
       {MESSAGES.map((m, i) => {
         const ip = Math.min(1, Math.max(0, p * 1.3 - i * 0.42));
         const y = (1 - ip) * 32;
         return (
-          <div key={m.id} style={{ position: "absolute", transform: `translate3d(0, ${y}px, 0)`, opacity: ip, transition: "opacity .25s linear, transform .25s linear" }}>
+          <div
+            key={m.id}
+            style={{
+              position: "absolute",
+              transform: `translate3d(0, ${y}px, 0)`,
+              opacity: ip,
+              transition: "opacity .25s linear, transform .25s linear",
+            }}
+          >
             <div style={{ fontSize: "clamp(24px, 5vw, 60px)", fontWeight: 800, letterSpacing: ".04em" }}>{m.title}</div>
             <div style={{ opacity: .85, marginTop: 10, fontSize: "clamp(14px, 2.6vw, 20px)" }}>{m.body}</div>
           </div>
@@ -258,16 +338,19 @@ function CopyBlock() {
   );
 }
 
-/** 画像を2枚重ねてラップ表示するための共通スタイル */
+/** 画像ラップの共通スタイル（上下マスクで継ぎ目を隠す） */
 function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
+  const mask = "linear-gradient(to bottom, transparent 0, black 3%, black 97%, transparent 100%)";
   return {
     position: "absolute",
-    inset: "-6% -4% -2% -4%",  // わずかにはみ出させて継ぎ目を隠す
+    inset: "-8% -4% -4% -4%",
     width: "108%",
-    height: "104%",
+    height: "108%",
     objectFit: "cover",
     zIndex: z,
     pointerEvents: "none",
+    WebkitMaskImage: mask,
+    maskImage: mask,
     transform: "translate3d(0,0,0)",
     ...more,
   };

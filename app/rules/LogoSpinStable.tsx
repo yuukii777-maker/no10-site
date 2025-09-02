@@ -32,12 +32,11 @@ export default function LogoSpinStable() {
 
     const front = new THREE.Mesh(geo, mat);
     front.position.set(0, 0, -1.0);
-    front.rotation.x = THREE.MathUtils.degToRad(6);
+    front.rotation.set(0, 0, 0); // 傾き無し
 
     const back = new THREE.Mesh(geo, mat);
     back.position.set(0, 0, -1.0002);
-    back.rotation.x = THREE.MathUtils.degToRad(6);
-    back.rotation.y = Math.PI;
+    back.rotation.set(0, Math.PI, 0); // 裏面はYで反転
     back.scale.x = -1;
 
     group.add(front, back);
@@ -45,7 +44,9 @@ export default function LogoSpinStable() {
 
     new THREE.TextureLoader().load("/RULE/volce-logo-3d.png", (tex) => {
       const aniso = (renderer.capabilities as any).getMaxAnisotropy?.() ?? 1;
-      tex.anisotropy = aniso; tex.flipY = false; (tex as any).colorSpace = THREE.SRGBColorSpace;
+      tex.flipY = true; // ★ 上下反転を正に
+      (tex as any).colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = aniso;
       tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;
       mat.map = tex; mat.alphaMap = tex; mat.needsUpdate = true;
     });
@@ -65,7 +66,7 @@ export default function LogoSpinStable() {
     let raf = 0;
     const tick = () => {
       const k = document.documentElement.classList.contains("reduced") ? 0 : 1;
-      group.rotation.y += ROT_SPEED * k;              // 中心自転（外周回り廃止）
+      group.rotation.y += ROT_SPEED * k; // 中心軸で“自転”
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };

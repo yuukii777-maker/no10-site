@@ -4,37 +4,33 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-/* =========================================
-   データ
-   - 幹部：団長(=代表)・副団長のみ
-   - 主力：Loz / Killer / Jun の3名
-   - それ以外はメンバー
-========================================= */
-type Person = {
-  id: string;       // Google Drive thumbnail id
-  name: string;
-  role?: string;    // 表示用バッジ（例：団長 / 副団長）
-};
-
+/* ================== データ ================== */
+type Person = { id: string; name: string; role?: string };
 type CategoryKey = "leader" | "core" | "creator" | "liver" | "member";
-
 const drive = (id: string, w = 512) =>
   `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
 
+/** 幹部：代表 / 副代表 / 副団長 */
 const leaders: Person[] = [
-  { id: "1GjhePWk7knqKjAI8CjpSqujXKxw8Hbg1", name: "VolceSharGOD", role: "団長" },     // 代表=団長
-  { id: "15Lmehli_MZTEQG7IZ-vcz15KLth-rsOx", name: "VolceReyGOD",  role: "副団長" },   // 副団長
+  { id: "1GjhePWk7knqKjAI8CjpSqujXKxw8Hbg1", name: "VolceSharGOD", role: "代表" },
+  { id: "14Y9U97vFVNkzS81F9qotCfpq3DgjCcSL", name: "VolceTenGOD",  role: "副代表" },
+  { id: "15Lmehli_MZTEQG7IZ-vcz15KLth-rsOx", name: "VolceReyGOD",  role: "副団長" },
 ];
 
+/** 主力（3名） */
 const core: Person[] = [
-  { id: "1S8MKLZEhekE25zmlMOlGDIWlrz4IC9RN", name: "VolceLozGOD"  },
+  { id: "1S8MKLZEhekE25zmlMOlGDIWlrz4IC9RN", name: "VolceLozGOD" },
   { id: "10f0Sy9lPfavOMc0BKbvqsder7Q8m9JmE", name: "VolceKillerGOD" },
-  { id: "1LNgsTIc5WBYbFp2bydpLO4_sJmDyc3Td", name: "VolceJunGOD"  },
+  { id: "1LNgsTIc5WBYbFp2bydpLO4_sJmDyc3Td", name: "VolceJunGOD" },
 ];
 
-const others: Person[] = [
-  // 幹部に含めなかった副代表 Ten はメンバーに
-  { id: "14Y9U97vFVNkzS81F9qotCfpq3DgjCcSL", name: "VolceTenGOD" },
+/** 追加予定 */
+const creators: Person[] = [];
+const livers: Person[] = [];
+
+/** その他メンバー */
+const members: Person[] = [
+  // 幹部／主力以外
   { id: "1qqEt12-1MLapP8ERIPKPrz4zYWxtE66h", name: "VolceE1GOD" },
   { id: "1lPuNE44kWml-LLeX7mV10KhPmOA17mFW", name: "VolceLoaGOD" },
   { id: "1GGBvKxCCMzX78HMw2uGnzs9F0i3PkFtm", name: "VolceDelaGOD" },
@@ -47,14 +43,6 @@ const others: Person[] = [
   { id: "1GGBvKxCCMzX78HMw2uGnzs9F0i3PkFtm__ZEO", name: "VolceZeoGOD" },
 ];
 
-/* いまは Creator / Liver の個別データが未定なので空配列。
-   追加が決まったらここに push すればOK。 */
-const creators: Person[] = [];
-const livers: Person[] = [];
-
-/* =========================================
-   タブ（黒×金・角丸なしの長方形）
-========================================= */
 const TABS: { key: CategoryKey; label: string }[] = [
   { key: "leader",  label: "幹部" },
   { key: "core",    label: "主力" },
@@ -63,51 +51,45 @@ const TABS: { key: CategoryKey; label: string }[] = [
   { key: "member",  label: "メンバー" },
 ];
 
-/* =========================================
-   ページ本体
-========================================= */
+/* ================== Page ================== */
 export default function TeamsPage() {
-  // 初期タブ：幹部
   const [tab, setTab] = useState<CategoryKey>("leader");
 
-  // タブ選択ごとの表示配列
   const items = useMemo(() => {
     switch (tab) {
       case "leader":  return leaders;
       case "core":    return core;
       case "creator": return creators;
       case "liver":   return livers;
-      case "member":  return others;
+      case "member":  return members;
     }
   }, [tab]);
 
-  // iOS の 100vh 問題対策（任意）
+  // iOS 100vh対策
   useEffect(() => {
     const set = () =>
-      document.documentElement.style.setProperty(
-        "--vh",
-        String((window.innerHeight || 800) * 0.01) + "px"
-      );
+      document.documentElement.style.setProperty("--vh", `${(window.innerHeight || 800) * 0.01}px`);
     set();
     addEventListener("resize", set, { passive: true });
     addEventListener("orientationchange", set, { passive: true });
-    return () => {
-      removeEventListener("resize", set);
-      removeEventListener("orientationchange", set);
-    };
+    return () => { removeEventListener("resize", set); removeEventListener("orientationchange", set); };
   }, []);
 
   return (
-    <main className="teams-wrap">
-      {/* 背景：金のフレア（最背面）＋ 右下の大ロゴ（フォールバック込み） */}
-      <div className="bg" aria-hidden />
+    <main className="teams">
+      {/* 背景（黒＋金アクセント） */}
+      <div className="bg" aria-hidden>
+        {/* 右下の大ロゴ：webp / png フォールバック */}
+        <i className="brand webp" />
+        <i className="brand png" />
+      </div>
 
-      {/* 見出し */}
+      {/* 見出し（ナビに被らないよう少し下げる） */}
       <header className="hero">
         <h1>Volceクラン</h1>
       </header>
 
-      {/* タブ（中央寄せ・黒金） */}
+      {/* タブ（黒金・長方形） */}
       <nav className="tabs" role="tablist" aria-label="カテゴリ切替">
         <div className="tabs-inner">
           {TABS.map(({ key, label }) => {
@@ -127,94 +109,76 @@ export default function TeamsPage() {
         </div>
       </nav>
 
-      {/* メンバー一覧（中央寄せ・薄枠は削除） */}
+      {/* メンバー一覧（中央揃え・金のリング復活） */}
       <section className="grid" aria-live="polite">
         {items.map((p, i) => (
           <figure className="tile" key={`${p.id}-${p.name}-${i}`}>
             <div className="avatar">
-              <img
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                src={drive(p.id, 512)}
-                alt={p.name}
-              />
+              <img loading="lazy" referrerPolicy="no-referrer" src={drive(p.id, 512)} alt={p.name} />
               {!!p.role && <span className="badge">{p.role}</span>}
             </div>
             <figcaption className="name">{p.name}</figcaption>
           </figure>
         ))}
-        {/* データがないカテゴリのときの空表示 */}
-        {!items.length && (
-          <div className="empty">準備中です</div>
-        )}
+        {!items.length && <div className="empty">準備中です</div>}
       </section>
 
-      {/* スタイル（このページ専用） */}
       <style jsx>{`
         :root{
-          --ink:#e9edf3;
-          --muted:#a9b0bb;
-          --gold-1:#fff6cc;
-          --gold-2:#ffe39c;
-          --gold-3:#caa45a;
-          --panel:rgba(8,12,20,.72);
+          --ink:#e9edf3; --muted:#a9b0bb;
+          --gold-1:#fff6cc; --gold-2:#ffe39c; --gold-3:#caa45a;
         }
-        .teams-wrap{
-          min-height: calc(var(--vh, 1vh) * 100);
-          position: relative;
-          color: var(--ink);
-          overflow-x: hidden;
-        }
+        .teams{ position:relative; min-height:calc(var(--vh,1vh)*100); color:var(--ink); overflow-x:hidden; }
 
-        /* ===== 背景 ===== */
+        /* ===== 純黒ベース + 金アクセント ===== */
         .bg{
-          position: fixed; inset: 0; z-index: -1; pointer-events:none;
-          /* 1枚目：右下の大ロゴ（フォールバック2経路）
-             2枚目：金フレア（/teams → /effects の順にフォールバック）
-             最背面：濃い黒グラデーション */
+          position:fixed; inset:0; z-index:-1; pointer-events:none;
           background:
-            url("/teams/volce-logo-3d.webp") bottom right/52vmin auto no-repeat,
-            url("/RULE/volce-logo-3d.png") bottom right/52vmin auto no-repeat,
-            url("/teams/bg_goldflare.webp") center/cover no-repeat,
-            url("/effects/bg_goldflare.webp") center/cover no-repeat,
-            radial-gradient(1200px 800px at 110% 100%, rgba(255,255,255,.06), transparent 60%),
-            linear-gradient(#0b0f17, #0b0f17);
-          /* 右下ロゴはほんの少し傾ける */
-          transform-origin: 100% 100%;
-          transform: rotate(-6deg);
-          opacity: 0.98;
+            radial-gradient(100% 60% at 50% -10%, rgba(255,230,160,.09), transparent 55%),
+            radial-gradient(100% 60% at 50% 110%, rgba(255,230,160,.06), transparent 55%),
+            linear-gradient(180deg, #0a0e15 0%, #0b0f17 100%);
         }
+        /* 金のストリーク（CSSのみ） */
+        .bg::before{
+          content:""; position:absolute; inset:-12% -12% -30% -12%;
+          background:
+            conic-gradient(from -20deg at 120% 60%, rgba(255,220,140,.10), transparent 22%, rgba(255,220,140,.08) 26%, transparent 36% 52%, rgba(255,220,140,.10) 58%, transparent 78%),
+            conic-gradient(from 30deg at -10% 30%, rgba(255,220,140,.05), transparent 20%, rgba(255,220,140,.05) 28%, transparent 40% 70%, rgba(255,220,140,.05) 76%, transparent 100%);
+          mix-blend-mode:screen; filter: blur(.6px);
+        }
+        /* 右下の大ロゴ（大きく・薄く） */
+        .bg .brand{
+          position:absolute; right:-6vmin; bottom:-6vmin;
+          width:72vmin; aspect-ratio:1/1;
+          background-position:center; background-size:contain; background-repeat:no-repeat;
+          opacity:.18; transform: rotate(-8deg);
+          filter: blur(.2px);
+        }
+        .bg .brand.webp{ background-image:url("/teams/volce-logo-3d.webp"); }
+        .bg .brand.png { background-image:url("/RULE/volce-logo-3d.png"); }
 
-        /* ===== 見出し：ナビに埋もれないよう下げる ===== */
-        .hero{
-          display:grid; place-items:center;
-          padding: clamp(84px, 12vh, 140px) 16px 10px;
-          text-align:center;
-        }
+        /* ===== 見出し ===== */
+        .hero{ display:grid; place-items:center; padding: clamp(86px, 12vh, 140px) 16px 8px; text-align:center; }
         .hero h1{
-          margin:0;
-          letter-spacing:.08em;
-          font-weight:900;
-          font-size: clamp(24px, 4.8vw, 40px);
-          background: linear-gradient(90deg, var(--gold-1), var(--gold-2) 40%, var(--gold-3) 100%);
+          margin:0; font-weight:900; letter-spacing:.08em; font-size:clamp(24px, 4.8vw, 40px);
+          background: linear-gradient(90deg, var(--gold-1), var(--gold-2) 45%, var(--gold-3) 100%);
           -webkit-background-clip:text; background-clip:text; color:transparent;
-          text-shadow: 0 0 20px rgba(255,230,150,.05);
+          text-shadow:0 0 20px rgba(255,230,150,.06);
         }
 
-        /* ===== タブ：黒金の長方形（中央揃え） ===== */
+        /* ===== タブ（黒金の長方形） ===== */
         .tabs{ display:grid; place-items:center; padding: 6px 0 18px; }
         .tabs-inner{
-          display:flex; gap: 10px; padding: 8px;
+          display:flex; gap:10px; padding:8px;
           border:1px solid rgba(255,255,255,.12);
-          background: rgba(10,14,21,.55);
-          border-radius: 14px;
+          background: rgba(10,14,21,.55); border-radius:14px;
           backdrop-filter: blur(6px);
         }
         .tab{
           appearance:none; border:0; cursor:pointer;
-          padding: 12px 22px; border-radius: 8px; /* 角丸は最小限（＝ほぼ長方形） */
+          padding:12px 22px; border-radius:8px;
           color:#d7deeb; font-weight:900; letter-spacing:.04em;
-          background: linear-gradient(180deg, rgba(20,24,34,.9), rgba(14,18,28,.9));
+          background: linear-gradient(180deg, rgba(20,24,34,.92), rgba(14,18,28,.92));
           border:1px solid rgba(255,255,255,.14);
           box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
           transition: transform .06s ease, filter .12s ease, box-shadow .12s ease;
@@ -228,62 +192,51 @@ export default function TeamsPage() {
           box-shadow: 0 10px 28px rgba(202,164,90,.25);
         }
 
-        /* ===== グリッド ===== */
+        /* ===== グリッド（中央寄せ） ===== */
         .grid{
-          width: min(1180px, 92vw);
-          margin: 10px auto 80px;
-          display: grid;
-          justify-items: center;
+          width:min(1180px, 92vw); margin: 10px auto 80px;
+          display:grid; justify-items:center;
           grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 28px 28px;
+          gap:28px;
         }
 
-        /* ===== 各タイル（薄枠は無し） ===== */
-        .tile{
-          display:grid; gap: 10px; justify-items:center; text-align:center;
-          padding: 10px;
-          /* 枠やカード感は消す。ホバーでほんの少しだけ光らせる */
-          border: 0; background: transparent; box-shadow:none;
-        }
+        /* ===== タイル（薄枠なし ／ 金のリング復活） ===== */
+        .tile{ display:grid; gap:10px; justify-items:center; text-align:center; padding:10px; background:transparent; border:0; box-shadow:none; }
         .avatar{
-          position:relative; width: 200px; height: 200px;
-          display:grid; place-items:center;
-          border-radius: 50%;
-          transition: filter .2s ease, transform .2s ease;
+          position:relative; width:200px; height:200px; border-radius:50%; display:grid; place-items:center;
+          transition: transform .2s ease;
         }
         .avatar img{
-          width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
-          display:block;
+          width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;
           filter: drop-shadow(0 12px 24px rgba(0,0,0,.45));
         }
+        /* 金のリング（常時うっすら、ホバーで強め） */
+        .avatar::before{
+          content:""; position:absolute; inset:-10px; border-radius:50%; pointer-events:none;
+          background:
+            radial-gradient(closest-side, rgba(255,245,185,.90), rgba(255,220,140,.32) 56%, rgba(255,220,140,0) 68%);
+          mix-blend-mode:screen; filter: blur(.6px); opacity:.55;
+        }
         .tile:hover .avatar{ transform: translateY(-2px) }
+        .tile:hover .avatar::before{ opacity:.85 }
         .tile:hover .avatar img{
-          filter: drop-shadow(0 14px 28px rgba(0,0,0,.5)) drop-shadow(0 0 28px rgba(255,215,120,.15));
+          filter: drop-shadow(0 14px 28px rgba(0,0,0,.50)) drop-shadow(0 0 28px rgba(255,215,120,.18));
         }
+
         .badge{
-          position:absolute; right: 8px; top: 8px;
-          font-size: 12px; font-weight: 900; letter-spacing: .04em;
-          padding: 4px 10px; border-radius: 999px;
-          color:#1a1a1a;
-          background: linear-gradient(180deg, #ffe887, #f2d64e);
-          box-shadow: 0 6px 16px rgba(0,0,0,.35);
+          position:absolute; right:8px; top:8px; font-size:12px; font-weight:900; letter-spacing:.04em;
+          padding:4px 10px; border-radius:999px; color:#1a1a1a;
+          background: linear-gradient(180deg,#ffe887,#f2d64e);
+          box-shadow:0 6px 16px rgba(0,0,0,.35);
         }
-        .name{
-          font-weight: 800; letter-spacing:.02em;
-          text-align:center; font-size: 14px;
-          text-shadow: 0 1px 2px rgba(0,0,0,.3);
-        }
+        .name{ font-weight:800; font-size:14px; text-align:center; text-shadow:0 1px 2px rgba(0,0,0,.3); }
 
-        .empty{
-          grid-column: 1 / -1;
-          opacity:.76; color: var(--muted);
-          padding: 40px 0; font-weight: 800;
-        }
+        .empty{ grid-column:1/-1; opacity:.76; color:var(--muted); padding:40px 0; font-weight:800; }
 
-        @media (max-width: 760px){
-          .avatar{ width: 160px; height: 160px; }
+        @media (max-width:760px){
+          .avatar{ width:160px; height:160px; }
           .tabs-inner{ gap:8px; }
-          .tab{ padding: 10px 14px; }
+          .tab{ padding:10px 14px; }
         }
       `}</style>
     </main>

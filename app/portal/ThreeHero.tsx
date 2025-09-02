@@ -1,4 +1,3 @@
-/* app/portal/ThreeHero.tsx */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -8,7 +7,7 @@ import { useMemo, useRef } from "react";
 
 type Props = {
   deviceIsMobile?: boolean;
-  scrollY?: number; // 親からのスクロール量
+  scrollY?: number;
   onContextLost?: () => void;
 };
 
@@ -22,15 +21,15 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
 
   const g = useRef<THREE.Group>(null!);
 
-  const baseScale = deviceIsMobile ? 1.4 : 1.9;
-  const yFactor = deviceIsMobile ? 0.0008 : 0.001; // 縦パララックス係数（控えめ）
+  const baseScale = deviceIsMobile ? 1.4 : 1.9;           // 遠目サイズ
+  const yFactor = deviceIsMobile ? 0.0008 : 0.001;        // 縦パララックス（控えめ）
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (!g.current) return;
-    g.current.position.y = -scrollY * yFactor + Math.sin(t * 1.2) * 0.08;
+    g.current.position.y = -scrollY * yFactor + Math.sin(t * 1.2) * 0.08; // 縦主体の揺れ
     g.current.rotation.x = Math.sin(t * 0.35) * 0.02;
-    g.current.rotation.y = Math.sin(t * 0.25) * 0.02;
+    g.current.rotation.y = Math.sin(t * 0.25) * 0.02;     // 横は控えめ
   });
 
   return (
@@ -50,6 +49,7 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
 
 export default function ThreeHero(props: Props) {
   const cameraZ = useMemo(() => (props.deviceIsMobile ? 8.8 : 8.2), [props.deviceIsMobile]);
+
   return (
     <Canvas
       dpr={[1, 2]}
@@ -59,7 +59,6 @@ export default function ThreeHero(props: Props) {
       onCreated={({ gl }) => {
         gl.domElement.addEventListener("webglcontextlost", props.onContextLost ?? (() => {}), false);
       }}
-      data-r3f="1"
     >
       <LogoBillboard {...props} />
     </Canvas>

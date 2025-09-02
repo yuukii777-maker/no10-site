@@ -10,7 +10,7 @@ const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT
   .slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
 
-/** assets（そのままのパス名でOK） */
+/** assets */
 const ASSETS = {
   sky: ["/portal/background2.webp"],
   rays: "/portal/rays.webp",
@@ -23,31 +23,31 @@ const ASSETS = {
   logo: "/portal/logo.webp",
 } as const;
 
-/** コピー（ここはお好みで差し替えてOK） */
+/** copy（必要なら好きに編集OK） */
 const MESSAGES = [
-  { id: "m1", title: "VOLCE", body: "雲を抜け、はじまりへ。" },
-  { id: "m2", title: "Gathering", body: "仲間と、想いと、景色をひとつに。" },
-  { id: "m3", title: "Into the Sky", body: "ここから上へ——物語のつづきへ。" },
+  { id: "m1", title: "VOLCE",       body: "雲を抜け、はじまりへ。" },
+  { id: "m2", title: "Gathering",   body: "仲間と、想いと、景色をひとつに。" },
+  { id: "m3", title: "Into the Sky",body: "ここから上へ——物語のつづきへ。" },
 ] as const;
 
 /** パラメータ */
 const CFG = {
   heroH: { desktop: 760, mobile: 560 },
-  // 縦主体のパララックス係数（数値が大きいほど速く流れる）
+  // 縦主体：大きいほど速く流れる
   speed: {
     rays: 0.12,
     far: 0.18,
     mid: 0.32,
     mid2: 0.45,
-    near: 0.7,
-    flareWide: 0.5,
+    near: 0.70,
+    flareWide: 0.50,
     flareCore: 0.62,
   },
-  // 横ゆれは最小限（px）
+  // 横ブレは最小限（px）
   tiltMaxX: 6,
 } as const;
 
-/* ===== hooks (ローカル完結) ===== */
+/* ===== hooks（ローカル完結） ===== */
 function useReducedMotion() {
   const [reduced, set] = useState(false);
   useEffect(() => {
@@ -89,7 +89,7 @@ function canUseWebGL() {
   }
 }
 
-/** Three.js はクライアント限定で */
+/** 3Dロゴはクライアント限定 */
 const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), {
   ssr: false,
   loading: () => null,
@@ -119,7 +119,7 @@ export default function PortalClient() {
   const [threeHardError, setThreeHardError] = useState(false);
   const [skyUrl, setSkyUrl] = useState<string | undefined>();
 
-  // hero 高さ参照（ラップ高さに使う）
+  // hero 高さ（ラップ高さに使う）
   const heroRef = useRef<HTMLElement | null>(null);
 
   // 各レイヤ（2枚でラップ）
@@ -155,6 +155,7 @@ export default function PortalClient() {
       const y = window.scrollY || 0;
       setScrollY(y);
 
+      // 縦：無限ラップ
       rays.setPos(y * CFG.speed.rays * motionScale);
       far.setPos(y * CFG.speed.far * motionScale);
       mid.setPos(y * CFG.speed.mid * motionScale);
@@ -163,7 +164,7 @@ export default function PortalClient() {
       flareWide.setPos(y * CFG.speed.flareWide * motionScale);
       flareCore.setPos(y * CFG.speed.flareCore * motionScale);
 
-      // 横方向は控えめ＆全レイヤに同じ微移動
+      // 横：控えめ（全レイヤ一律）
       tmx = lerp(tmx, mx, 0.08);
       const setX = (el: HTMLElement | null) => {
         if (!el) return;
@@ -180,7 +181,7 @@ export default function PortalClient() {
 
     const onPointer = (e: PointerEvent) => {
       const w = window.innerWidth || 1;
-      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX; // max 6px
+      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX; // 最大 6px
     };
     const onOrient = (e: DeviceOrientationEvent) => {
       if (e.gamma == null) return;
@@ -242,10 +243,10 @@ export default function PortalClient() {
         <img ref={(el) => (rays.refs.current.b = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
 
         {/* 雲（wrap） */}
-        <img ref={(el) => (far.refs.current.a = el)} src={ASSETS.far + Q} alt="" style={wrapStyle(5, { opacity: 0.92 })} />
-        <img ref={(el) => (far.refs.current.b = el)} src={ASSETS.far + Q} alt="" style={wrapStyle(5, { opacity: 0.92 })} />
-        <img ref={(el) => (mid.refs.current.a = el)} src={ASSETS.mid + Q} alt="" style={wrapStyle(6)} />
-        <img ref={(el) => (mid.refs.current.b = el)} src={ASSETS.mid + Q} alt="" style={wrapStyle(6)} />
+        <img ref={(el) => (far.refs.current.a = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
+        <img ref={(el) => (far.refs.current.b = el)}  src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} />
+        <img ref={(el) => (mid.refs.current.a = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
+        <img ref={(el) => (mid.refs.current.b = el)}  src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} />
         <img ref={(el) => (mid2.refs.current.a = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
         <img ref={(el) => (mid2.refs.current.b = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
         <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
@@ -366,7 +367,7 @@ export default function PortalClient() {
   );
 }
 
-/** 共通スタイル：wrap用（2枚重ね） */
+/** 共通：2枚重ねラップ用スタイル */
 function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
   return {
     position: "absolute",

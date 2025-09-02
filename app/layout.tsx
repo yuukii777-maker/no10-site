@@ -22,12 +22,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
-        {/* ヒーロー周りだけプリロード（初期表示を安定・高速化） */}
+        {/* ===== ヒーロー周りだけプリロード（初期表示を安定・高速化） ===== */}
         <link rel="preload" as="image" href={`/portal/background2.webp${Q}`} />
         <link rel="preload" as="image" href={`/portal/cloud_mid.webp${Q}`} />
         <link rel="preload" as="image" href={`/portal/cloud_near.webp${Q}`} />
-        {/* PNG フォールバックを残すなら下も */}
-        {/* <link rel="preload" as="image" href={`/portal/background2.png${Q}`} /> */}
+        {/* 必要なら下も（負荷と相談） */}
+        {/* <link rel="preload" as="image" href={`/portal/rays.webp${Q}`} /> */}
+        {/* <link rel="preload" as="image" href={`/portal/flare_core.webp${Q}`} /> */}
+
         <meta name="theme-color" content="#0a0f1a" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>

@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
+/* ====== データ ====== */
 type Person = { id: string; name: string; role?: string; badge?: string };
 
 const leaders: Person[] = [
@@ -10,13 +11,11 @@ const leaders: Person[] = [
   { id: "1GjhePWk7knqKjAI8CjpSqujXKxw8Hbg1", name: "VolceSharGOD", role: "代表" },
   { id: "14Y9U97vFVNkzS81F9qotCfpq3DgjCcSL", name: "VolceTenGOD", role: "副代表" },
 ];
-
 const specials: Person[] = [
   { id: "1S8MKLZEhekE25zmlMOlGDIWlrz4IC9RN", name: "VolceLozGOD",  badge: "火力枠" },
   { id: "10f0Sy9lPfavOMc0BKbvqsder7Q8m9JmE", name: "VolceKillerGOD", badge: "大火力枠" },
   { id: "1LNgsTIc5WBYbFp2bydpLO4_sJmDyc3Td", name: "VolceJunGOD",  badge: "火力枠" },
 ];
-
 const members: Person[] = [
   { id: "1qqEt12-1MLapP8ERIPKPrz4zYWxtE66h", name: "VolceE1GOD" },
   { id: "1lPuNE44kWml-LLeX7mV10KhPmOA17mFW", name: "VolceLoaGOD" },
@@ -30,162 +29,107 @@ const members: Person[] = [
   { id: "1GGBvKxCCMzX78HMw2uGnzs9F0i3PkFtm__ZEO", name: "VolceZeoGOD" },
 ];
 
-const Q = (() => {
-  const sha = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "").toString().slice(0, 8);
-  return sha ? `?v=${sha}` : "";
-})();
+/* ====== 便利 ====== */
+const drive = (id: string, w = 512) => `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
 
+/* ====== ページ ====== */
 export default function TeamsPage() {
-  const [revealed, setRevealed] = useState(false);
-  const hostRef = useRef<HTMLDivElement | null>(null);
-
-  // 霧カーテンのIO開始
+  const [reveal, setReveal] = useState(false);
   useEffect(() => {
-    const root = hostRef.current;
-    if (!root) return;
-    let fired = false;
-    const io = new IntersectionObserver((es) => {
-      es.forEach((e) => {
-        if (!fired && e.isIntersecting) {
-          fired = true;
-          setTimeout(() => setRevealed(true), 300); // すこし間を置く
-          io.disconnect();
-        }
-      });
-    }, { threshold: 0.2 });
-    io.observe(root);
-    return () => io.disconnect();
+    // 初回のみ“霧が晴れる”
+    const t = setTimeout(() => setReveal(true), 1200);
+    return () => clearTimeout(t);
   }, []);
 
-  const drive = (id: string, w = 512) => `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
-
-  return (
-    <main className="page">
-      <section ref={hostRef} id="teams" className="card" style={{ maxWidth: 1000, margin: "16px auto 0", position: "relative", overflow: "hidden" }}>
-        <h2 style={{ margin: "0 0 10px", fontFamily: "'Cinzel',serif", letterSpacing: ".06em" }}>クランメンバー</h2>
-
-        {/* 役職 */}
-        <div className="leaders-grid">
-          {leaders.map((p, i) => (
-            <figure className={`leader ${revealed ? "in" : ""}`} key={`${p.id}-${p.name}`}>
-              <img loading="lazy" referrerPolicy="no-referrer" src={drive(p.id, 256)} alt="" />
-              <figcaption className="name">{p.name}</figcaption>
-              {!!p.role && <div className="role">{p.role}</div>}
-            </figure>
-          ))}
-        </div>
-
-        {/* 特別枠 */}
-        <div className="special-wrap">
-          <h3 className="special-title">特別枠</h3>
-          <div className="special-grid">
-            {specials.map((p, idx) => (
-              <figure className={`member special ${revealed ? "in" : ""}`} key={`${p.id}-${p.name}`}>
-                <img loading="lazy" referrerPolicy="no-referrer" src={drive(p.id, 512)} alt="" />
-                <figcaption className="name">{p.name}</figcaption>
-                {!!p.badge && <span className="role-badge">{p.badge}</span>}
-              </figure>
-            ))}
-          </div>
-        </div>
-
-        <h3 className="divider-title">メンバー</h3>
-        <div className="member-grid">
-          {members.map((p, idx) => (
-            <figure className={`member ${revealed ? "in" : ""}`} key={`${p.id}-${p.name}-${idx}`}>
-              <img loading="lazy" referrerPolicy="no-referrer" src={drive(p.id.replace("__ZEO",""), 256)} alt="" />
-              <figcaption className="name">{p.name}</figcaption>
-            </figure>
-          ))}
-        </div>
-
-        {/* 霧カーテン */}
-        <FogCurtain show={!revealed} />
-
-        {/* 紫の常時発光（ロゴ周辺に固定） */}
-        <Glow />
-      </section>
-
-      <style jsx>{`
-        .page{max-width:1020px;margin:16px auto 0;}
-        .leaders-grid{ display:grid; gap:16px; grid-template-columns:repeat(3, minmax(160px,1fr)); justify-items:center; align-items:end; margin-bottom:18px; }
-        .leader{ display:grid; justify-items:center; gap:8px; padding:12px; border-radius:14px; background:transparent; }
-        .leader img{ width:clamp(112px, 10vw, 140px); height:clamp(112px, 10vw, 140px); border-radius:50%; object-fit:cover; display:block; }
-        .leader .role{ font-size:12px; opacity:.9; padding:2px 10px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); }
-        .leader .name{ font-weight:800; font-size:16px; text-align:center; }
-
-        .special-wrap{ margin:14px 0 6px; }
-        .special-title{ display:flex; align-items:center; gap:10px; margin:6px 0 10px; letter-spacing:.06em; font-weight:900; }
-        .special-title::before, .special-title::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, rgba(255,242,168,.0), rgba(255,242,168,.6), rgba(255,242,168,.0)); filter:blur(.2px); }
-        .special-grid{ display:grid; gap:16px; grid-template-columns:repeat(3, minmax(180px,1fr)); justify-items:center; }
-
-        .member-grid{ display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(clamp(120px, 18vw, 160px), 1fr)); }
-        .member{ display:grid; justify-items:center; gap:8px; padding:10px; border-radius:12px; background:transparent; }
-        .member img{ width:clamp(74px, 8.5vw, 96px); height:clamp(74px, 8.5vw, 96px); border-radius:50%; object-fit:cover; display:block; }
-        .member .name{ font-weight:800; font-size:14px; text-align:center; }
-
-        /* ステップフェード（散開→集合は廃止） */
-        .leader, .member{ opacity:0; transform: translate3d(0,12px,0) scale(.98); }
-        .leader.in, .member.in{ opacity:1; transform: none; transition: opacity .7s ease, transform .7s ease; }
-        .member.in{ transition-delay: .1s; }
-        .special .in{ transition-delay: .15s; }
-
-        @media (max-width:760px){
-          .leaders-grid{ grid-template-columns:1fr; }
-          .special-grid{ grid-template-columns:1fr; }
-          .member-grid{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
-        }
-      `}</style>
-    </main>
-  );
-}
-
-/* ===== 霧カーテン（画像2層＋フェードアウト） ===== */
-function FogCurtain({ show }: { show: boolean }) {
-  return (
-    <div className={`fog-curtain ${show ? "show" : "hide"}`} aria-hidden>
-      <picture>
-        <source srcSet={`/portal/fog_soft.webp${Q}`} type="image/webp" />
-        <img src={`/portal/fog_soft.png${Q}`} alt="" />
-      </picture>
-      <picture>
-        <source srcSet={`/portal/smoke_light.webp${Q}`} type="image/webp" />
-        <img src={`/portal/smoke_light.png${Q}`} alt="" />
-      </picture>
-      <style jsx>{`
-        .fog-curtain{ position:absolute; inset:-6% -4% -2% -4%; width:108%; height:104%; pointer-events:none; }
-        .fog-curtain picture{ position:absolute; inset:0; }
-        .fog-curtain img{ width:100%; height:100%; object-fit:cover; display:block; }
-        .fog-curtain :first-child{ opacity:.92; filter: saturate(.96) brightness(.96); }
-        .fog-curtain :last-child{ mix-blend-mode:screen; opacity:.42; animation: fogFloat 18s ease-in-out infinite; }
-        .fog-curtain.show{ opacity:1; }
-        .fog-curtain.hide{ opacity:0; transition: opacity 1600ms cubic-bezier(.2,.8,.1,1); }
-        @keyframes fogFloat { 0%{ transform: translateY(0) } 50%{ transform: translateY(14px) } 100%{ transform: translateY(0) } }
-      `}</style>
-    </div>
-  );
-}
-
-/* ===== 紫の常時発光（中心固定） ===== */
-function Glow() {
   return (
     <>
-      <picture className="glow aura">
-        <source srcSet={`/effects/glow_purple.webp${Q}`} type="image/webp" />
-        <img src={`/effects/glow_purple.png${Q}`} alt="" />
-      </picture>
-      <picture className="glow ring">
-        <source srcSet={`/effects/glow_ring.webp${Q}`} type="image/webp" />
-        <img src={`/effects/glow_ring.png${Q}`} alt="" />
-      </picture>
+      {/* 背景：暗紺→中央やや明るめ＋紫の発光 */}
+      <div className="scene" aria-hidden="true">
+        <div className="glow" />
+        {/* 霧カーテン（最初は濃い→だんだん消える） */}
+        <img className={`curtain fog1 ${reveal ? "out" : ""}`} src="/portal/fog_soft.png" alt="" />
+        <img className={`curtain fog2 ${reveal ? "out" : ""}`} src="/portal/smoke_dense.png" alt="" />
+      </div>
+
+      <main className="wrap">
+        <h2 className="ttl">クランメンバー</h2>
+
+        <div className="leaders">
+          {leaders.map((p, i) => (
+            <figure key={p.id} className="card">
+              <img src={drive(p.id, 256)} alt="" />
+              <figcaption className="name">{p.name}</figcaption>
+              {p.role && <span className="role">{p.role}</span>}
+            </figure>
+          ))}
+        </div>
+
+        <h3 className="sub">特別枠</h3>
+        <div className="specials">
+          {specials.map((p) => (
+            <figure key={p.id} className="card">
+              <img src={drive(p.id, 512)} alt="" />
+              <figcaption className="name">{p.name}</figcaption>
+              {p.badge && <span className="badge">{p.badge}</span>}
+            </figure>
+          ))}
+        </div>
+
+        <h3 className="sub">メンバー</h3>
+        <div className="grid">
+          {members.map((p, idx) => (
+            <figure key={`${p.id}-${idx}`} className="card small">
+              <img src={drive(p.id.replace("__ZEO",""), 256)} alt="" />
+              <figcaption className="name">{p.name}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </main>
 
       <style jsx>{`
-        .glow{ position:absolute; left:50%; top:50%; translate:-50% -50%; width:min(54vmin, 620px); aspect-ratio:1; pointer-events:none; z-index:1; }
-        .glow img{ width:100%; height:100%; object-fit:contain; display:block; mix-blend-mode:screen; }
-        .aura{ opacity:.55; filter: blur(.3px); animation: auraPulse 3.8s ease-in-out infinite; }
-        .ring{ opacity:.70; filter: blur(.3px); animation: ringPulse 2.4s ease-in-out infinite; }
-        @keyframes auraPulse{ 0%,100%{ transform:scale(1); opacity:.52 } 50%{ transform:scale(1.04); opacity:.66 } }
-        @keyframes ringPulse{ 0%,100%{ transform:scale(.98) } 50%{ transform:scale(1.03) } }
+        .scene{
+          position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+          background: radial-gradient(120% 80% at 50% 40%, #0e1422 0, #0b101a 55%, #070b12 100%);
+        }
+        .glow{
+          position:absolute; left:50%; top:50%; width:min(70vmin,720px); aspect-ratio:1/1; translate:-50% -50%;
+          background:
+            radial-gradient(closest-side, rgba(170,120,255,.35), rgba(170,120,255,.18) 45%, rgba(170,120,255,0) 70%),
+            radial-gradient(closest-side, rgba(170,120,255,.18), rgba(170,120,255,0) 55%);
+          filter: blur(2px);
+        }
+        .curtain{ position:absolute; inset:auto; left:50%; top:50%; translate:-50% -50%; pointer-events:none; opacity:.95; mix-blend-mode:screen; transition: opacity .9s ease 250ms; }
+        .curtain.out{ opacity:0; }
+        .fog1{ width:110vw; animation: drift 24s linear infinite, bob 17s ease-in-out infinite; }
+        .fog2{ width:90vw;  animation: driftR 32s linear infinite, bob 21s ease-in-out infinite; opacity:.65; }
+
+        @keyframes drift{  0%{ transform:translate(-50%,-50%) translateX(-2vw) } 100%{ transform:translate(-50%,-50%) translateX(2vw) } }
+        @keyframes driftR{ 0%{ transform:translate(-50%,-50%) translateX( 2vw) } 100%{ transform:translate(-50%,-50%) translateX(-2vw) } }
+        @keyframes bob{ 0%,100%{ transform:translate(-50%,-52%) } 50%{ transform:translate(-50%,-48%) } }
+
+        .wrap{ position:relative; z-index:1; width:min(1080px,92vw); margin:22px auto 80px; padding:20px;
+               background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; backdrop-filter: blur(2px); }
+        .ttl{ margin:4px 0 14px; font-weight:900; letter-spacing:.06em; text-align:center; }
+        .sub{ margin:14px 0 10px; font-weight:900; letter-spacing:.04em; }
+
+        .leaders{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; justify-items:center; }
+        .specials{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; justify-items:center; }
+        .grid{ display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(clamp(120px, 18vw, 160px), 1fr)); }
+
+        .card{ position:relative; display:grid; place-items:center; gap:8px; padding:12px; border-radius:12px; background:transparent; }
+        .card img{ width:clamp(110px, 10vw, 140px); height:clamp(110px, 10vw, 140px); border-radius:50%; object-fit:cover; display:block;
+                   box-shadow: 0 8px 18px rgba(0,0,0,.28); background: rgba(10,14,21,.18); }
+        .card.small img{ width:clamp(74px, 8.5vw, 96px); height:clamp(74px, 8.5vw, 96px); }
+        .name{ font-weight:800; font-size:14px; text-align:center; }
+        .role{ font-size:12px; opacity:.9; padding:2px 10px; border-radius:999px; background:rgba(255,255,255,.10);
+               border:1px solid rgba(255,255,255,.18); }
+        .badge{ position:absolute; top:6px; right:10px; font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px;
+                color:#1a1a1a; background:linear-gradient(180deg,#ffe887,#f2d64e); box-shadow:0 4px 14px rgba(0,0,0,.35); }
+
+        @media (max-width: 760px){
+          .leaders{ grid-template-columns:1fr; }
+          .specials{ grid-template-columns:1fr; }
+        }
       `}</style>
     </>
   );

@@ -1,17 +1,16 @@
-/* app/portal/PortalClient.tsx */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
 import dynamic from "next/dynamic";
 import React, { useEffect, useRef, useState } from "react";
 
-// ===== cache-busting =====
+/** cache-busting */
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
   .toString()
   .slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
 
-// ===== assets =====
+/** assets（そのままのパス名でOK） */
 const ASSETS = {
   sky: ["/portal/background2.webp"],
   rays: "/portal/rays.webp",
@@ -24,16 +23,17 @@ const ASSETS = {
   logo: "/portal/logo.webp",
 } as const;
 
-// ===== copy（必要ならここを書き換え）=====
+/** コピー（ここはお好みで差し替えてOK） */
 const MESSAGES = [
   { id: "m1", title: "VOLCE", body: "雲を抜け、はじまりへ。" },
   { id: "m2", title: "Gathering", body: "仲間と、想いと、景色をひとつに。" },
   { id: "m3", title: "Into the Sky", body: "ここから上へ——物語のつづきへ。" },
-];
+] as const;
 
-// ===== config =====
+/** パラメータ */
 const CFG = {
   heroH: { desktop: 760, mobile: 560 },
+  // 縦主体のパララックス係数（数値が大きいほど速く流れる）
   speed: {
     rays: 0.12,
     far: 0.18,
@@ -42,13 +42,13 @@ const CFG = {
     near: 0.7,
     flareWide: 0.5,
     flareCore: 0.62,
-    logo2D: 0.35,
   },
-  tiltMaxX: 6, // 横ゆれは控えめ
+  // 横ゆれは最小限（px）
+  tiltMaxX: 6,
 } as const;
 
-// ===== local hooks =====
-function usePrefersReducedMotion() {
+/* ===== hooks (ローカル完結) ===== */
+function useReducedMotion() {
   const [reduced, set] = useState(false);
   useEffect(() => {
     const mq = matchMedia("(prefers-reduced-motion: reduce)");
@@ -89,44 +89,49 @@ function canUseWebGL() {
   }
 }
 
-// ===== 3D（client only）=====
-const ThreeHeroLazy = dynamic(() => import("./ThreeHero").then(m => ({ default: m.default })), {
+/** Three.js はクライアント限定で */
+const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), {
   ssr: false,
   loading: () => null,
 });
 
-// ===== 2 枚ラップのためのユーティリティ =====
-type WrapLayerRefs = { a: HTMLImageElement | null; b: HTMLImageElement | null; h: number };
-function useWrapLayer() {
-  const refs = useRef<WrapLayerRefs>({ a: null, b: null, h: 0 });
+/* ===== 2枚でラップ表示（無限スクロール風） ===== */
+type WrapRefs = { a: HTMLImageElement | null; b: HTMLImageElement | null; h: number };
+function useWrap() {
+  const refs = useRef<WrapRefs>({ a: null, b: null, h: 0 });
   const setH = (h: number) => (refs.current.h = h);
   const setPos = (y: number) => {
     const { a, b, h } = refs.current;
     if (!a || !b || !h) return;
-    const yk = ((y % h) + h) % h;
+    const yk = ((y % h) + h) % h; // 0..h
     a.style.transform = `translate3d(0, ${yk}px, 0)`;
     b.style.transform = `translate3d(0, ${yk - h}px, 0)`;
   };
   return { refs, setH, setPos };
 }
 
+/* ===================== Main ===================== */
 export default function PortalClient() {
-  const reduced = usePrefersReducedMotion();
+  const reduced = useReducedMotion();
   const isMobile = useIsMobile();
 
   const [webglOk, setWebglOk] = useState(false);
   const [threeHardError, setThreeHardError] = useState(false);
   const [skyUrl, setSkyUrl] = useState<string | undefined>();
 
+  // hero 高さ参照（ラップ高さに使う）
   const heroRef = useRef<HTMLElement | null>(null);
-  const rays = useWrapLayer();
-  const far = useWrapLayer();
-  const mid = useWrapLayer();
-  const mid2 = useWrapLayer();
-  const near = useWrapLayer();
-  const flareWide = useWrapLayer();
-  const flareCore = useWrapLayer();
 
+  // 各レイヤ（2枚でラップ）
+  const rays = useWrap();
+  const far = useWrap();
+  const mid = useWrap();
+  const mid2 = useWrap();
+  const near = useWrap();
+  const flareWide = useWrap();
+  const flareCore = useWrap();
+
+  // 3Dロゴ用のスクロール量
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -134,22 +139,22 @@ export default function PortalClient() {
     setWebglOk(canUseWebGL());
   }, []);
 
-  // スクロール＆傾き
+  // 縦主体パララックス & 横は控えめ
   useEffect(() => {
     if (!heroRef.current) return;
-    const heroH = heroRef.current.clientHeight;
-    [rays, far, mid, mid2, near, flareWide, flareCore].forEach((w) => w.setH(heroH * 1.04));
+    const h = heroRef.current.clientHeight;
+    [rays, far, mid, mid2, near, flareWide, flareCore].forEach((w) => w.setH(h * 1.04));
 
     const motionScale = reduced ? 0.15 : 1;
 
-    let mx = 0, tmx = 0;
+    let mx = 0;
+    let tmx = 0;
     const lerp = (a: number, b: number, n: number) => a + (b - a) * n;
 
     const tick = () => {
       const y = window.scrollY || 0;
       setScrollY(y);
 
-      // 縦パララックス（ラップ）
       rays.setPos(y * CFG.speed.rays * motionScale);
       far.setPos(y * CFG.speed.far * motionScale);
       mid.setPos(y * CFG.speed.mid * motionScale);
@@ -158,17 +163,16 @@ export default function PortalClient() {
       flareWide.setPos(y * CFG.speed.flareWide * motionScale);
       flareCore.setPos(y * CFG.speed.flareCore * motionScale);
 
-      // 横は控えめ
+      // 横方向は控えめ＆全レイヤに同じ微移動
       tmx = lerp(tmx, mx, 0.08);
-      const setX = (el: HTMLElement | null, kx: number) => {
+      const setX = (el: HTMLElement | null) => {
         if (!el) return;
         const ty = /translate3d\(0, ([^,]+), 0\)/.exec(el.style.transform)?.[1] ?? "0px";
-        el.style.transform = `translate3d(${kx}px, ${ty}, 0)`;
+        el.style.transform = `translate3d(${tmx}px, ${ty}, 0)`;
       };
-      const fx = (k: number) => (CFG.tiltMaxX * k) / 100;
-      [rays, far, mid, mid2, near, flareWide, flareCore].forEach((w, i) => {
-        setX(w.refs.current.a, tmx * fx(-20 - i * 10));
-        setX(w.refs.current.b, tmx * fx(-20 - i * 10));
+      [rays, far, mid, mid2, near, flareWide, flareCore].forEach(({ refs }) => {
+        setX(refs.current.a);
+        setX(refs.current.b);
       });
 
       requestAnimationFrame(tick);
@@ -176,7 +180,7 @@ export default function PortalClient() {
 
     const onPointer = (e: PointerEvent) => {
       const w = window.innerWidth || 1;
-      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX;
+      mx = ((e.clientX - w / 2) / w) * CFG.tiltMaxX; // max 6px
     };
     const onOrient = (e: DeviceOrientationEvent) => {
       if (e.gamma == null) return;
@@ -198,7 +202,7 @@ export default function PortalClient() {
   const use2D = reduced || !webglOk || threeHardError;
   const heroHeight = isMobile ? CFG.heroH.mobile : CFG.heroH.desktop;
 
-  // メッセージのフェードイン進捗
+  // ===== コピーのフェードイン進行度 =====
   const [msgProgress, setMsgProgress] = useState(0);
   const msgRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -216,7 +220,7 @@ export default function PortalClient() {
 
   return (
     <main className="relative min-h-[300vh] text-neutral-200">
-      {/* ===== HERO ===== */}
+      {/* ====== HERO（雲＆ロゴ） ====== */}
       <section
         ref={heroRef}
         className="relative overflow-hidden"
@@ -229,16 +233,23 @@ export default function PortalClient() {
           isolation: "isolate",
         }}
       >
-        {/* 光・フレア */}
-        <WrapImg z={3} style={{ mixBlendMode: "screen", opacity: 0.5 }} src={ASSETS.flareWide + Q} layer={flareWide} />
-        <WrapImg z={4} style={{ mixBlendMode: "screen", opacity: 0.65 }} src={ASSETS.flareCore + Q} layer={flareCore} />
-        <WrapImg z={2} style={{ opacity: 0.9 }} src={ASSETS.rays + Q} layer={rays} />
+        {/* フレア／光（wrap） */}
+        <img ref={(el) => (flareWide.refs.current.a = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
+        <img ref={(el) => (flareWide.refs.current.b = el)} src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} />
+        <img ref={(el) => (flareCore.refs.current.a = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
+        <img ref={(el) => (flareCore.refs.current.b = el)} src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} />
+        <img ref={(el) => (rays.refs.current.a = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
+        <img ref={(el) => (rays.refs.current.b = el)} src={ASSETS.rays + Q} alt="" style={wrapStyle(2, { opacity: 0.9 })} />
 
-        {/* 雲 */}
-        <WrapImg z={5} style={{ opacity: 0.92 }} src={ASSETS.far + Q} layer={far} />
-        <WrapImg z={6} src={ASSETS.mid + Q} layer={mid} />
-        <WrapImg z={7} src={ASSETS.mid2 + Q} layer={mid2} />
-        <WrapImg z={8} src={ASSETS.near + Q} layer={near} />
+        {/* 雲（wrap） */}
+        <img ref={(el) => (far.refs.current.a = el)} src={ASSETS.far + Q} alt="" style={wrapStyle(5, { opacity: 0.92 })} />
+        <img ref={(el) => (far.refs.current.b = el)} src={ASSETS.far + Q} alt="" style={wrapStyle(5, { opacity: 0.92 })} />
+        <img ref={(el) => (mid.refs.current.a = el)} src={ASSETS.mid + Q} alt="" style={wrapStyle(6)} />
+        <img ref={(el) => (mid.refs.current.b = el)} src={ASSETS.mid + Q} alt="" style={wrapStyle(6)} />
+        <img ref={(el) => (mid2.refs.current.a = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
+        <img ref={(el) => (mid2.refs.current.b = el)} src={ASSETS.mid2 + Q} alt="" style={wrapStyle(7)} />
+        <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
+        <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} />
 
         {/* 粒子ベール（うっすら） */}
         <div
@@ -256,15 +267,13 @@ export default function PortalClient() {
           }}
         />
 
-        {/* 3D or 2D ロゴ（常にど真ん中） */}
+        {/* ロゴ：3D or 2D（ど真ん中固定） */}
         {!use2D ? (
           <div className="absolute inset-0 z-10 pointer-events-none">
             <ThreeHeroLazy
-              // @ts-ignore
               deviceIsMobile={isMobile}
               scrollY={scrollY}
               onContextLost={() => setThreeHardError(true)}
-              data-r3f="1"
             />
           </div>
         ) : (
@@ -286,7 +295,7 @@ export default function PortalClient() {
           />
         )}
 
-        {/* 上下の締めグラデーション */}
+        {/* 上下を締めるグラデ */}
         <div
           aria-hidden
           style={{
@@ -300,7 +309,7 @@ export default function PortalClient() {
         />
       </section>
 
-      {/* ===== COPY ===== */}
+      {/* ===== コピー（雲の上に浮かび上がる） ===== */}
       <section
         ref={msgRef}
         className="relative"
@@ -337,7 +346,9 @@ export default function PortalClient() {
                 <div style={{ fontSize: "clamp(24px, 5vw, 60px)", fontWeight: 800, letterSpacing: ".04em" }}>
                   {m.title}
                 </div>
-                <div style={{ opacity: 0.85, marginTop: 10, fontSize: "clamp(14px, 2.6vw, 20px)" }}>{m.body}</div>
+                <div style={{ opacity: 0.85, marginTop: 10, fontSize: "clamp(14px, 2.6vw, 20px)" }}>
+                  {m.body}
+                </div>
               </div>
             );
           })}
@@ -355,18 +366,9 @@ export default function PortalClient() {
   );
 }
 
-function WrapImg({
-  z,
-  src,
-  layer,
-  style,
-}: {
-  z: number;
-  src: string;
-  layer: ReturnType<typeof useWrapLayer>;
-  style?: React.CSSProperties;
-}) {
-  const common: React.CSSProperties = {
+/** 共通スタイル：wrap用（2枚重ね） */
+function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
+  return {
     position: "absolute",
     inset: "-6% -4% -2% -4%",
     width: "108%",
@@ -375,12 +377,6 @@ function WrapImg({
     zIndex: z,
     pointerEvents: "none",
     transform: "translate3d(0,0,0)",
-    ...style,
+    ...more,
   };
-  return (
-    <>
-      <img ref={(el) => (layer.refs.current.a = el)} src={src} alt="" style={common} />
-      <img ref={(el) => (layer.refs.current.b = el)} src={src} alt="" style={common} />
-    </>
-  );
 }

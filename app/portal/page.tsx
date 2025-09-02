@@ -1,7 +1,8 @@
-/* app/portal/page.tsx */
+// app/portal/page.tsx
 import PortalClient from "./PortalClient";
 
-export const dynamic = "force-dynamic"; // SSG を止めて毎回最新
+// SSG/ISRのキャッシュを避ける（常に最新アセットを読む）
+export const revalidate = 0;
 
 export default function Page() {
   return <PortalClient />;

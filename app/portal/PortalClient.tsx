@@ -14,22 +14,22 @@ const CFG = {
   HERO_MOBILE: 560,
 
   /** ← 文字サイズの全体倍率（見出し・本文に一括適用） */
-  COPY_FONT_SCALE: 1.10,     // 例: 0.92(小さめ) / 1.10(やや大) / 1.25(大きめ)
+  COPY_FONT_SCALE: 1.25,     // ★ 大きめに（好みで調整）
 
   /** ← 文章の間隔と表示位置（vh） */
-  COPY_GAP_VH: 120,          // 文章ブロック間の距離
+  COPY_GAP_VH: 120,          // 文章ブロック間の距離（好みで 100〜160 など）
   COPY_TOP_VH: 22,           // 文章の画面上からの位置
 
-  /** ← ロゴの距離＆サイズ調整（数字だけで遠近を変更。中央からズレません） */
+  /** ← ロゴの距離＆サイズ調整（中央のまま遠近だけ数値で変更） */
   LOGO_BASE_Z_DESKTOP: 8.2,
-  LOGO_BASE_Z_MOBILE: 10.0,   // iPhoneは少し奥へ
-  LOGO_DEPTH_TUNE: 1.0,       // +でより奥（小さく見える）
-  LOGO_DEPTH_TUNE_MOBILE: 0.5,
-  LOGO_SCALE: 1.00,           // デスクトップ用倍率
-  LOGO_SCALE_MOBILE: 0.90,    // iPhoneで少し小さく
+  LOGO_BASE_Z_MOBILE: 10.0,
+  LOGO_DEPTH_TUNE: 1.6,        // ★ 少し後ろ（大きいほど奥）
+  LOGO_DEPTH_TUNE_MOBILE: 1.2, // ★ iPhone側も奥に
+  LOGO_SCALE: 0.98,            // 見た目が小さすぎる場合は 1.00 に
+  LOGO_SCALE_MOBILE: 0.88,     // iPhoneは少し小さめ
 };
 
-const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
+const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_BUILD_TIME || "")
   .toString()
   .slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
@@ -110,6 +110,7 @@ export default function PortalClient() {
   const flareCore = useWrap();
 
   const [scrollY, setScrollY] = useState(0);
+  const scrollYRef = useRef(0);
 
   useEffect(() => {
     try {
@@ -132,14 +133,11 @@ export default function PortalClient() {
     return () => removeEventListener("resize", setAllHeights);
   }, []);
 
-  // 縦パララックスのみ
+  /** ── 軽量化版：スクロール時だけDOM更新（React再レンダーは ~15fps） ── */
   useEffect(() => {
-    const tick = () => {
-      const y = window.scrollY || 0;
-      setScrollY(y);
+    const applyAll = (y: number) => {
       const scale = reduced ? 0.2 : 1;
       const apply = (hook: ReturnType<typeof useWrap>, ky: number) => hook.setY(y * ky * scale);
-
       apply(sky, CFG.speedY.sky);
       apply(rays, CFG.speedY.rays);
       apply(far, CFG.speedY.far);
@@ -147,16 +145,32 @@ export default function PortalClient() {
       apply(near, CFG.speedY.near);
       apply(flareWide, CFG.speedY.flareWide);
       apply(flareCore, CFG.speedY.flareCore);
-
-      requestAnimationFrame(tick);
     };
-    const id = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(id);
+
+    const onScroll = () => {
+      scrollYRef.current = window.scrollY || 0;
+      requestAnimationFrame(() => applyAll(scrollYRef.current));
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll(); // 初期適用
+    return () => window.removeEventListener("scroll", onScroll);
   }, [reduced]);
+
+  // Three へは低頻度で反映（再レンダー負荷を下げる）
+  useEffect(() => {
+    let id = 0 as unknown as number;
+    const tick = () => {
+      setScrollY(scrollYRef.current);
+      id = window.setTimeout(tick, 66); // 約15fps
+    };
+    tick();
+    return () => clearTimeout(id);
+  }, []);
 
   const use2D = reduced || !webglOk || threeHardError;
 
-  // ★ 修正：cameraZ の式にタイプミスがありました（compile error）
+  // ロゴの距離（中央のまま、遠近だけ可変）
   const cameraZ =
     isMobile
       ? CFG.LOGO_BASE_Z_MOBILE + CFG.LOGO_DEPTH_TUNE_MOBILE
@@ -181,24 +195,39 @@ export default function PortalClient() {
         }}
       >
         {/* 背景（縦ラップ） */}
-        <img ref={(el) => (sky.refs.current.a = el)}  src={ASSETS.sky + Q}  alt="" style={wrapStyle(0, { opacity: 0.98 })} />
-        <img ref={(el) => (sky.refs.current.b = el)}  src={ASSETS.sky + Q}  alt="" style={wrapStyle(0, { opacity: 0.98 })} />
+        <img
+          ref={(el) => (sky.refs.current.a = el)}
+          src={ASSETS.sky + Q}
+          alt=""
+          style={wrapStyle(0, { opacity: 0.98 })}
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
+        />
+        <img
+          ref={(el) => (sky.refs.current.b = el)}
+          src={ASSETS.sky + Q}
+          alt=""
+          style={wrapStyle(0, { opacity: 0.98 })}
+          decoding="async"
+          loading="lazy"
+        />
 
         {/* 光 */}
-        <img ref={(el) => (flareWide.refs.current.a = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}/>
-        <img ref={(el) => (flareWide.refs.current.b = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}/>
-        <img ref={(el) => (flareCore.refs.current.a = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}/>
-        <img ref={(el) => (flareCore.refs.current.b = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}/>
-        <img ref={(el) => (rays.refs.current.a = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })}/>
-        <img ref={(el) => (rays.refs.current.b = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })}/>
+        <img ref={(el) => (flareWide.refs.current.a = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (flareWide.refs.current.b = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (flareCore.refs.current.a = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (flareCore.refs.current.b = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (rays.refs.current.a = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (rays.refs.current.b = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })} decoding="async" loading="lazy" />
 
         {/* 雲 */}
-        <img ref={(el) => (far.refs.current.a  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })}/>
-        <img ref={(el) => (far.refs.current.b  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })}/>
-        <img ref={(el) => (mid.refs.current.a  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)}/>
-        <img ref={(el) => (mid.refs.current.b  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)}/>
-        <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)}/>
-        <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)}/>
+        <img ref={(el) => (far.refs.current.a  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (far.refs.current.b  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (mid.refs.current.a  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} decoding="async" loading="lazy" />
+        <img ref={(el) => (mid.refs.current.b  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} decoding="async" loading="lazy" />
+        <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} decoding="async" loading="lazy" />
+        <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} decoding="async" loading="lazy" />
 
         {/* 中央ロゴ */}
         {!use2D ? (
@@ -224,6 +253,8 @@ export default function PortalClient() {
               height: "auto", zIndex: 30, pointerEvents: "none",
               filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))", opacity: 0.98,
             }}
+            decoding="async"
+            loading="eager"
           />
         )}
       </div>
@@ -278,6 +309,7 @@ export default function PortalClient() {
 
         .copyItem h2{
           margin: 0 0 12px;
+          color: #fff; /* 白文字をはっきり */
           font-size: calc(clamp(22px, 4.8vw, 42px) * var(--copyScale));
           font-weight: 900;
           letter-spacing: .04em;
@@ -286,7 +318,7 @@ export default function PortalClient() {
 
         .copyItem p{
           margin: 0;
-          color: #d9e1ee;
+          color: #d9e1ee; /* ほんのり青みの白 */
           font-size: calc(clamp(14px, 2.2vw, 18px) * var(--copyScale));
           line-height: 1.9;
           text-shadow: 0 1px 0 rgba(0,0,0,.35);

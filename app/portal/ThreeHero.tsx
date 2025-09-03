@@ -1,25 +1,76 @@
 "use client";
 
 import * as THREE from "three";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   deviceIsMobile?: boolean;
   scrollY?: number;
   onContextLost?: () => void;
+  /** 中央のまま遠近だけを変えるためのカメラ距離。大きいほど奥へ */
+  cameraZ?: number;
+  /** ロゴの倍率（大きさ） */
+  logoScale?: number;
 };
 
-function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
-  const tex = useLoader(THREE.TextureLoader, "/portal/logo.webp");
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  tex.anisotropy = 8;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.transparent = true;
+/* ── ビルド識別子（キャッシュバスター） ─────────────────────────── */
+const SHA =
+  (process.env.NEXT_PUBLIC_COMMIT_SHA ||
+    process.env.NEXT_PUBLIC_BUILD_TIME ||
+    "").toString().slice(0, 8);
+const Q = SHA ? `?v=${SHA}` : "";
+
+/* ── 安全なテクスチャローダー（エラーで throw しない） ─────────────── */
+function useTextureSafe(url: string) {
+  const [tex, setTex] = useState<THREE.Texture | null>(null);
+  const [err, setErr] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      url,
+      (t) => {
+        if (!alive) return;
+        t.minFilter = THREE.LinearFilter;
+        t.magFilter = THREE.LinearFilter;
+        t.anisotropy = 8;
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.transparent = true;
+        setTex(t);
+      },
+      undefined,
+      (e) => {
+        if (!alive) return;
+        setErr(e as any);
+      }
+    );
+    return () => {
+      alive = false;
+    };
+  }, [url]);
+
+  return { tex, err };
+}
+
+function LogoBillboard({
+  deviceIsMobile,
+  scrollY = 0,
+  logoScale = 1,
+  onContextLost,
+}: Props) {
+  // ※ Three.js 側も ?v= を付ける
+  const url = `/portal/logo.webp${Q}`;
+  const { tex, err } = useTextureSafe(url);
+
+  // もし読み込みに失敗したら、上位へ通知しつつ描画はスキップ（クラッシュさせない）
+  useEffect(() => {
+    if (err) onContextLost?.();
+  }, [err, onContextLost]);
 
   const g = useRef<THREE.Group>(null!);
-  const baseScale = deviceIsMobile ? 1.4 : 1.9;
+  const baseScale = (deviceIsMobile ? 1.4 : 1.9) * logoScale;
   const yFactor = deviceIsMobile ? 0.0008 : 0.001;
 
   useFrame(({ clock }) => {
@@ -29,6 +80,9 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
     g.current.rotation.x = Math.sin(t * 0.35) * 0.02;
     g.current.rotation.y = Math.sin(t * 0.25) * 0.02;
   });
+
+  // テクスチャ未読込 or 失敗時は何も描かずに返す（Canvas自体は維持）
+  if (!tex) return null;
 
   return (
     <group ref={g}>
@@ -41,7 +95,11 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
 }
 
 export default function ThreeHero(props: Props) {
-  const cameraZ = useMemo(() => (props.deviceIsMobile ? 8.8 : 8.2), [props.deviceIsMobile]);
+  const cameraZ = useMemo(
+    () => props.cameraZ ?? (props.deviceIsMobile ? 8.8 : 8.2),
+    [props.cameraZ, props.deviceIsMobile]
+  );
+
   return (
     <Canvas
       dpr={[1, 2]}
@@ -49,7 +107,11 @@ export default function ThreeHero(props: Props) {
       gl={{ alpha: true, antialias: true }}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       onCreated={({ gl }) => {
-        gl.domElement.addEventListener("webglcontextlost", props.onContextLost ?? (() => {}), false);
+        gl.domElement.addEventListener(
+          "webglcontextlost",
+          props.onContextLost ?? (() => {}),
+          false
+        );
       }}
       data-r3f="1"
     >

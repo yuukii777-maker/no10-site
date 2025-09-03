@@ -23,10 +23,10 @@ const CFG = {
   /** ← ロゴの距離＆サイズ調整（数字だけで遠近を変更。中央からズレません） */
   LOGO_BASE_Z_DESKTOP: 8.2,
   LOGO_BASE_Z_MOBILE: 10.0,   // iPhoneは少し奥へ
-  LOGO_DEPTH_TUNE: 1.0,      // +でより奥（小さく見える）
+  LOGO_DEPTH_TUNE: 1.0,       // +でより奥（小さく見える）
   LOGO_DEPTH_TUNE_MOBILE: 0.5,
-  LOGO_SCALE: 1.00,          // デスクトップ用倍率
-  LOGO_SCALE_MOBILE: 0.90,   // iPhoneで少し小さく
+  LOGO_SCALE: 1.00,           // デスクトップ用倍率
+  LOGO_SCALE_MOBILE: 0.90,    // iPhoneで少し小さく
 };
 
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
@@ -156,10 +156,11 @@ export default function PortalClient() {
 
   const use2D = reduced || !webglOk || threeHardError;
 
-  // ロゴの距離（中央のまま、遠近だけ可変）
-  const cameraZ =LOGO_DEPTH_TUNE
-    (isMobile ? CFG.LOGO_BASE_Z_MOBILE + CFG._MOBILE
-              : CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE);
+  // ★ 修正：cameraZ の式にタイプミスがありました（compile error）
+  const cameraZ =
+    isMobile
+      ? CFG.LOGO_BASE_Z_MOBILE + CFG.LOGO_DEPTH_TUNE_MOBILE
+      : CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE;
 
   // ロゴの倍率（大きさ）
   const logoScale = isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE;
@@ -201,15 +202,17 @@ export default function PortalClient() {
 
         {/* 中央ロゴ */}
         {!use2D ? (
-          <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
-            <ThreeHeroLazy
-              deviceIsMobile={isMobile}
-              scrollY={scrollY}
-              onContextLost={() => setThreeHardError(true)}
-              cameraZ={cameraZ}
-              logoScale={logoScale}
-            />
-          </div>
+          <React.Suspense fallback={null}>
+            <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
+              <ThreeHeroLazy
+                deviceIsMobile={isMobile}
+                scrollY={scrollY}
+                onContextLost={() => setThreeHardError(true)}
+                cameraZ={cameraZ}
+                logoScale={logoScale}
+              />
+            </div>
+          </React.Suspense>
         ) : (
           <img
             src={ASSETS.logo + Q}

@@ -8,20 +8,20 @@ type Props = {
   deviceIsMobile?: boolean;
   scrollY?: number;
   onContextLost?: () => void;
-  /** 中央のまま遠近だけを変えるためのカメラ距離。大きいほど奥へ */
+  /** 中央のまま遠近だけを変えるためのカメラ距離（大きいほど奥） */
   cameraZ?: number;
   /** ロゴの倍率（大きさ） */
   logoScale?: number;
 };
 
-/* ── ビルド識別子（キャッシュバスター） ─────────────────────────── */
+/* キャッシュバスター */
 const SHA =
   (process.env.NEXT_PUBLIC_COMMIT_SHA ||
     process.env.NEXT_PUBLIC_BUILD_TIME ||
     "").toString().slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
 
-/* ── 安全なテクスチャローダー（エラーで throw しない） ─────────────── */
+/* 例外を投げない安全ローダー */
 function useTextureSafe(url: string) {
   const [tex, setTex] = useState<THREE.Texture | null>(null);
   const [err, setErr] = useState<Error | null>(null);
@@ -35,7 +35,7 @@ function useTextureSafe(url: string) {
         if (!alive) return;
         t.minFilter = THREE.LinearFilter;
         t.magFilter = THREE.LinearFilter;
-        t.anisotropy = 8;
+        t.anisotropy = 4; // 少し軽く
         t.colorSpace = THREE.SRGBColorSpace;
         t.transparent = true;
         setTex(t);
@@ -46,9 +46,7 @@ function useTextureSafe(url: string) {
         setErr(e as any);
       }
     );
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [url]);
 
   return { tex, err };
@@ -60,11 +58,8 @@ function LogoBillboard({
   logoScale = 1,
   onContextLost,
 }: Props) {
-  // ※ Three.js 側も ?v= を付ける
-  const url = `/portal/logo.webp${Q}`;
-  const { tex, err } = useTextureSafe(url);
+  const { tex, err } = useTextureSafe(`/portal/logo.webp${Q}`);
 
-  // もし読み込みに失敗したら、上位へ通知しつつ描画はスキップ（クラッシュさせない）
   useEffect(() => {
     if (err) onContextLost?.();
   }, [err, onContextLost]);
@@ -81,7 +76,6 @@ function LogoBillboard({
     g.current.rotation.y = Math.sin(t * 0.25) * 0.02;
   });
 
-  // テクスチャ未読込 or 失敗時は何も描かずに返す（Canvas自体は維持）
   if (!tex) return null;
 
   return (
@@ -100,11 +94,18 @@ export default function ThreeHero(props: Props) {
     [props.cameraZ, props.deviceIsMobile]
   );
 
+  // 高DPRディスプレイでも上限をかけて軽くする
+  const dpr = useMemo(() => {
+    if (typeof window === "undefined") return 1;
+    const real = window.devicePixelRatio || 1;
+    return Math.min(1.5, real); // ★ 1.5 までに制限
+  }, []);
+
   return (
     <Canvas
-      dpr={[1, 2]}
+      dpr={dpr}
       camera={{ position: [0, 0, cameraZ], fov: 45 }}
-      gl={{ alpha: true, antialias: true }}
+      gl={{ alpha: true, antialias: false, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener(

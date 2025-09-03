@@ -13,20 +13,20 @@ const CFG = {
   HERO_DESKTOP: 760,
   HERO_MOBILE: 560,
 
-  /** ← 文字サイズの全体倍率（見出し・本文に一括適用） */
-  COPY_FONT_SCALE: 1.25,     // ★ 大きめに（好みで調整）
+  /** 文字サイズの全体倍率（見出し・本文に一括適用） */
+  COPY_FONT_SCALE: 1.25,     // ★大きめ
 
-  /** ← 文章の間隔と表示位置（vh） */
-  COPY_GAP_VH: 120,          // 文章ブロック間の距離（好みで 100〜160 など）
-  COPY_TOP_VH: 22,           // 文章の画面上からの位置
+  /** 文章の間隔と表示位置（vh） */
+  COPY_GAP_VH: 120,          // ブロック間の距離
+  COPY_TOP_VH: 22,           // 画面上からの位置
 
-  /** ← ロゴの距離＆サイズ調整（中央のまま遠近だけ数値で変更） */
+  /** ロゴの距離＆サイズ（中央のまま遠近のみ変化） */
   LOGO_BASE_Z_DESKTOP: 8.2,
   LOGO_BASE_Z_MOBILE: 10.0,
-  LOGO_DEPTH_TUNE: 1.6,        // ★ 少し後ろ（大きいほど奥）
-  LOGO_DEPTH_TUNE_MOBILE: 1.2, // ★ iPhone側も奥に
-  LOGO_SCALE: 0.98,            // 見た目が小さすぎる場合は 1.00 に
-  LOGO_SCALE_MOBILE: 0.88,     // iPhoneは少し小さめ
+  LOGO_DEPTH_TUNE: 1.6,        // ★奥へ（大きいほど奥）
+  LOGO_DEPTH_TUNE_MOBILE: 1.2, // ★モバイルも少し奥へ
+  LOGO_SCALE: 0.98,
+  LOGO_SCALE_MOBILE: 0.88,
 };
 
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_BUILD_TIME || "")
@@ -92,7 +92,7 @@ function useWrap() {
   return { refs, setH, setY };
 }
 
-/** 3D ロゴ */
+/** 3D ロゴ（遅延マウントで初期表示を軽く） */
 const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), { ssr: false, loading: () => null });
 
 export default function PortalClient() {
@@ -100,6 +100,7 @@ export default function PortalClient() {
   const isMobile = useIsMobile();
   const [webglOk, setWebglOk] = useState(false);
   const [threeHardError, setThreeHardError] = useState(false);
+  const [mountThree, setMountThree] = useState(false); // ★ 3Dの遅延マウント
 
   const sky = useWrap();
   const rays = useWrap();
@@ -133,7 +134,7 @@ export default function PortalClient() {
     return () => removeEventListener("resize", setAllHeights);
   }, []);
 
-  /** ── 軽量化版：スクロール時だけDOM更新（React再レンダーは ~15fps） ── */
+  /** ── 軽量化：スクロール時だけDOM更新（React再レンダーは ~15fps） ── */
   useEffect(() => {
     const applyAll = (y: number) => {
       const scale = reduced ? 0.2 : 1;
@@ -166,6 +167,18 @@ export default function PortalClient() {
     };
     tick();
     return () => clearTimeout(id);
+  }, []);
+
+  // 3Dロゴはアイドル時に遅延でマウント（初期ロードを軽く）
+  useEffect(() => {
+    const w = window as any;
+    const handle = w.requestIdleCallback
+      ? w.requestIdleCallback(() => setMountThree(true), { timeout: 1200 })
+      : window.setTimeout(() => setMountThree(true), 800);
+    return () => {
+      if (w.cancelIdleCallback) w.cancelIdleCallback(handle);
+      else clearTimeout(handle);
+    };
   }, []);
 
   const use2D = reduced || !webglOk || threeHardError;
@@ -230,7 +243,7 @@ export default function PortalClient() {
         <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} decoding="async" loading="lazy" />
 
         {/* 中央ロゴ */}
-        {!use2D ? (
+        {mountThree && !use2D ? (
           <React.Suspense fallback={null}>
             <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
               <ThreeHeroLazy
@@ -243,6 +256,7 @@ export default function PortalClient() {
             </div>
           </React.Suspense>
         ) : (
+          // 初期は軽い 2D ロゴを表示（3Dはアイドル時にマウント）
           <img
             src={ASSETS.logo + Q}
             alt="VOLCE Logo"
@@ -278,7 +292,6 @@ export default function PortalClient() {
           will-change:transform,opacity;
         }
 
-        /* 雲の上に重ねる。黒フェードは使わない */
         .copyWrap{
           margin-top: -100vh;    /* 雲の上に被せる */
           padding-top: 100vh;    /* レイアウト維持 */
@@ -288,13 +301,8 @@ export default function PortalClient() {
           --copyScale: ${CFG.COPY_FONT_SCALE};
         }
 
-        /* 各段の“高さ”は COPY_GAP_VH で調整（= 文章間の距離） */
-        .copyBlock{
-          position: relative;
-          height: ${CFG.COPY_GAP_VH}vh;
-        }
+        .copyBlock{ position: relative; height: ${CFG.COPY_GAP_VH}vh; }
 
-        /* 文章は画面内で固定表示（上からの位置は COPY_TOP_VH で調整） */
         .copyItem{
           position: sticky;
           top: ${CFG.COPY_TOP_VH}vh;
@@ -309,16 +317,15 @@ export default function PortalClient() {
 
         .copyItem h2{
           margin: 0 0 12px;
-          color: #fff; /* 白文字をはっきり */
+          color: #fff;
           font-size: calc(clamp(22px, 4.8vw, 42px) * var(--copyScale));
           font-weight: 900;
           letter-spacing: .04em;
           line-height: 1.25;
         }
-
         .copyItem p{
           margin: 0;
-          color: #d9e1ee; /* ほんのり青みの白 */
+          color: #d9e1ee;
           font-size: calc(clamp(14px, 2.2vw, 18px) * var(--copyScale));
           line-height: 1.9;
           text-shadow: 0 1px 0 rgba(0,0,0,.35);

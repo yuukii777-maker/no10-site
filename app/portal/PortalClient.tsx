@@ -12,24 +12,15 @@ const CFG = {
   tiltMaxX: 0,
   HERO_DESKTOP: 760,
   HERO_MOBILE: 560,
+  COPY_FONT_SCALE: 0.92,
 
-  /** 文字サイズの全体倍率（見出し・本文に一括適用） */
-  COPY_FONT_SCALE: 1.25,     // ★大きめ
-
-  /** 文章の間隔と表示位置（vh） */
-  COPY_GAP_VH: 120,          // ブロック間の距離
-  COPY_TOP_VH: 22,           // 画面上からの位置
-
-  /** ロゴの距離＆サイズ（中央のまま遠近のみ変化） */
-  LOGO_BASE_Z_DESKTOP: 8.2,
-  LOGO_BASE_Z_MOBILE: 10.0,
-  LOGO_DEPTH_TUNE: 1.6,        // ★奥へ（大きいほど奥）
-  LOGO_DEPTH_TUNE_MOBILE: 1.2, // ★モバイルも少し奥へ
-  LOGO_SCALE: 0.98,
-  LOGO_SCALE_MOBILE: 0.88,
+  // ← ここを変えるだけで“文章同士の距離”を調整できます（各段の高さ）
+  COPY_GAP_VH: 120,       // 例: 100〜160 を好みで
+  // ← 文章の表示位置（画面上からのオフセット）
+  COPY_TOP_VH: 22,        // 例: 16〜28 を好みで
 };
 
-const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_BUILD_TIME || "")
+const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
   .toString()
   .slice(0, 8);
 const Q = SHA ? `?v=${SHA}` : "";
@@ -48,7 +39,10 @@ const ASSETS = {
 
 /** ===== 文章 ===== */
 const COPY: { title?: string; body: string }[] = [
-  { title: "Volceクラン公式ホームページへようこそ。", body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。" },
+  {
+    title: "Volceクラン公式ホームページへようこそ。",
+    body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。",
+  },
   { body: "得意分野に振り分け、ゲリラ・大会への参加、SNS活動、イベントの開催等、活動を行っています。" },
   { body: "人との輪を大切に、荒野行動を楽しみ、広めてユーザーを増やす。をモットーにしています。" },
   { body: "プレイの実力が無くても、他の強みを生かして活躍することも可能です。" },
@@ -92,7 +86,7 @@ function useWrap() {
   return { refs, setH, setY };
 }
 
-/** 3D ロゴ（遅延マウントで初期表示を軽く） */
+/** 3D ロゴ */
 const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), { ssr: false, loading: () => null });
 
 export default function PortalClient() {
@@ -100,7 +94,8 @@ export default function PortalClient() {
   const isMobile = useIsMobile();
   const [webglOk, setWebglOk] = useState(false);
   const [threeHardError, setThreeHardError] = useState(false);
-  const [mountThree, setMountThree] = useState(false); // ★ 3Dの遅延マウント
+
+  const stageRef = useRef<HTMLDivElement | null>(null);
 
   const sky = useWrap();
   const rays = useWrap();
@@ -111,7 +106,6 @@ export default function PortalClient() {
   const flareCore = useWrap();
 
   const [scrollY, setScrollY] = useState(0);
-  const scrollYRef = useRef(0);
 
   useEffect(() => {
     try {
@@ -134,11 +128,14 @@ export default function PortalClient() {
     return () => removeEventListener("resize", setAllHeights);
   }, []);
 
-  /** ── 軽量化：スクロール時だけDOM更新（React再レンダーは ~15fps） ── */
+  // 縦パララックスのみ
   useEffect(() => {
-    const applyAll = (y: number) => {
+    const tick = () => {
+      const y = window.scrollY || 0;
+      setScrollY(y);
       const scale = reduced ? 0.2 : 1;
       const apply = (hook: ReturnType<typeof useWrap>, ky: number) => hook.setY(y * ky * scale);
+
       apply(sky, CFG.speedY.sky);
       apply(rays, CFG.speedY.rays);
       apply(far, CFG.speedY.far);
@@ -146,56 +143,20 @@ export default function PortalClient() {
       apply(near, CFG.speedY.near);
       apply(flareWide, CFG.speedY.flareWide);
       apply(flareCore, CFG.speedY.flareCore);
-    };
 
-    const onScroll = () => {
-      scrollYRef.current = window.scrollY || 0;
-      requestAnimationFrame(() => applyAll(scrollYRef.current));
+      requestAnimationFrame(tick);
     };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); // 初期適用
-    return () => window.removeEventListener("scroll", onScroll);
+    const id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
   }, [reduced]);
 
-  // Three へは低頻度で反映（再レンダー負荷を下げる）
-  useEffect(() => {
-    let id = 0 as unknown as number;
-    const tick = () => {
-      setScrollY(scrollYRef.current);
-      id = window.setTimeout(tick, 66); // 約15fps
-    };
-    tick();
-    return () => clearTimeout(id);
-  }, []);
-
-  // 3Dロゴはアイドル時に遅延でマウント（初期ロードを軽く）
-  useEffect(() => {
-    const w = window as any;
-    const handle = w.requestIdleCallback
-      ? w.requestIdleCallback(() => setMountThree(true), { timeout: 1200 })
-      : window.setTimeout(() => setMountThree(true), 800);
-    return () => {
-      if (w.cancelIdleCallback) w.cancelIdleCallback(handle);
-      else clearTimeout(handle);
-    };
-  }, []);
-
   const use2D = reduced || !webglOk || threeHardError;
-
-  // ロゴの距離（中央のまま、遠近だけ可変）
-  const cameraZ =
-    isMobile
-      ? CFG.LOGO_BASE_Z_MOBILE + CFG.LOGO_DEPTH_TUNE_MOBILE
-      : CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE;
-
-  // ロゴの倍率（大きさ）
-  const logoScale = isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE;
 
   return (
     <main className="portal" style={{ minHeight: `${CFG.stageHeightVH}vh` }}>
       {/* === sticky sky stage === */}
       <div
+        ref={stageRef}
         style={{
           position: "sticky",
           top: 0,
@@ -208,69 +169,49 @@ export default function PortalClient() {
         }}
       >
         {/* 背景（縦ラップ） */}
-        <img
-          ref={(el) => (sky.refs.current.a = el)}
-          src={ASSETS.sky + Q}
-          alt=""
-          style={wrapStyle(0, { opacity: 0.98 })}
-          fetchPriority="high"
-          decoding="async"
-          loading="eager"
-        />
-        <img
-          ref={(el) => (sky.refs.current.b = el)}
-          src={ASSETS.sky + Q}
-          alt=""
-          style={wrapStyle(0, { opacity: 0.98 })}
-          decoding="async"
-          loading="lazy"
-        />
+        <img ref={(el) => (sky.refs.current.a = el)}  src={ASSETS.sky + Q}  alt="" style={wrapStyle(0, { opacity: 0.98 })} />
+        <img ref={(el) => (sky.refs.current.b = el)}  src={ASSETS.sky + Q}  alt="" style={wrapStyle(0, { opacity: 0.98 })} />
 
         {/* 光 */}
-        <img ref={(el) => (flareWide.refs.current.a = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (flareWide.refs.current.b = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (flareCore.refs.current.a = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (flareCore.refs.current.b = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (rays.refs.current.a = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (rays.refs.current.b = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })} decoding="async" loading="lazy" />
+        <img ref={(el) => (flareWide.refs.current.a = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}/>
+        <img ref={(el) => (flareWide.refs.current.b = el)}  src={ASSETS.flareWide + Q} alt="" style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}/>
+        <img ref={(el) => (flareCore.refs.current.a = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}/>
+        <img ref={(el) => (flareCore.refs.current.b = el)}  src={ASSETS.flareCore + Q} alt="" style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}/>
+        <img ref={(el) => (rays.refs.current.a = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })}/>
+        <img ref={(el) => (rays.refs.current.b = el)}       src={ASSETS.rays + Q}      alt="" style={wrapStyle(2, { opacity: 0.9 })}/>
 
         {/* 雲 */}
-        <img ref={(el) => (far.refs.current.a  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (far.refs.current.b  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })} decoding="async" loading="lazy" />
-        <img ref={(el) => (mid.refs.current.a  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} decoding="async" loading="lazy" />
-        <img ref={(el) => (mid.refs.current.b  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)} decoding="async" loading="lazy" />
-        <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} decoding="async" loading="lazy" />
-        <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)} decoding="async" loading="lazy" />
+        <img ref={(el) => (far.refs.current.a  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })}/>
+        <img ref={(el) => (far.refs.current.b  = el)} src={ASSETS.far + Q}  alt="" style={wrapStyle(5, { opacity: 0.92 })}/>
+        <img ref={(el) => (mid.refs.current.a  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)}/>
+        <img ref={(el) => (mid.refs.current.b  = el)} src={ASSETS.mid + Q}  alt="" style={wrapStyle(6)}/>
+        <img ref={(el) => (near.refs.current.a = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)}/>
+        <img ref={(el) => (near.refs.current.b = el)} src={ASSETS.near + Q} alt="" style={wrapStyle(8)}/>
 
         {/* 中央ロゴ */}
-        {mountThree && !use2D ? (
-          <React.Suspense fallback={null}>
-            <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
-              <ThreeHeroLazy
-                deviceIsMobile={isMobile}
-                scrollY={scrollY}
-                onContextLost={() => setThreeHardError(true)}
-                cameraZ={cameraZ}
-                logoScale={logoScale}
-              />
-            </div>
-          </React.Suspense>
+        {!use2D ? (
+          <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
+            <ThreeHeroLazy
+              deviceIsMobile={isMobile}
+              scrollY={scrollY}
+              onContextLost={() => setThreeHardError(true)}
+            />
+          </div>
         ) : (
-          // 初期は軽い 2D ロゴを表示（3Dはアイドル時にマウント）
           <img
             src={ASSETS.logo + Q}
             alt="VOLCE Logo"
             style={{
               position: "absolute", left: "50%", top: "50%",
               transform: "translate(-50%, -50%)",
-              width: (isMobile ? 220 : 320) * logoScale,
+              width: isMobile ? 220 : 320,
               height: "auto", zIndex: 30, pointerEvents: "none",
               filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))", opacity: 0.98,
             }}
-            decoding="async"
-            loading="eager"
           />
         )}
+
+        {/* ★★ 黒い上下グラデーションは削除しました ★★ */}
       </div>
 
       {/* ==== コピー（1段＝1スクロールセクション） ==== */}
@@ -292,17 +233,22 @@ export default function PortalClient() {
           will-change:transform,opacity;
         }
 
+        /* 雲の上に重ねる。黒フェードは使わない */
         .copyWrap{
-          margin-top: -100vh;    /* 雲の上に被せる */
-          padding-top: 100vh;    /* レイアウト維持 */
+          margin-top: -100vh;    /* 上に引き上げて雲の上に被せる */
+          padding-top: 100vh;    /* レイアウトは維持 */
           position: relative;
           z-index: 60;
-          background: transparent;
-          --copyScale: ${CFG.COPY_FONT_SCALE};
+          background: transparent; /* ← フェード削除 */
         }
 
-        .copyBlock{ position: relative; height: ${CFG.COPY_GAP_VH}vh; }
+        /* 各段の“高さ”は COPY_GAP_VH で調整（= 文章間の距離） */
+        .copyBlock{
+          position: relative;
+          height: ${CFG.COPY_GAP_VH}vh;
+        }
 
+        /* 文章は画面内で固定表示（上からの位置は COPY_TOP_VH で調整） */
         .copyItem{
           position: sticky;
           top: ${CFG.COPY_TOP_VH}vh;
@@ -317,16 +263,16 @@ export default function PortalClient() {
 
         .copyItem h2{
           margin: 0 0 12px;
-          color: #fff;
-          font-size: calc(clamp(22px, 4.8vw, 42px) * var(--copyScale));
+          font-size: clamp(22px, 4.8vw, 42px);
           font-weight: 900;
           letter-spacing: .04em;
           line-height: 1.25;
         }
+
         .copyItem p{
           margin: 0;
           color: #d9e1ee;
-          font-size: calc(clamp(14px, 2.2vw, 18px) * var(--copyScale));
+          font-size: clamp(14px, 2.2vw, 18px);
           line-height: 1.9;
           text-shadow: 0 1px 0 rgba(0,0,0,.35);
           word-break: break-word;

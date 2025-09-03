@@ -13,6 +13,11 @@ const CFG = {
   HERO_DESKTOP: 760,
   HERO_MOBILE: 560,
   COPY_FONT_SCALE: 0.92,
+
+  // ← ここを変えるだけで“文章同士の距離”を調整できます（各段の高さ）
+  COPY_GAP_VH: 120,       // 例: 100〜160 を好みで
+  // ← 文章の表示位置（画面上からのオフセット）
+  COPY_TOP_VH: 22,        // 例: 16〜28 を好みで
 };
 
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
@@ -34,7 +39,10 @@ const ASSETS = {
 
 /** ===== 文章 ===== */
 const COPY: { title?: string; body: string }[] = [
-  { title: "Volceクラン公式ホームページへようこそ。", body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。" },
+  {
+    title: "Volceクラン公式ホームページへようこそ。",
+    body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。",
+  },
   { body: "得意分野に振り分け、ゲリラ・大会への参加、SNS活動、イベントの開催等、活動を行っています。" },
   { body: "人との輪を大切に、荒野行動を楽しみ、広めてユーザーを増やす。をモットーにしています。" },
   { body: "プレイの実力が無くても、他の強みを生かして活躍することも可能です。" },
@@ -143,7 +151,6 @@ export default function PortalClient() {
   }, [reduced]);
 
   const use2D = reduced || !webglOk || threeHardError;
-  const heroHeight = isMobile ? CFG.HERO_MOBILE : CFG.HERO_DESKTOP;
 
   return (
     <main className="portal" style={{ minHeight: `${CFG.stageHeightVH}vh` }}>
@@ -204,63 +211,71 @@ export default function PortalClient() {
           />
         )}
 
-        {/* 上下グラデーション */}
-        <div aria-hidden style={{
-          position: "absolute", inset: 0, zIndex: 12, pointerEvents: "none",
-          background: "linear-gradient(to bottom, rgba(5,8,15,.40) 0%, rgba(5,8,15,0) 28%, rgba(5,8,15,0) 72%, rgba(5,8,15,.28) 100%)",
-        }}/>
+        {/* ★★ 黒い上下グラデーションは削除しました ★★ */}
       </div>
 
-      {/* ==== コピー ==== */}
+      {/* ==== コピー（1段＝1スクロールセクション） ==== */}
       <section className="copyWrap">
-        <div className="copySticky">
-          {COPY.map((c, i) => (
-            <article className="copy" style={{ ["--i" as any]: i } as React.CSSProperties} key={i}>
+        {COPY.map((c, i) => (
+          <section className="copyBlock" key={i}>
+            <div className="copyItem">
               {!!c.title && <h2>{c.title}</h2>}
               <p>{c.body}</p>
-            </article>
-          ))}
-        </div>
+            </div>
+          </section>
+        ))}
       </section>
 
       <style jsx>{`
-        .portal :global(img){ user-select:none; -webkit-user-drag:none; will-change:transform,opacity; }
+        .portal :global(img){
+          user-select:none;
+          -webkit-user-drag:none;
+          will-change:transform,opacity;
+        }
 
+        /* 雲の上に重ねる。黒フェードは使わない */
         .copyWrap{
-          /* 雲ステージの上に重ねる（重なる領域を作る） */
-          margin-top: -100vh;    /* ← ここで上に引き上げる */
-          padding-top: 100vh;    /* ← レイアウトは元のままに戻す */
+          margin-top: -100vh;    /* 上に引き上げて雲の上に被せる */
+          padding-top: 100vh;    /* レイアウトは維持 */
           position: relative;
-          z-index: 60;           /* 雲ステージ(z-index:40)より前 */
-
-          min-height: 220vh;
-          background: linear-gradient(to bottom,
-            rgba(6,10,18,1) 0,
-            rgba(6,10,18,0) 35%,
-            rgba(6,10,18,0) 65%,
-            rgba(6,10,18,1) 100%);
+          z-index: 60;
+          background: transparent; /* ← フェード削除 */
         }
 
-        .copySticky{
-          position: sticky; top: 16vh; height: 68vh;
-          display:grid; place-items:center; text-align:center; pointer-events:none;
-          font-size: calc(1rem * ${CFG.COPY_FONT_SCALE});
+        /* 各段の“高さ”は COPY_GAP_VH で調整（= 文章間の距離） */
+        .copyBlock{
+          position: relative;
+          height: ${CFG.COPY_GAP_VH}vh;
         }
-        .copy{
-          position:absolute; width:min(820px, 86vw); margin:0 auto;
-          opacity:0; transform: translate3d(0, 26px, 0);
-          transition: opacity .35s ease, transform .35s ease;
-          animation: reveal 1ms linear both;
-          animation-delay: calc(var(--i,0) * 220ms);
+
+        /* 文章は画面内で固定表示（上からの位置は COPY_TOP_VH で調整） */
+        .copyItem{
+          position: sticky;
+          top: ${CFG.COPY_TOP_VH}vh;
+          display: grid;
+          place-items: center;
+          text-align: center;
+          width: min(900px, 86vw);
+          margin: 0 auto;
+          pointer-events: auto;
+          opacity: 0.98;
         }
-        @keyframes reveal { to { opacity:1; transform: translate3d(0,0,0); } }
-        .copy + .copy{ filter:none }
-        .copy h2{
-          margin:0 0 10px; font-size:clamp(20px, 4.6vw, 40px); font-weight:900; letter-spacing:.04em;
+
+        .copyItem h2{
+          margin: 0 0 12px;
+          font-size: clamp(22px, 4.8vw, 42px);
+          font-weight: 900;
+          letter-spacing: .04em;
+          line-height: 1.25;
         }
-        .copy p{
-          margin:0; color:#d9e1ee; font-size:clamp(14px, 2.2vw, 18px); line-height:1.9;
-          text-shadow: 0 1px 0 rgba(0,0,0,.45);
+
+        .copyItem p{
+          margin: 0;
+          color: #d9e1ee;
+          font-size: clamp(14px, 2.2vw, 18px);
+          line-height: 1.9;
+          text-shadow: 0 1px 0 rgba(0,0,0,.35);
+          word-break: break-word;
         }
       `}</style>
     </main>

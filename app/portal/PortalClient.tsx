@@ -9,10 +9,10 @@ const CFG = {
   stageHeightVH: 900,
   // 縦パララックス速度（横ドリフトは完全に0へ）
   speedY: { sky: 0.06, rays: 0.12, far: 0.18, mid: 0.32, near: 0.70, flareWide: 0.50, flareCore: 0.62 },
-  tiltMaxX: 0,                     // 横ブレ無し
+  tiltMaxX: 0,
   HERO_DESKTOP: 760,
   HERO_MOBILE: 560,
-  COPY_FONT_SCALE: 0.92,           // ← 文字サイズの全体倍率（重なり時は下げる）
+  COPY_FONT_SCALE: 0.92,
 };
 
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
@@ -32,29 +32,13 @@ const ASSETS = {
   logo: "/portal/logo.webp",
 } as const;
 
-/** ===== 文章（ここを書き換えればOK） ===== */
+/** ===== 文章 ===== */
 const COPY: { title?: string; body: string }[] = [
-  {
-    title: "Volceクラン公式ホームページへようこそ。",
-    body:
-      "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。",
-  },
-  {
-    body:
-      "得意分野に振り分け、ゲリラ・大会への参加、SNS活動、イベントの開催等、活動を行っています。",
-  },
-  {
-    body:
-      "人との輪を大切に、荒野行動を楽しみ、広めてユーザーを増やす。をモットーにしています。",
-  },
-  {
-    body:
-      "プレイの実力が無くても、他の強みを生かして活躍することも可能です。",
-  },
-  {
-    body:
-      "興味のある方は X(旧ツイッター) の ID @Char_god1 まで「入隊希望」とご連絡ください。",
-  },
+  { title: "Volceクラン公式ホームページへようこそ。", body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。" },
+  { body: "得意分野に振り分け、ゲリラ・大会への参加、SNS活動、イベントの開催等、活動を行っています。" },
+  { body: "人との輪を大切に、荒野行動を楽しみ、広めてユーザーを増やす。をモットーにしています。" },
+  { body: "プレイの実力が無くても、他の強みを生かして活躍することも可能です。" },
+  { body: "興味のある方は X(旧ツイッター) の ID @Char_god1 まで「入隊希望」とご連絡ください。" },
 ];
 
 /* ===== small hooks ===== */
@@ -94,7 +78,7 @@ function useWrap() {
   return { refs, setH, setY };
 }
 
-/** 3D ロゴ（必要なら） */
+/** 3D ロゴ */
 const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), { ssr: false, loading: () => null });
 
 export default function PortalClient() {
@@ -241,11 +225,22 @@ export default function PortalClient() {
 
       <style jsx>{`
         .portal :global(img){ user-select:none; -webkit-user-drag:none; will-change:transform,opacity; }
+
         .copyWrap{
+          /* 雲ステージの上に重ねる（重なる領域を作る） */
+          margin-top: -100vh;    /* ← ここで上に引き上げる */
+          padding-top: 100vh;    /* ← レイアウトは元のままに戻す */
+          position: relative;
+          z-index: 60;           /* 雲ステージ(z-index:40)より前 */
+
           min-height: 220vh;
-          background: linear-gradient(to bottom, rgba(6,10,18,1) 0, rgba(6,10,18,0) 35%, rgba(6,10,18,0) 65%, rgba(6,10,18,1) 100%);
-          z-index:10; position:relative;
+          background: linear-gradient(to bottom,
+            rgba(6,10,18,1) 0,
+            rgba(6,10,18,0) 35%,
+            rgba(6,10,18,0) 65%,
+            rgba(6,10,18,1) 100%);
         }
+
         .copySticky{
           position: sticky; top: 16vh; height: 68vh;
           display:grid; place-items:center; text-align:center; pointer-events:none;
@@ -255,7 +250,6 @@ export default function PortalClient() {
           position:absolute; width:min(820px, 86vw); margin:0 auto;
           opacity:0; transform: translate3d(0, 26px, 0);
           transition: opacity .35s ease, transform .35s ease;
-          /* 出現タイミングをずらす：各段落ごとに閾値を変える */
           animation: reveal 1ms linear both;
           animation-delay: calc(var(--i,0) * 220ms);
         }

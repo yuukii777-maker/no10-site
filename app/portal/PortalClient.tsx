@@ -12,12 +12,21 @@ const CFG = {
   tiltMaxX: 0,
   HERO_DESKTOP: 760,
   HERO_MOBILE: 560,
-  COPY_FONT_SCALE: 0.92,
 
-  // ← ここを変えるだけで“文章同士の距離”を調整できます（各段の高さ）
-  COPY_GAP_VH: 120,       // 例: 100〜160 を好みで
-  // ← 文章の表示位置（画面上からのオフセット）
-  COPY_TOP_VH: 22,        // 例: 16〜28 を好みで
+  /** ← 文字サイズの全体倍率（見出し・本文に一括適用） */
+  COPY_FONT_SCALE: 1.10,     // 例: 0.92(小さめ) / 1.10(やや大) / 1.25(大きめ)
+
+  /** ← 文章の間隔と表示位置（vh） */
+  COPY_GAP_VH: 120,          // 文章ブロック間の距離
+  COPY_TOP_VH: 22,           // 文章の画面上からの位置
+
+  /** ← ロゴの距離＆サイズ調整（数字だけで遠近を変更。中央からズレません） */
+  LOGO_BASE_Z_DESKTOP: 8.2,
+  LOGO_BASE_Z_MOBILE: 10.0,   // iPhoneは少し奥へ
+  LOGO_DEPTH_TUNE: 1.0,      // +でより奥（小さく見える）
+  LOGO_DEPTH_TUNE_MOBILE: 0.5,
+  LOGO_SCALE: 1.00,          // デスクトップ用倍率
+  LOGO_SCALE_MOBILE: 0.90,   // iPhoneで少し小さく
 };
 
 const SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "")
@@ -39,10 +48,7 @@ const ASSETS = {
 
 /** ===== 文章 ===== */
 const COPY: { title?: string; body: string }[] = [
-  {
-    title: "Volceクラン公式ホームページへようこそ。",
-    body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。",
-  },
+  { title: "Volceクラン公式ホームページへようこそ。", body: "私たちは、メンバー全員の個性を生かし、知名度拡大のため活動しています。" },
   { body: "得意分野に振り分け、ゲリラ・大会への参加、SNS活動、イベントの開催等、活動を行っています。" },
   { body: "人との輪を大切に、荒野行動を楽しみ、広めてユーザーを増やす。をモットーにしています。" },
   { body: "プレイの実力が無くても、他の強みを生かして活躍することも可能です。" },
@@ -94,8 +100,6 @@ export default function PortalClient() {
   const isMobile = useIsMobile();
   const [webglOk, setWebglOk] = useState(false);
   const [threeHardError, setThreeHardError] = useState(false);
-
-  const stageRef = useRef<HTMLDivElement | null>(null);
 
   const sky = useWrap();
   const rays = useWrap();
@@ -152,11 +156,18 @@ export default function PortalClient() {
 
   const use2D = reduced || !webglOk || threeHardError;
 
+  // ロゴの距離（中央のまま、遠近だけ可変）
+  const cameraZ =LOGO_DEPTH_TUNE
+    (isMobile ? CFG.LOGO_BASE_Z_MOBILE + CFG._MOBILE
+              : CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE);
+
+  // ロゴの倍率（大きさ）
+  const logoScale = isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE;
+
   return (
     <main className="portal" style={{ minHeight: `${CFG.stageHeightVH}vh` }}>
       {/* === sticky sky stage === */}
       <div
-        ref={stageRef}
         style={{
           position: "sticky",
           top: 0,
@@ -195,6 +206,8 @@ export default function PortalClient() {
               deviceIsMobile={isMobile}
               scrollY={scrollY}
               onContextLost={() => setThreeHardError(true)}
+              cameraZ={cameraZ}
+              logoScale={logoScale}
             />
           </div>
         ) : (
@@ -204,14 +217,12 @@ export default function PortalClient() {
             style={{
               position: "absolute", left: "50%", top: "50%",
               transform: "translate(-50%, -50%)",
-              width: isMobile ? 220 : 320,
+              width: (isMobile ? 220 : 320) * logoScale,
               height: "auto", zIndex: 30, pointerEvents: "none",
               filter: "drop-shadow(0 10px 24px rgba(0,0,0,.45))", opacity: 0.98,
             }}
           />
         )}
-
-        {/* ★★ 黒い上下グラデーションは削除しました ★★ */}
       </div>
 
       {/* ==== コピー（1段＝1スクロールセクション） ==== */}
@@ -235,11 +246,12 @@ export default function PortalClient() {
 
         /* 雲の上に重ねる。黒フェードは使わない */
         .copyWrap{
-          margin-top: -100vh;    /* 上に引き上げて雲の上に被せる */
-          padding-top: 100vh;    /* レイアウトは維持 */
+          margin-top: -100vh;    /* 雲の上に被せる */
+          padding-top: 100vh;    /* レイアウト維持 */
           position: relative;
           z-index: 60;
-          background: transparent; /* ← フェード削除 */
+          background: transparent;
+          --copyScale: ${CFG.COPY_FONT_SCALE};
         }
 
         /* 各段の“高さ”は COPY_GAP_VH で調整（= 文章間の距離） */
@@ -263,7 +275,7 @@ export default function PortalClient() {
 
         .copyItem h2{
           margin: 0 0 12px;
-          font-size: clamp(22px, 4.8vw, 42px);
+          font-size: calc(clamp(22px, 4.8vw, 42px) * var(--copyScale));
           font-weight: 900;
           letter-spacing: .04em;
           line-height: 1.25;
@@ -272,7 +284,7 @@ export default function PortalClient() {
         .copyItem p{
           margin: 0;
           color: #d9e1ee;
-          font-size: clamp(14px, 2.2vw, 18px);
+          font-size: calc(clamp(14px, 2.2vw, 18px) * var(--copyScale));
           line-height: 1.9;
           text-shadow: 0 1px 0 rgba(0,0,0,.35);
           word-break: break-word;

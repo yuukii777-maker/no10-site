@@ -17,14 +17,16 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
   const base = (deviceIsMobile ? 1.4 : 1.9) * logoScale;
   const yFactor = deviceIsMobile ? 0.0008 : 0.001;
   const frame = useRef(0);
+
   useFrame(({ clock }) => {
-    if ((frame.current++ % 2) !== 0) return; // 30fpsに間引き
+    if ((frame.current++ % 2) !== 0) return; // 30fps に間引き
     const t = clock.getElapsedTime();
     if (!g.current) return;
     g.current.position.y = -scrollY * yFactor + Math.sin(t * 1.05) * 0.08;
     g.current.rotation.x = Math.sin(t * 0.35) * 0.02;
     g.current.rotation.y = Math.sin(t * 0.25) * 0.02;
   });
+
   return (
     <group ref={g}>
       <mesh>
@@ -37,7 +39,8 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
 
 export default function ThreeHero(props: Props) {
   const cameraZ = useMemo(() => props.cameraZ ?? (props.deviceIsMobile ? 8.8 : 8.2), [props.cameraZ, props.deviceIsMobile]);
-  const dpr = useMemo(() => typeof window === "undefined" ? 1 : Math.min(1.5, window.devicePixelRatio || 1), []);
+  const dpr = 1; // 高DPRでも重くならないよう固定
+
   return (
     <Canvas
       dpr={dpr}

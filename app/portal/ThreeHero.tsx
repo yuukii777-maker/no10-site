@@ -1,31 +1,29 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
-import React, { useMemo, useRef } from "react";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 
 type Props = {
   deviceIsMobile?: boolean;
   scrollY?: number;
   onContextLost?: () => void;
-  cameraZ?: number;
-  logoScale?: number;
 };
 
-function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
-  const tex = useMemo(() => {
-    const t = new THREE.TextureLoader().load("/portal/logo.webp");
-    t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
-    t.anisotropy = 2; t.colorSpace = THREE.SRGBColorSpace; t.transparent = true;
-    return t;
-  }, []);
+function LogoBillboard({ deviceIsMobile, scrollY = 0 }: Props) {
+  const tex = useLoader(THREE.TextureLoader, "/portal/logo.webp");
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.transparent = true;
+
   const g = useRef<THREE.Group>(null!);
-  const base = (deviceIsMobile ? 1.4 : 1.9) * logoScale;
+  const baseScale = deviceIsMobile ? 1.4 : 1.9;
   const yFactor = deviceIsMobile ? 0.0008 : 0.001;
-  const frame = useRef(0);
 
   useFrame(({ clock }) => {
-    if ((frame.current++ % 2) !== 0) return; // 30fps に間引き
     const t = clock.getElapsedTime();
     if (!g.current) return;
     g.current.position.y = -scrollY * yFactor + Math.sin(t * 1.05) * 0.08;
@@ -36,7 +34,7 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
   return (
     <group ref={g}>
       <mesh>
-        <planeGeometry args={[2.4 * base, 2.4 * base]} />
+        <planeGeometry args={[2.4 * baseScale, 2.4 * baseScale]} />
         <meshBasicMaterial map={tex} transparent depthWrite={false} />
       </mesh>
     </group>
@@ -44,22 +42,17 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
 }
 
 export default function ThreeHero(props: Props) {
-  const cameraZ = useMemo(
-    () => props.cameraZ ?? (props.deviceIsMobile ? 8.8 : 8.2),
-    [props.cameraZ, props.deviceIsMobile]
-  );
-  const dpr = 1; // 高DPRでも重くならないよう固定
-
+  const cameraZ = useMemo(() => (props.deviceIsMobile ? 8.8 : 8.2), [props.deviceIsMobile]);
   return (
     <Canvas
-      dpr={dpr}
+      dpr={[1, 2]}
       camera={{ position: [0, 0, cameraZ], fov: 45 }}
-      gl={{ alpha: true, antialias: false, powerPreference: "high-performance" }}
+      gl={{ alpha: true, antialias: true }}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       onCreated={({ gl }) => {
-        gl.toneMapping = THREE.NoToneMapping;
         gl.domElement.addEventListener("webglcontextlost", props.onContextLost ?? (() => {}), false);
       }}
+      data-r3f="1"
     >
       <LogoBillboard {...props} />
     </Canvas>

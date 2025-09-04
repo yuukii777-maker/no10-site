@@ -1,42 +1,76 @@
-/* ===== Stormgate 背景 ===== */
-.storm-bg{ position:fixed; inset:0; z-index:0; pointer-events:none; background:#0b0f18; overflow:hidden; }
-.storm-bg::after{
-  content:""; position:absolute; inset:-12%;
-  background: radial-gradient(60% 50% at 50% 55%, rgba(0,0,0,.35) 0%, rgba(0,0,0,.52) 55%, rgba(0,0,0,.85) 100%);
-  mix-blend-mode:multiply;
+/* ===== Stormgate 背景（軽量・クリック阻害なし・Firefox最適化） ===== */
+.storm-bg{
+  position: fixed; inset: 0;
+  z-index: 0;                 /* 背景は最背面に */
+  pointer-events: none;       /* すべてのクリックを通す */
+  background: #0b0f18;
+  overflow: hidden;
+  contain: layout paint size; /* ペイント範囲を閉じて軽くする */
+  isolation: isolate;         /* blend を背景内に閉じ込める */
 }
-.storm-bg .layer{ position:absolute; inset:0; width:100%; height:100%; will-change:transform,opacity; transition:opacity .25s ease; }
-.storm-bg .layer>.anim{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(1.05) brightness(.98); }
-.storm-bg .gate{ mix-blend-mode:screen; }
-.bolt-canvas{ position:absolute; inset:0; width:100%; height:100%; mix-blend-mode:screen; pointer-events:none; }
+.storm-bg::after{
+  content:"";
+  position:absolute; inset:-12%;
+  background: radial-gradient(60% 50% at 50% 55%,
+              rgba(0,0,0,.35) 0%, rgba(0,0,0,.52) 55%, rgba(0,0,0,.85) 100%);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
 
-/* 雲：水平ドリフト＋上下ボブ */
-@keyframes cloud-drift{ from{transform:translateX(0)} to{transform:translateX(-8vw)} }
-@keyframes cloud-bob{ 0%{transform:translateY(0)} 50%{transform:translateY(1.8vh)} 100%{transform:translateY(0)} }
-.cloud-far{ animation: cloud-drift 36s linear infinite, cloud-bob 18s ease-in-out infinite; }
+/* 各レイヤー：will-change は付けない（Firefoxの予約メモリ警告を回避） */
+.storm-bg .layer{
+  position:absolute; inset:0; width:100%; height:100%;
+  transform: translate3d(0,0,0);   /* 合成レイヤー化だけ付ける */
+  transition: opacity .25s ease;   /* opacity のみトランジション */
+  backface-visibility: hidden;
+}
+.storm-bg .layer > .anim{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit: cover;
+  filter: saturate(1.05) brightness(.98);  /* 静的フィルタ（アニメしない） */
+  pointer-events: none;
+}
+.storm-bg .gate{ mix-blend-mode: screen; }
+.bolt-canvas{
+  position:absolute; inset:0; width:100%; height:100%;
+  mix-blend-mode: screen; pointer-events:none;
+}
 
-/* リング：脈動のみ（回転はOFF） */
-@keyframes ringPulse{ 0%,100%{ filter:drop-shadow(0 0 18px rgba(255,255,255,.22)); opacity:.98 } 50%{ filter:drop-shadow(0 0 32px rgba(255,255,255,.40)); opacity:1 } }
+/* --- アニメ --- */
+/* 2つのtransformアニメは競合しやすいので1本に統合（十分それっぽく動きます） */
+@keyframes cloud-move {
+  0%   { transform: translate(  0vw, 0vh); }
+  25%  { transform: translate(-2vw, 1.8vh); }
+  50%  { transform: translate(-4vw, 0vh); }
+  75%  { transform: translate(-6vw, 1.8vh); }
+  100% { transform: translate(-8vw, 0vh); }
+}
+.cloud-far{ animation: cloud-move 36s linear infinite; }
+
+@keyframes ringPulse{
+  0%,100%{ filter: drop-shadow(0 0 18px rgba(255,255,255,.22)); opacity:.98; }
+  50%   { filter: drop-shadow(0 0 32px rgba(255,255,255,.40)); opacity:1;    }
+}
 .ring-pulse{ animation: ringPulse 4.2s ease-in-out infinite; }
 
-/* レインハイズ：縦流し */
-@keyframes rainflow{ from{transform:translateY(-2vh)} to{transform:translateY(2vh)} }
+@keyframes rainflow{ from{ transform: translateY(-2vh); } to{ transform: translateY(2vh); } }
 .rain-flow{ animation: rainflow 3.8s linear infinite; }
 
-/* ===== BGM トグル ===== */
+/* ===== BGM トグル（最前面・押せる） ===== */
 .audio-toggle{
-  position: fixed; left: 18px; bottom: 18px; z-index: 2;
+  position: fixed; left: 18px; bottom: 18px;
+  z-index: 120;               /* ヘッダーより上ならここを上げる */
   display:flex; align-items:center; gap:10px;
   padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.18);
   background: rgba(16,22,38,.72); color:#e7eefc; font-weight:700;
   backdrop-filter: blur(6px);
-  pointer-events:auto; /* 重要：押せるように */
+  pointer-events: auto;       /* 重要：必ず押せるように */
 }
 .audio-toggle .dot{
   width:10px; height:10px; border-radius:999px;
   background: #9aa4b7; box-shadow:0 0 0 2px rgba(255,255,255,.1) inset;
 }
-.audio-toggle .dot[data-on="1"]{ background: #6ff; box-shadow:0 0 10px #6ff; }
+.audio-toggle .dot[data-on="1"]{ background:#6ff; box-shadow:0 0 10px #6ff; }
 .audio-toggle .label{ letter-spacing:.02em; }
 
 /* ===== コンテンツ ===== */
@@ -59,7 +93,7 @@
   text-decoration:none; box-shadow:0 6px 22px rgba(255,55,199,.25);
 }
 
-/* ===== イベント一覧（参考画像風） ===== */
+/* ===== イベント一覧 ===== */
 .ev-wrap{ margin-top:28px; }
 .ev-list{ list-style:none; padding:0; margin:0; }
 .ev-item{
@@ -87,7 +121,7 @@
 .ev-band{
   position:absolute; left:0; top:0; bottom:0; width:calc(100% - 62px);
   background: linear-gradient(90deg, rgba(0,224,255,.24), rgba(247,211,114,.18), rgba(255,55,199,.20));
-  opacity:.14; transform: scaleX(.0); transform-origin:left center;
+  opacity:.14; transform: scaleX(0); transform-origin:left center;
   transition: transform .35s cubic-bezier(.22,.61,.36,1), opacity .35s ease;
   border-right:1px solid rgba(255,255,255,.08);
 }
@@ -107,17 +141,16 @@
 .ev-item:hover .ev-band{ transform: scaleX(1); opacity:.28; }
 .ev-item:hover .ev-arrow{ border-color: rgba(255,255,255,.6); }
 
-/* モバイル調整 */
+/* モバイル */
 @media (max-width: 768px){
   .ev-item{ grid-template-columns: 132px 1fr; }
   .ev-link{ padding-right:56px; }
-  .storm-bg .rain{ display:none; }
-  .cloud-far{ animation-duration:40s,22s; }
+  .storm-bg .rain{ display:none; }       /* 描画負荷を抑える */
 }
 
 /* 省モーション */
 @media (prefers-reduced-motion: reduce){
   .storm-bg .layer{ transform:none !important; transition:none !important; }
-  .storm-bg .layer>.anim{ animation:none !important; }
+  .storm-bg .layer > .anim{ animation:none !important; }
   .ev-band{ transition:none !important; }
 }

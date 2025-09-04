@@ -3,7 +3,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /** ===== 調整値 ===== */
 const CFG = {
@@ -57,6 +57,23 @@ function useIsMobile() {
   return m;
 }
 
+/* FPSを1秒だけ計測してLite切替 */
+function useLiteMode() {
+  const [lite, setLite] = useState(false);
+  useEffect(() => {
+    const weak = ((navigator as any).deviceMemory || 8) <= 4 || (navigator.hardwareConcurrency || 8) <= 4;
+    let frames = 0, slow = 0, last = performance.now(), id = 0 as unknown as number;
+    const tick = (t: number) => {
+      const dt = t - last; last = t; frames++; if (dt > 24) slow++;  // 60fps 予算からの余裕
+      if (frames >= 60) { if (weak || slow > 10) setLite(true); return; }
+      id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return lite;
+}
+
 /* ===== パララックス（DIVを translate3d） ===== */
 type WrapRefs = { a: HTMLDivElement | null; b: HTMLDivElement | null; h: number };
 function useWrap() {
@@ -78,12 +95,31 @@ const ThreeHeroLazy = dynamic(() => import("./ThreeHero"), { ssr: false, loading
 export default function PortalClient() {
   const reduced = useReducedMotion();
   const isMobile = useIsMobile();
+  const lite = useLiteMode();
+
   const [webglOk, setWebglOk] = useState(false);
   const [threeHardError, setThreeHardError] = useState(false);
   const [mountThree, setMountThree] = useState(false);
 
-  // クリック事故防止：背景側の layer 参照
+  // 背景層
   const sky = useWrap(), rays = useWrap(), far = useWrap(), mid = useWrap(), near = useWrap(), flareWide = useWrap(), flareCore = useWrap();
+
+  // 一時的 will-change（スクロール中だけ付与）
+  const wrappers = [sky, rays, far, mid, near, flareWide, flareCore];
+  const wcTimer = useRef<number | null>(null);
+  const addWillChange = () => {
+    wrappers.forEach(w => {
+      w.refs.current.a && (w.refs.current.a.style.willChange = "transform");
+      w.refs.current.b && (w.refs.current.b.style.willChange = "transform");
+    });
+    if (wcTimer.current) clearTimeout(wcTimer.current);
+    wcTimer.current = window.setTimeout(() => {
+      wrappers.forEach(w => {
+        w.refs.current.a && (w.refs.current.a.style.willChange = "");
+        w.refs.current.b && (w.refs.current.b.style.willChange = "");
+      });
+    }, 180); // 停止後すぐ外す（Firefox警告対策）
+  };
 
   const [scrollY, setScrollY] = useState(0);
   const scrollYRef = useRef(0);
@@ -101,7 +137,7 @@ export default function PortalClient() {
   useEffect(() => {
     const setAllHeights = () => {
       const h = window.innerHeight || 800;
-      [sky, rays, far, mid, near, flareWide, flareCore].forEach((w) => w.setH(h * 1.04));
+      wrappers.forEach((w) => w.setH(h * 1.04));
     };
     setAllHeights();
     addEventListener("resize", setAllHeights);
@@ -110,7 +146,7 @@ export default function PortalClient() {
 
   // スクロールでtransformをrAF集約
   useEffect(() => {
-    const scale = reduced ? 0.2 : 1;
+    const scale = (lite ? 0.7 : 1) * (reduced ? 0.2 : 1);
     const applyAll = (y: number) => {
       sky.setY(y * CFG.speedY.sky * scale);
       rays.setY(y * CFG.speedY.rays * scale);
@@ -121,13 +157,14 @@ export default function PortalClient() {
       flareCore.setY(y * CFG.speedY.flareCore * scale);
     };
     const onScroll = () => {
+      addWillChange();
       scrollYRef.current = window.scrollY || 0;
       requestAnimationFrame(() => applyAll(scrollYRef.current));
     };
     addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => removeEventListener("scroll", onScroll);
-  }, [reduced]);
+  }, [reduced, lite]);
 
   // Threeへの反映は約15fpsに間引き
   useEffect(() => {
@@ -137,8 +174,9 @@ export default function PortalClient() {
     return () => clearTimeout(id);
   }, []);
 
-  // 3Dは画面に入ったら＋アイドル時に読込
+  // 3Dは画面に入ったら＋アイドル時に読込（ただし lite は切る）
   useEffect(() => {
+    if (lite) return; // 軽量時は3Dを使わない
     const target = document.getElementById("three-mount-io");
     if (!target) return;
     const io = new IntersectionObserver(([e]) => {
@@ -150,9 +188,24 @@ export default function PortalClient() {
     }, { rootMargin: "200px" });
     io.observe(target);
     return () => io.disconnect();
-  }, []);
+  }, [lite]);
 
-  const use2D = reduced || !webglOk || threeHardError;
+  // 段階読み込みレベル（0=skyのみ → 1=rays/flare → 2=far/mid → 3=near）
+  const [lvl, setLvl] = useState(0);
+  useEffect(() => {
+    let t1: number, t2: number, t3: number;
+    const idle = (cb: () => void, ms: number) => {
+      const w = window as any;
+      if (w.requestIdleCallback) return w.requestIdleCallback(cb, { timeout: ms });
+      return window.setTimeout(cb, ms);
+    };
+    t1 = idle(() => setLvl(1), 600);
+    if (!lite) t2 = idle(() => setLvl(2), 1000);
+    if (!lite) t3 = idle(() => setLvl(3), 1400);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [lite]);
+
+  const use2D = reduced || lite || !webglOk || threeHardError;
   const cameraZ = isMobile ? (CFG.LOGO_BASE_Z_MOBILE + CFG.LOGO_DEPTH_TUNE_MOBILE)
                            : (CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE);
   const logoScale = isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE;
@@ -162,88 +215,97 @@ export default function PortalClient() {
       {/* === 背景ステージ（クリック透過 & 最背面） === */}
       <div
         style={{
-          position: "sticky",
-          top: 0,
-          height: "100vh",
-          overflow: "hidden",
-          zIndex: 0,                  // ← ヘッダーより下
-          isolation: "isolate",
-          pointerEvents: "none",      // ← ここで必ず“通す”
-          background: "black",
+          position: "sticky", top: 0, height: "100vh", overflow: "hidden",
+          zIndex: 0, isolation: "isolate", pointerEvents: "none", background: "black",
           contain: "layout paint size",
         }}
       >
-        {/* Next/Image を DIVラッパにして transform を当てる */}
+        {/* sky（LCP） */}
         <div ref={(el) => (sky.refs.current.a = el)} style={wrapStyle(0, { opacity: 0.98 })}>
-          <Image src={ASSETS.sky} alt="" fill sizes="100vw" priority quality={65} />
+          <Image src={ASSETS.sky} alt="" fill sizes="100vw" priority quality={60} />
         </div>
         <div ref={(el) => (sky.refs.current.b = el)} style={wrapStyle(0, { opacity: 0.98 })}>
-          <Image src={ASSETS.sky} alt="" fill sizes="100vw" quality={65} />
+          <Image src={ASSETS.sky} alt="" fill sizes="100vw" quality={60} />
         </div>
 
-        <div ref={(el) => (flareWide.refs.current.a = el)} style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}>
-          <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (flareWide.refs.current.b = el)} style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}>
-          <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (flareCore.refs.current.a = el)} style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}>
-          <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (flareCore.refs.current.b = el)} style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}>
-          <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (rays.refs.current.a = el)} style={wrapStyle(2, { opacity: 0.9 })}>
-          <Image src={ASSETS.rays} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (rays.refs.current.b = el)} style={wrapStyle(2, { opacity: 0.9 })}>
-          <Image src={ASSETS.rays} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
+        {/* level 1: flare / rays */}
+        {lvl >= 1 && (
+          <>
+            <div ref={(el) => (flareWide.refs.current.a = el)} style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}>
+              <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" loading="lazy" quality={50} />
+            </div>
+            <div ref={(el) => (flareWide.refs.current.b = el)} style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}>
+              <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" loading="lazy" quality={50} />
+            </div>
+            <div ref={(el) => (flareCore.refs.current.a = el)} style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.6 })}>
+              <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" loading="lazy" quality={50} />
+            </div>
+            <div ref={(el) => (flareCore.refs.current.b = el)} style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.6 })}>
+              <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" loading="lazy" quality={50} />
+            </div>
+            <div ref={(el) => (rays.refs.current.a = el)} style={wrapStyle(2, { opacity: 0.88 })}>
+              <Image src={ASSETS.rays} alt="" fill sizes="100vw" loading="lazy" quality={50} />
+            </div>
+            <div ref={(el) => (rays.refs.current.b = el)} style={wrapStyle(2, { opacity: 0.88 })}>
+              <Image src={ASSETS.rays} alt="" fill sizes="100vw" loading="lazy" quality={50} />
+            </div>
+          </>
+        )}
 
-        <div ref={(el) => (far.refs.current.a = el)} style={wrapStyle(5, { opacity: 0.92 })}>
-          <Image src={ASSETS.far} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (far.refs.current.b = el)} style={wrapStyle(5, { opacity: 0.92 })}>
-          <Image src={ASSETS.far} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (mid.refs.current.a = el)} style={wrapStyle(6)}>
-          <Image src={ASSETS.mid} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (mid.refs.current.b = el)} style={wrapStyle(6)}>
-          <Image src={ASSETS.mid} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (near.refs.current.a = el)} style={wrapStyle(8)}>
-          <Image src={ASSETS.near} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
-        <div ref={(el) => (near.refs.current.b = el)} style={wrapStyle(8)}>
-          <Image src={ASSETS.near} alt="" fill sizes="100vw" loading="lazy" quality={55} />
-        </div>
+        {/* level 2: far / mid */}
+        {lvl >= 2 && (
+          <>
+            <div ref={(el) => (far.refs.current.a = el)} style={wrapStyle(5, { opacity: 0.92 })}>
+              <Image src={ASSETS.far} alt="" fill sizes="100vw" loading="lazy" quality={48} />
+            </div>
+            <div ref={(el) => (far.refs.current.b = el)} style={wrapStyle(5, { opacity: 0.92 })}>
+              <Image src={ASSETS.far} alt="" fill sizes="100vw" loading="lazy" quality={48} />
+            </div>
+            <div ref={(el) => (mid.refs.current.a = el)} style={wrapStyle(6)}>
+              <Image src={ASSETS.mid} alt="" fill sizes="100vw" loading="lazy" quality={48} />
+            </div>
+            <div ref={(el) => (mid.refs.current.b = el)} style={wrapStyle(6)}>
+              <Image src={ASSETS.mid} alt="" fill sizes="100vw" loading="lazy" quality={48} />
+            </div>
+          </>
+        )}
 
-        {/* 透明オーバーレイがイベントを奪わないよう念のため */}
-        <div id="three-mount-io" style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }} />
+        {/* level 3: near（最も重いので最後） */}
+        {lvl >= 3 && (
+          <>
+            <div ref={(el) => (near.refs.current.a = el)} style={wrapStyle(8)}>
+              <Image src={ASSETS.near} alt="" fill sizes="100vw" loading="lazy" quality={46} />
+            </div>
+            <div ref={(el) => (near.refs.current.b = el)} style={wrapStyle(8)}>
+              <Image src={ASSETS.near} alt="" fill sizes="100vw" loading="lazy" quality={46} />
+            </div>
+          </>
+        )}
 
-        {/* 中央ロゴ（3Dは遅延。だめなら2D） */}
-        {mountThree && !(reduced || !webglOk || threeHardError) ? (
+        {/* クリックを奪わない透明層 */}
+        <div id="three-mount-io" style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }} />
+
+        {/* 中央ロゴ */}
+        {mountThree && !use2D ? (
           <React.Suspense fallback={null}>
-            <div style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
+            <div style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none" }}>
               <ThreeHeroLazy
                 deviceIsMobile={isMobile}
                 scrollY={scrollY}
                 onContextLost={() => setThreeHardError(true)}
-                cameraZ={isMobile ? (CFG.LOGO_BASE_Z_MOBILE + CFG.LOGO_DEPTH_TUNE_MOBILE) :
-                                    (CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE)}
-                logoScale={isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE}
+                cameraZ={cameraZ}
+                logoScale={logoScale}
               />
             </div>
           </React.Suspense>
         ) : (
-          <div style={{ position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", zIndex:2, pointerEvents:"none" }}>
+          <div style={{ position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", zIndex:3, pointerEvents:"none" }}>
             <Image
               src={ASSETS.logo}
               alt="VOLCE Logo"
-              width={(isMobile ? 220 : 320) * (isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE)}
-              height={(isMobile ? 220 : 320) * (isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE)}
-              priority quality={85}
+              width={(isMobile ? 220 : 320) * logoScale}
+              height={(isMobile ? 220 : 320) * logoScale}
+              priority quality={82}
               style={{ filter:"drop-shadow(0 10px 24px rgba(0,0,0,.45))", opacity:.98 }}
             />
           </div>
@@ -265,7 +327,7 @@ export default function PortalClient() {
       <style jsx>{`
         .copyWrap{
           margin-top: -100vh; padding-top: 100vh;
-          position: relative; z-index: 1;  /* ← ヘッダーより下。ヘッダーは z-index:100 などに */
+          position: relative; z-index: 10;  /* ヘッダー(z>=100)よりは下に */
           --copyScale: ${CFG.COPY_FONT_SCALE};
         }
         .copyBlock{ position: relative; height: ${CFG.COPY_GAP_VH}vh; content-visibility:auto; contain:paint style layout; }
@@ -297,7 +359,7 @@ function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
     width: "108%",
     height: "104%",
     zIndex: z,
-    pointerEvents: "none",     // ← 念のため各レイヤーでも無効化
+    pointerEvents: "none",     // 念のため各レイヤーでも無効化
     transform: "translate3d(0,0,0)",
     ...more,
   };

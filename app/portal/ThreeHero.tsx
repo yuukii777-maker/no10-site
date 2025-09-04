@@ -4,7 +4,13 @@ import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import React, { useMemo, useRef } from "react";
 
-type Props = { deviceIsMobile?: boolean; scrollY?: number; onContextLost?: () => void; cameraZ?: number; logoScale?: number; };
+type Props = {
+  deviceIsMobile?: boolean;
+  scrollY?: number;
+  onContextLost?: () => void;
+  cameraZ?: number;
+  logoScale?: number;
+};
 
 function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
   const tex = useMemo(() => {
@@ -38,7 +44,10 @@ function LogoBillboard({ deviceIsMobile, scrollY = 0, logoScale = 1 }: Props) {
 }
 
 export default function ThreeHero(props: Props) {
-  const cameraZ = useMemo(() => props.cameraZ ?? (props.deviceIsMobile ? 8.8 : 8.2), [props.cameraZ, props.deviceIsMobile]);
+  const cameraZ = useMemo(
+    () => props.cameraZ ?? (props.deviceIsMobile ? 8.8 : 8.2),
+    [props.cameraZ, props.deviceIsMobile]
+  );
   const dpr = 1; // 高DPRでも重くならないよう固定
 
   return (

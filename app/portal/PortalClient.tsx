@@ -9,17 +9,10 @@ import React, { useEffect, useRef, useState } from "react";
 const CFG = {
   stageHeightVH: 900,
   speedY: { sky: 0.06, rays: 0.12, far: 0.18, mid: 0.32, near: 0.70, flareWide: 0.50, flareCore: 0.62 },
-
-  COPY_FONT_SCALE: 1.20,
-  COPY_GAP_VH: 120,
-  COPY_TOP_VH: 22,
-
-  LOGO_BASE_Z_DESKTOP: 8.2,
-  LOGO_BASE_Z_MOBILE: 10.0,
-  LOGO_DEPTH_TUNE: 1.4,
-  LOGO_DEPTH_TUNE_MOBILE: 1.1,
-  LOGO_SCALE: 0.98,
-  LOGO_SCALE_MOBILE: 0.88,
+  COPY_FONT_SCALE: 1.20, COPY_GAP_VH: 120, COPY_TOP_VH: 22,
+  LOGO_BASE_Z_DESKTOP: 8.2, LOGO_BASE_Z_MOBILE: 10.0,
+  LOGO_DEPTH_TUNE: 1.4, LOGO_DEPTH_TUNE_MOBILE: 1.1,
+  LOGO_SCALE: 0.98, LOGO_SCALE_MOBILE: 0.88,
 };
 
 const ASSETS = {
@@ -64,7 +57,7 @@ function useIsMobile() {
   return m;
 }
 
-/* ===== パララックスの縦ラップ (DIVにtransformを当てる) ===== */
+/* ===== パララックス（DIVを translate3d） ===== */
 type WrapRefs = { a: HTMLDivElement | null; b: HTMLDivElement | null; h: number };
 function useWrap() {
   const refs = useRef<WrapRefs>({ a: null, b: null, h: 0 });
@@ -89,13 +82,8 @@ export default function PortalClient() {
   const [threeHardError, setThreeHardError] = useState(false);
   const [mountThree, setMountThree] = useState(false);
 
-  const sky = useWrap();
-  const rays = useWrap();
-  const far = useWrap();
-  const mid = useWrap();
-  const near = useWrap();
-  const flareWide = useWrap();
-  const flareCore = useWrap();
+  // クリック事故防止：背景側の layer 参照
+  const sky = useWrap(), rays = useWrap(), far = useWrap(), mid = useWrap(), near = useWrap(), flareWide = useWrap(), flareCore = useWrap();
 
   const [scrollY, setScrollY] = useState(0);
   const scrollYRef = useRef(0);
@@ -171,93 +159,91 @@ export default function PortalClient() {
 
   return (
     <main className="portal" style={{ minHeight: `${CFG.stageHeightVH}vh` }}>
-      {/* === sticky sky stage === */}
+      {/* === 背景ステージ（クリック透過 & 最背面） === */}
       <div
         style={{
           position: "sticky",
           top: 0,
           height: "100vh",
           overflow: "hidden",
-          zIndex: 40,
+          zIndex: 0,                  // ← ヘッダーより下
           isolation: "isolate",
-          pointerEvents: "none",
+          pointerEvents: "none",      // ← ここで必ず“通す”
           background: "black",
           contain: "layout paint size",
         }}
       >
-        {/* 背景（縦ラップ）— Next/Image を “DIVラッパ”でtransform */}
+        {/* Next/Image を DIVラッパにして transform を当てる */}
         <div ref={(el) => (sky.refs.current.a = el)} style={wrapStyle(0, { opacity: 0.98 })}>
-          <Image src={ASSETS.sky} alt="" fill sizes="100vw" priority quality={70} />
+          <Image src={ASSETS.sky} alt="" fill sizes="100vw" priority quality={65} />
         </div>
         <div ref={(el) => (sky.refs.current.b = el)} style={wrapStyle(0, { opacity: 0.98 })}>
-          <Image src={ASSETS.sky} alt="" fill sizes="100vw" quality={70} />
+          <Image src={ASSETS.sky} alt="" fill sizes="100vw" quality={65} />
         </div>
 
-        {/* 光 */}
         <div ref={(el) => (flareWide.refs.current.a = el)} style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}>
-          <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (flareWide.refs.current.b = el)} style={wrapStyle(3, { mixBlendMode: "screen", opacity: 0.5 })}>
-          <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.flareWide} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (flareCore.refs.current.a = el)} style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}>
-          <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (flareCore.refs.current.b = el)} style={wrapStyle(4, { mixBlendMode: "screen", opacity: 0.65 })}>
-          <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.flareCore} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (rays.refs.current.a = el)} style={wrapStyle(2, { opacity: 0.9 })}>
-          <Image src={ASSETS.rays} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.rays} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (rays.refs.current.b = el)} style={wrapStyle(2, { opacity: 0.9 })}>
-          <Image src={ASSETS.rays} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.rays} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
 
-        {/* 雲 */}
         <div ref={(el) => (far.refs.current.a = el)} style={wrapStyle(5, { opacity: 0.92 })}>
-          <Image src={ASSETS.far} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.far} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (far.refs.current.b = el)} style={wrapStyle(5, { opacity: 0.92 })}>
-          <Image src={ASSETS.far} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.far} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (mid.refs.current.a = el)} style={wrapStyle(6)}>
-          <Image src={ASSETS.mid} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.mid} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (mid.refs.current.b = el)} style={wrapStyle(6)}>
-          <Image src={ASSETS.mid} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.mid} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (near.refs.current.a = el)} style={wrapStyle(8)}>
-          <Image src={ASSETS.near} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.near} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
         <div ref={(el) => (near.refs.current.b = el)} style={wrapStyle(8)}>
-          <Image src={ASSETS.near} alt="" fill sizes="100vw" quality={60} />
+          <Image src={ASSETS.near} alt="" fill sizes="100vw" loading="lazy" quality={55} />
         </div>
 
-        {/* 3Dマウントの目印 */}
-        <div id="three-mount-io" style={{ position: "absolute", inset: 0, zIndex: 29 }} />
+        {/* 透明オーバーレイがイベントを奪わないよう念のため */}
+        <div id="three-mount-io" style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }} />
 
-        {/* 中央ロゴ */}
+        {/* 中央ロゴ（3Dは遅延。だめなら2D） */}
         {mountThree && !(reduced || !webglOk || threeHardError) ? (
           <React.Suspense fallback={null}>
-            <div style={{ position: "absolute", inset: 0, zIndex: 30, pointerEvents: "none" }}>
+            <div style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
               <ThreeHeroLazy
                 deviceIsMobile={isMobile}
                 scrollY={scrollY}
                 onContextLost={() => setThreeHardError(true)}
-                cameraZ={cameraZ}
-                logoScale={logoScale}
+                cameraZ={isMobile ? (CFG.LOGO_BASE_Z_MOBILE + CFG.LOGO_DEPTH_TUNE_MOBILE) :
+                                    (CFG.LOGO_BASE_Z_DESKTOP + CFG.LOGO_DEPTH_TUNE)}
+                logoScale={isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE}
               />
             </div>
           </React.Suspense>
         ) : (
-          <div style={{ position: "absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", zIndex:30, pointerEvents:"none" }}>
+          <div style={{ position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", zIndex:2, pointerEvents:"none" }}>
             <Image
               src={ASSETS.logo}
               alt="VOLCE Logo"
-              width={(isMobile ? 220 : 320) * logoScale}
-              height={(isMobile ? 220 : 320) * logoScale}
-              priority
-              quality={85}
+              width={(isMobile ? 220 : 320) * (isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE)}
+              height={(isMobile ? 220 : 320) * (isMobile ? CFG.LOGO_SCALE_MOBILE : CFG.LOGO_SCALE)}
+              priority quality={85}
               style={{ filter:"drop-shadow(0 10px 24px rgba(0,0,0,.45))", opacity:.98 }}
             />
           </div>
@@ -277,31 +263,16 @@ export default function PortalClient() {
       </section>
 
       <style jsx>{`
-        /* will-change の常時付与は禁止（Firefox警告の原因）。translate3dで合成へ */
         .copyWrap{
-          margin-top: -100vh;
-          padding-top: 100vh;
-          position: relative;
-          z-index: 60;
-          background: transparent;
+          margin-top: -100vh; padding-top: 100vh;
+          position: relative; z-index: 1;  /* ← ヘッダーより下。ヘッダーは z-index:100 などに */
           --copyScale: ${CFG.COPY_FONT_SCALE};
         }
-        .copyBlock{
-          position: relative;
-          height: ${CFG.COPY_GAP_VH}vh;
-          content-visibility: auto;
-          contain: paint style layout;
-        }
+        .copyBlock{ position: relative; height: ${CFG.COPY_GAP_VH}vh; content-visibility:auto; contain:paint style layout; }
         .copyItem{
-          position: sticky;
-          top: ${CFG.COPY_TOP_VH}vh;
-          display: grid;
-          place-items: center;
-          text-align: center;
-          width: min(900px, 86vw);
-          margin: 0 auto;
-          pointer-events: auto;
-          opacity: 0.98;
+          position: sticky; top: ${CFG.COPY_TOP_VH}vh;
+          display: grid; place-items: center; text-align: center;
+          width: min(900px, 86vw); margin: 0 auto; pointer-events: auto; opacity: .98;
         }
         .copyItem h2{
           margin: 0 0 12px; color: #fff;
@@ -311,15 +282,14 @@ export default function PortalClient() {
         .copyItem p{
           margin: 0; color: #d9e1ee;
           font-size: calc(clamp(14px, 2.2vw, 18px) * var(--copyScale));
-          line-height: 1.9; text-shadow: 0 1px 0 rgba(0,0,0,.35);
-          word-break: break-word;
+          line-height: 1.9; text-shadow: 0 1px 0 rgba(0,0,0,.35); word-break: break-word;
         }
       `}</style>
     </main>
   );
 }
 
-/** 画像レイヤー用の共通スタイル（親DIVにtransformを当てる） */
+/** 画像レイヤー用スタイル（親DIVにtransformを当てる） */
 function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
   return {
     position: "absolute",
@@ -327,7 +297,7 @@ function wrapStyle(z: number, more?: React.CSSProperties): React.CSSProperties {
     width: "108%",
     height: "104%",
     zIndex: z,
-    pointerEvents: "none",
+    pointerEvents: "none",     // ← 念のため各レイヤーでも無効化
     transform: "translate3d(0,0,0)",
     ...more,
   };

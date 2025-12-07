@@ -1,14 +1,15 @@
 import type { Config } from "tailwindcss";
 
+const config: Config = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
 
-export default {
-content: [
-"./app/**/*.{ts,tsx}",
-"./components/**/*.{ts,tsx}",
-"./pages/**/*.{ts,tsx}",
-],
-theme: {
-extend: {}, // 既存スタイルを壊さない
-},
-plugins: [],
-} satisfies Config;
+export default config;

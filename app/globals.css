@@ -1,11 +1,14 @@
-/* globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ベース設定 */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: "Yu Gothic Medium", "Hiragino Sans", sans-serif;
-  background: #faf7f2; /* ナチュラル系の薄ベージュ */
+  background: #faf7f2;
   color: #36332e;
 }
 
@@ -62,7 +65,7 @@ a {
   font-size: 14px;
 }
 
-/* CTAボタン（購入ボタン） */
+/* CTAボタン */
 .btn-primary {
   display: inline-block;
   background: linear-gradient(135deg, #ffb44d, #ff9130);

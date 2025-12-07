@@ -8,8 +8,15 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+    <header
+      className="
+        fixed top-0 left-0 w-full 
+        bg-white/90 backdrop-blur-md shadow-sm 
+        z-50
+      "
+    >
+      {/* 内側コンテナ */}
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
         {/* ロゴ */}
         <Link href="/" className="text-xl font-bold text-gray-800">
           山川みかん農園

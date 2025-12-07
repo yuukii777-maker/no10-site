@@ -2,9 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================
-   ベース設定（Tailwindに任せない部分）
-   ============================ */
+/* ====== あなたの基本設定 ====== */
 html,
 body {
   margin: 0;
@@ -17,46 +15,4 @@ body {
 a {
   text-decoration: none;
   color: inherit;
-}
-
-/* ============================
-   レイアウト（main コンテナ）
-   ※ Tailwind と併用するので必要な部分のみ
-   ============================ */
-.main-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
-
-/* ============================
-   フッター基本
-   ============================ */
-.footer {
-  margin-top: 80px;
-  padding: 40px 20px;
-  background: #f0ebe4;
-  text-align: center;
-  color: #5a5245;
-  font-size: 14px;
-}
-
-/* ============================
-   CTA ボタン
-   ============================ */
-.btn-primary {
-  display: inline-block;
-  background: linear-gradient(135deg, #ffb44d, #ff9130);
-  padding: 14px 28px;
-  border-radius: 999px;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 4px 10px rgba(255, 145, 48, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(255, 145, 48, 0.4);
 }

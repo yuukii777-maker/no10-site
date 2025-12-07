@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -12,7 +13,8 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="text-[#333]">
+    <main className="pt-[80px] text-[#333]"> 
+      {/* ヘッダーが fixed なのでそのぶん余白を足す */}
 
       {/* ============================================ */}
       {/* ① ヒーローセクション（パララックス） */}
@@ -53,7 +55,7 @@ export default function Home() {
         {/* テキスト */}
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-            山川みかん農園  
+            山川みかん農園
           </h1>
           <h2 className="text-2xl md:text-3xl mt-4">
             北原早生・山川ブランド — 無人直売所
@@ -79,7 +81,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
         <p className="text-center text-gray-600 mt-4 leading-relaxed">
-          傷があっても味は抜群。  
+          傷があっても味は抜群。
           “山川みかんを気軽に味わってほしい”という想いから、訳あり品を特別価格で提供しています。
         </p>
 
@@ -96,7 +98,7 @@ export default function Home() {
             />
             <h3 className="text-xl font-semibold mt-6 text-center">見た目に傷があるだけ</h3>
             <p className="text-gray-600 mt-3 text-center">
-              味・鮮度・香りは通常品と同じ。  
+              味・鮮度・香りは通常品と同じ。
               形や傷だけで味は変わりません。
             </p>
           </div>
@@ -112,7 +114,7 @@ export default function Home() {
             />
             <h3 className="text-xl font-semibold mt-6 text-center">無人販売だからこそ実現</h3>
             <p className="text-gray-600 mt-3 text-center">
-              手間を省き、お客様に還元しています。  
+              手間を省き、お客様に還元しています。
               毎年リピーターが絶えない人気商品です。
             </p>
           </div>
@@ -145,7 +147,7 @@ export default function Home() {
                 【訳あり】山川みかん（1袋100円）
               </h3>
               <p className="text-center text-gray-600 mt-3">
-                傷ありでも味はそのまま。  
+                傷ありでも味はそのまま。
                 人気No.1商品です。
               </p>
             </a>
@@ -175,7 +177,7 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ④ パララックス2段目（自然の魅力） */}
+      {/* ④ パララックス2段目 */}
       {/* ============================================ */}
       <section className="relative h-[50vh] overflow-hidden mt-20">
         <div
@@ -207,8 +209,8 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center">農園の想い</h2>
 
         <p className="text-center text-gray-700 mt-6 leading-relaxed text-lg">
-          みかんを通して、地域に貢献したい。  
-          毎年楽しみにしてくれるお客様へ、変わらず「美味しい」を届けたい。  
+          みかんを通して、地域に貢献したい。
+          毎年楽しみにしてくれるお客様へ、変わらず「美味しい」を届けたい。
           その想いで、家族みんなで育てています。
         </p>
       </section>

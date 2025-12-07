@@ -13,10 +13,12 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="pt-[80px] text-[#333]">
-
-      {/* ─────────────── ヒーロー ─────────────── */}
+    <main className="text-[#333]">
+      {/* ============================================ */}
+      {/* ① ヒーローセクション（パララックス） */}
+      {/* ============================================ */}
       <section className="relative h-[80vh] overflow-hidden">
+
         <div
           className="absolute inset-0"
           style={{
@@ -52,9 +54,11 @@ export default function Home() {
           <h2 className="text-2xl md:text-3xl mt-4">
             北原早生・山川ブランド — 無人直売所
           </h2>
+
           <p className="mt-6 text-lg md:text-xl font-light">
             “驚きの100円みかん”を、旬の鮮度そのままに。
           </p>
+
           <a
             href="/products"
             className="mt-8 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full text-lg shadow-lg transition"
@@ -64,14 +68,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────── 理由 ─────────────── */}
+      {/* 以下は今のあなたの Home 部分をそのまま残して OK */}
+      {/* ============================================ */}
+      {/* ② なぜ100円なのか？ */}
+      {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
         <p className="text-center text-gray-600 mt-4 leading-relaxed">
           傷があっても味は抜群。
-          “山川みかんを気軽に味わってほしい”という想いから、
-          訳あり品を特別価格で提供しています。
+          “山川みかんを気軽に味わってほしい”という想いから、訳あり品を特別価格で提供しています。
         </p>
 
         <div className="grid md:grid-cols-2 gap-10 mt-14">
@@ -105,47 +111,6 @@ export default function Home() {
             <p className="text-gray-600 mt-3 text-center">
               手間を省き、お客様に還元しています。
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────── 商品一覧 ─────────────── */}
-      <section className="bg-[#fafafa] py-20 border-t">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center">商品一覧</h2>
-
-          <div className="grid md:grid-cols-2 gap-10 mt-14">
-            <a
-              href="/products"
-              className="bg-white rounded-xl shadow-md p-8 border hover:shadow-lg transition"
-            >
-              <Image
-                src="/mikan/hand.png"
-                width={400}
-                height={300}
-                alt="訳ありみかん"
-                className="rounded-lg mx-auto"
-              />
-              <h3 className="text-2xl font-semibold mt-6 text-center text-orange-600">
-                【訳あり】山川みかん（1袋100円）
-              </h3>
-            </a>
-
-            <a
-              href="/products"
-              className="bg-white rounded-xl shadow-md p-8 border hover:shadow-lg transition"
-            >
-              <Image
-                src="/mikan/premium.png"
-                width={400}
-                height={300}
-                alt="通常品"
-                className="rounded-lg mx-auto"
-              />
-              <h3 className="text-2xl font-semibold mt-6 text-center">
-                【通常品】山川みかん（3kg〜）
-              </h3>
-            </a>
           </div>
         </div>
       </section>

@@ -13,3 +13,52 @@ a {
   text-decoration: none;
   color: inherit;
 }
+/* ================================
+   フェードイン
+================================ */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-in.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================================
+   Pure CSS Slider（超軽量）
+================================ */
+.slider {
+  position: relative;
+  height: 260px;
+  max-height: 40vh;
+}
+
+.slide-track {
+  display: flex;
+  width: calc(1600px * 3);
+  animation: slide 16s infinite linear;
+}
+
+.slide-img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(0);
+  }
+  33% {
+    transform: translateX(-100%);
+  }
+  66% {
+    transform: translateX(-200%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

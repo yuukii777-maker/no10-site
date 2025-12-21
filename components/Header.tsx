@@ -1,83 +1,69 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
 
   const navItems = [
-    { href: "/", label: "ホーム" },
-    { href: "/products", label: "商品" },
-    { href: "/about", label: "農園について" },
-    { href: "/news", label: "お知らせ" },
-    { href: "/contact", label: "お問い合わせ" },
+    { href: "/", src: "/mikan/nav_home.png", label: "ホーム" },
+    { href: "/products", src: "/mikan/nav_products.png", label: "商品" },
+    { href: "/about", src: "/mikan/nav_farm.png", label: "農園について" },
+    { href: "/news", src: "/mikan/nav_news.png", label: "お知らせ" },
+    { href: "/contact", src: "/mikan/nav_contact.png", label: "お問い合わせ" },
   ];
 
   return (
-    <>
-      {/* ==============================
-          ヘッダー本体（和紙ガラス）
-      ============================== */}
-      <header className="
-        fixed top-0 left-0 right-0
-        backdrop-blur-md
-        bg-white/60
-        border-b border-white/30
-        shadow-sm
-        z-50
-      ">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
+    <header className="fixed top-0 left-0 right-0 z-50 shadow-md bg-white/80 backdrop-blur-xl">
+      {/* 上段：ロゴ＋ハンバーガー */}
+      <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
+        <Link href="/" className="text-xl font-bold text-[#333]">
+          山川みかん農園
+        </Link>
 
-          {/* ロゴ */}
-          <Link href="/" className="text-xl font-bold text-gray-800">
-            山川みかん農園
-          </Link>
+        <button
+          className="p-2 border rounded-md shadow-sm bg-white/70 backdrop-blur-sm hover:bg-white"
+          onClick={() => setOpen(!open)}
+        >
+          <Image
+            src="/icons/menu.svg"
+            alt="menu"
+            width={24}
+            height={24}
+          />
+        </button>
+      </div>
 
-          {/* ハンバーガー */}
-          <button
-            className="w-10 h-10 flex items-center justify-center rounded-md
-                       bg-white/40 backdrop-blur-sm shadow
-                       active:scale-95 transition"
-            onClick={() => setOpen(!open)}
-          >
-            <span className="text-2xl">☰</span>
-          </button>
-        </div>
-      </header>
-
-      {/* ==============================
-          ドロワーメニュー（縦に展開）
-      ============================== */}
+      {/* ドロワーメニュー（縦の画像メニュー） */}
       {open && (
         <div className="
-          fixed top-16 right-3
-          w-48
-          bg-white/80 backdrop-blur-md
-          rounded-xl shadow-lg border border-white/40
-          p-2
-          z-40
+          absolute right-4 mt-2 w-[150px]
+          p-4 rounded-xl shadow-lg
+          bg-white/80 backdrop-blur-xl
           animate-fadeSlide
         ">
           {navItems.map((item) => (
             <Link
-              key={item.href}
               href={item.href}
+              key={item.href}
+              className="block mb-3 last:mb-0"
               onClick={() => setOpen(false)}
-              className="
-                block w-full
-                px-4 py-3
-                text-gray-800
-                rounded-md
-                hover:bg-orange-100
-                transition
-              "
             >
-              {item.label}
+              <div className="w-full h-[50px] relative">
+                <Image
+                  src={item.src}
+                  alt={item.label}
+                  fill
+                  className="object-contain"
+                  sizes="150px"
+                />
+              </div>
             </Link>
           ))}
         </div>
       )}
-    </>
+    </header>
   );
 }

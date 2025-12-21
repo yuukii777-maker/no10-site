@@ -84,9 +84,9 @@ export default function ProductsPage() {
       </section>
 
       {/* ====================== */}
-      {/* キャンペーン */}
+      {/* キャンペーン（←ここに飛んでくる） */}
       {/* ====================== */}
-      <section id="campaign-banners" className="mt-24">
+      <section id="campaign-banners" className="mt-24 scroll-mt-24">
         <h2 className="text-3xl font-bold text-center mb-10">キャンペーン情報</h2>
 
         {[
@@ -104,7 +104,13 @@ export default function ProductsPage() {
           },
         ].map((item, i) => (
           <div key={i} className="rounded-xl overflow-hidden shadow-md mb-16">
-            <Image src={item.src} width={1200} height={700} alt="" className="w-full object-cover" />
+            <Image
+              src={item.src}
+              width={1200}
+              height={700}
+              alt={`キャンペーン ${i + 1}`}
+              className="w-full object-cover"
+            />
 
             <div className="
               bg-white/60 backdrop-blur-sm rounded-b-2xl shadow-md

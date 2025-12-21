@@ -111,16 +111,16 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ② スワイプスライダー（高さ調整版） */}
+      {/* ② スワイプスライダー（ジャンプ付き） */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-16 relative z-10">
         <div
           className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
-          onClick={() =>
-            document
-              .getElementById("campaign-banners")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
+
+          /* 🚀 ここが重要（クリックで products#campaign-banners へ遷移） */
+          onClick={() => {
+            window.location.href = "/products#campaign-banners";
+          }}
         >
           <div
             className="slider-track"
@@ -132,8 +132,8 @@ export default function Home() {
                 className="
                   slider-item 
                   relative 
-                  h-[360px]      /* ←★スマホの高さ調整ここ★ */
-                  sm:h-[800px]   /* ←★PCの高さ調整ここ★ */
+                  h-[360px]      /* ←スマホ高さ */
+                  sm:h-[800px]   /* ←PC高さ */
                 "
               >
                 <Image

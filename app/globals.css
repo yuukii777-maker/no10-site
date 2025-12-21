@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* ====== Global settings ====== */
+/* --- あなたの基本設定 --- */
+
 html,
 body {
   margin: 0;

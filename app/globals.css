@@ -9,8 +9,9 @@ body {
   padding: 0;
   font-family: "Yu Gothic Medium", "Hiragino Sans", sans-serif;
 
+  /* 和紙 */
   background-image: url("/mikan/bg_washi.png");
-  background-size: cover;
+  background-size: 600px;
   background-repeat: repeat;
   background-attachment: fixed;
   background-position: center;
@@ -25,22 +26,28 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.45);
+
+  /* 白くしすぎず自然に馴染ませるベスト値 */
+  background: rgba(255, 255, 255, 0.42);
+
   pointer-events: none;
   z-index: -1;
 }
 
 /* ===================================== */
-/* Header 改良（影＋グラデ） */
+/* Header（透明白＋影） */
 /* ===================================== */
 header {
+  position: relative;
+  z-index: 50;
+
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
   background: rgba(255, 255, 255, 0.93);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* グラデ（下にほんのり影） */
+/* 本物のサイトのように下に淡い影 */
 header::after {
   content: "";
   position: absolute;
@@ -50,10 +57,11 @@ header::after {
   height: 8px;
   background: linear-gradient(to bottom, rgba(0,0,0,0.04), transparent);
   pointer-events: none;
+  z-index: -1;
 }
 
 /* ===================================== */
-/* Hero 画像の和風トーン調整 */
+/* Hero 画像の和風トーン overlay */
 /* ===================================== */
 .hero-overlay {
   background: linear-gradient(
@@ -62,17 +70,20 @@ header::after {
     rgba(0, 0, 0, 0.35),
     rgba(0, 0, 0, 0.1)
   );
+  mix-blend-mode: multiply;
 }
 
 /* ===================================== */
-/* 新スライダー（右→左にスムーズ移動） */
+/* スライダー（右→左に滑らか移動） */
 /* ===================================== */
 .slider-container {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  height: 380px; /* 文字切れ防止 */
+  height: 380px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  background: rgba(255, 255, 255, 0.35); /* 和紙が強すぎる時の視認性 */
+  backdrop-filter: blur(3px);
 }
 
 .slider-track {

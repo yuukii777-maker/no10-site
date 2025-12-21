@@ -7,7 +7,7 @@ export default function MikanNav() {
   const navItems = [
     { href: "/", src: "/mikan/nav_home.png", label: "ホーム" },
     { href: "/products", src: "/mikan/nav_products.png", label: "商品" },
-    { href: "/farm", src: "/mikan/nav_farm.png", label: "農園について" },
+    { href: "/about", src: "/mikan/nav_farm.png", label: "農園について" },  // ← 修正ここ
     { href: "/news", src: "/mikan/nav_news.png", label: "お知らせ" },
     { href: "/contact", src: "/mikan/nav_contact.png", label: "お問い合わせ" },
   ];

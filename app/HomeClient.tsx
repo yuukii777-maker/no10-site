@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 
-// フェードインアニメ
+/* -------- フェードインアニメ Hook -------- */
 function useFadeIn() {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -12,13 +12,12 @@ function useFadeIn() {
     if (!el) return;
 
     const obs = new IntersectionObserver(
-      (entries) => {
+      (entries) =>
         entries.forEach((e) => {
           if (e.isIntersecting) {
             el.classList.add("opacity-100", "translate-y-0");
           }
-        });
-      },
+        }),
       { threshold: 0.2 }
     );
 
@@ -29,7 +28,32 @@ function useFadeIn() {
   return ref;
 }
 
-export default function Home() {
+/* -------- ギャラリーコンポーネント -------- */
+function GalleryItem({
+  src,
+  title,
+  text,
+}: {
+  src: string;
+  title: string;
+  text: string;
+}) {
+  const fade = useFadeIn();
+  return (
+    <div
+      ref={fade}
+      className="opacity-0 translate-y-6 transition-all duration-700"
+    >
+      <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
+        <Image src={src} alt={title} fill className="object-cover" />
+      </div>
+      <h3 className="text-lg font-semibold mt-4">{title}</h3>
+      <p className="text-gray-600 text-sm mt-1">{text}</p>
+    </div>
+  );
+}
+
+export default function HomeClient() {
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
@@ -40,8 +64,9 @@ export default function Home() {
 
   return (
     <main className="text-[#333]">
+
       {/* ============================================ */}
-      {/* ① ヒーロー（hiro.png） */}
+      {/* ① HERO（hiro.png） */}
       {/* ============================================ */}
       <section className="relative h-[80vh] overflow-hidden">
         <div
@@ -80,7 +105,7 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ② 100円みかん（理由） */}
+      {/* ② 100円みかんの理由 */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
@@ -129,7 +154,7 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ③ POPバナー（あなたの画像） */}
+      {/* ③ POPバナー */}
       {/* ============================================ */}
       <section className="max-w-4xl mx-auto px-6 py-10">
         <div className="rounded-xl overflow-hidden shadow-lg border">
@@ -150,75 +175,43 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center mb-12">山川みかんギャラリー</h2>
 
         <div className="grid md:grid-cols-3 gap-10">
-
-          {/* defect */}
           <GalleryItem
             src="/mikan/defect.png"
             title="訳ありみかん"
             text="見た目に傷がありますが、甘さは本物。人気No.1。"
           />
 
-          {/* premium */}
           <GalleryItem
             src="/mikan/premium.png"
             title="選別された正規品"
-            text="プロが厳選した見た目も味も優れたみかん。"
+            text="プロが厳選した甘味と見た目に優れたみかん。"
           />
 
-          {/* hand */}
           <GalleryItem
             src="/mikan/hand.png"
             title="手作業で丁寧に収穫"
-            text="一つ一つ状態を確認しながら、最適なタイミングで収穫します。"
+            text="ひとつひとつ状態を見ながら最適なタイミングで収穫。"
           />
 
-          {/* farm */}
           <GalleryItem
             src="/mikan/farm.png"
             title="自然に囲まれた農園"
-            text="海風・日当たりがそろう山川の大地で育った安心安全のみかん。"
+            text="海風・日当たりがそろう山川の大地で育てています。"
           />
 
-          {/* shelf */}
           <GalleryItem
             src="/mikan/shelf.png"
             title="無人販売所"
-            text="1袋100円で買える、地域に根付いた山川の文化。"
+            text="1袋100円で買える、地域に根付く山川の文化。"
           />
 
-          {/* top */}
           <GalleryItem
             src="/mikan/top.png"
             title="袋いっぱいのみかん"
-            text="2袋分ほどの量で、家庭用にぴったり。"
+            text="1袋4〜6個入りで家庭用にもぴったり。"
           />
         </div>
       </section>
     </main>
-  );
-}
-
-/* ギャラリーコンポーネント */
-function GalleryItem({
-  src,
-  title,
-  text,
-}: {
-  src: string;
-  title: string;
-  text: string;
-}) {
-  const fade = useFadeIn();
-  return (
-    <div
-      ref={fade}
-      className="opacity-0 translate-y-6 transition-all duration-700"
-    >
-      <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
-        <Image src={src} alt={title} fill className="object-cover" />
-      </div>
-      <h3 className="text-lg font-semibold mt-4">{title}</h3>
-      <p className="text-gray-600 text-sm mt-1">{text}</p>
-    </div>
   );
 }

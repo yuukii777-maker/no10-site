@@ -9,7 +9,7 @@ body {
   padding: 0;
   font-family: "Yu Gothic Medium", "Hiragino Sans", sans-serif;
 
-  /* 和紙 */
+  /* 和紙背景 */
   background-image: url("/mikan/bg_washi.png");
   background-size: 600px;
   background-repeat: repeat;
@@ -19,27 +19,31 @@ body {
 
   color: #36332e;
   scroll-behavior: smooth;
-  position: relative;
-  z-index: 0;  /* これが重要：bodyを基準レイヤーに固定 */
+
+  /* ❌ これを入れると画像が消える（絶対に入れない）
+     position: relative;
+     z-index: 0;
+  */
 }
 
 /* ===================================== */
-/* 和紙の上に薄い白ベール（※ 最背面に固定） */
+/* 和紙の上に薄い白ベール（固定・最背面） */
 /* ===================================== */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
 
+  /* 景色を邪魔せず文字を読みやすくする黄金値 */
   background: rgba(255, 255, 255, 0.45);
   pointer-events: none;
 
-  /* 🧡 最背面へ（これで画像より前に来ない） */
+  /* 和紙の完全裏側へ */
   z-index: -10;
 }
 
 /* ===================================== */
-/* Header（透明白 + 下影） */
+/* Header（透明白 + グラデ影） */
 /* ===================================== */
 header {
   position: fixed;
@@ -47,42 +51,47 @@ header {
   left: 0;
   right: 0;
 
-  z-index: 50; /* ベールより圧倒的に前 */
-
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
+
   border-bottom: 1px solid rgba(0,0,0,0.05);
   box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+
+  z-index: 50;
 }
 
-/* Header下影 */
+/* Header 下の自然な影（プロ品質） */
 header::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -8px;
-  height: 8px;
+  bottom: -10px;
+  height: 10px;
 
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.06),
+    rgba(0,0,0,0.08),
     transparent
   );
   pointer-events: none;
+
   z-index: -1;
 }
 
 /* ===================================== */
-/* MikanNav（画像ボタンナビ） */
+/* 画像ナビ（MikanNav） */
 /* ===================================== */
 .mikan-nav-container {
   position: relative;
-  z-index: 40; /* headerより下、ベールより上 */
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+
+  z-index: 40; /* header より下、body::before より上 */
 }
 
 /* ===================================== */
-/* Hero Overlay */
+/* Hero Overlay（和風トーン） */
 /* ===================================== */
 .hero-overlay {
   background: linear-gradient(
@@ -96,7 +105,7 @@ header::after {
 }
 
 /* ===================================== */
-/* スライダー */
+/* スライダー（背景馴染ませ + 影調整） */
 /* ===================================== */
 .slider-container {
   position: relative;
@@ -105,9 +114,10 @@ header::after {
   height: 380px;
 
   background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
 
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
   z-index: 10;
 }
 
@@ -125,15 +135,18 @@ header::after {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.4);
+
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(3px);
+
   padding: 10px;
-  text-align: center;
   color: white;
+  text-align: center;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
+/* スマホ最適化 */
 @media (max-width: 640px) {
   .slider-container {
     height: 300px;

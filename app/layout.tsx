@@ -12,17 +12,14 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
-      <body className="bg-[#faf7f2] text-[#36332e]">
-        {/* 🟧 固定ヘッダー（ロゴのみ） */}
+      {/* ⚠️ Tailwind の bg を完全削除 → globals.css の背景を活かす */}
+      <body className="text-[#36332e]">
         <Header />
 
-        {/* 🍊 画像ナビ（テキストナビを完全置き換え） */}
-        <div className="pt-[64px]"> 
-          {/* Header が fixed なのでその高さ分余白を入れる */}
+        <div className="pt-[64px]">
           <MikanNav />
         </div>
 
-        {/* 🟧 メインコンテンツ（画像ナビの高さも考慮して余白を調整） */}
         <main className="main-container mt-4">
           {children}
         </main>

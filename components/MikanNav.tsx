@@ -7,13 +7,23 @@ export default function MikanNav() {
   const navItems = [
     { href: "/", src: "/mikan/nav_home.png", label: "ホーム" },
     { href: "/products", src: "/mikan/nav_products.png", label: "商品" },
-    { href: "/about", src: "/mikan/nav_farm.png", label: "農園について" },  // ← 修正ここ
+    { href: "/about", src: "/mikan/nav_farm.png", label: "農園について" },
     { href: "/news", src: "/mikan/nav_news.png", label: "お知らせ" },
     { href: "/contact", src: "/mikan/nav_contact.png", label: "お問い合わせ" },
   ];
 
   return (
-    <nav className="w-full bg-white py-3 shadow-sm">
+    <nav
+      className="
+        w-full 
+        bg-white/60 
+        backdrop-blur-md 
+        py-3 
+        shadow 
+        mikan-nav-container
+        z-[40]
+      "
+    >
       <div className="max-w-5xl mx-auto px-3 flex gap-4 overflow-x-auto scrollbar-hide">
         {navItems.map((item) => (
           <Link

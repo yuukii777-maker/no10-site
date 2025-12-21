@@ -133,7 +133,7 @@ export default function Home() {
                   slider-item 
                   relative 
                   h-[360px]      /* ←★スマホの高さ調整ここ★ */
-                  sm:h-[620px]   /* ←★PCの高さ調整ここ★ */
+                  sm:h-[800px]   /* ←★PCの高さ調整ここ★ */
                 "
               >
                 <Image

@@ -1,139 +1,106 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-/* ---- フェードイン Hook ---- */
-function useFadeIn() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const obs = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            el.classList.add("opacity-100", "translate-y-0");
-          }
-        }),
-      { threshold: 0.2 }
-    );
-
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  return ref;
-}
+/* =======================================
+   ３枚ローテーション用スライダー画像
+======================================= */
+const slides = [
+  "/mikan/bnr_shipping_campaign.png", // 九州送料無料キャンペーン
+  "/mikan/bnr_open_special.png",      // 新設サイト記念 +1kg
+  "/mikan/bnr_oseibo.png",            // 冬ギフト（お歳暮）
+];
 
 export default function AboutClient() {
-  return (
-    <main className="text-[#333]">
+  const [index, setIndex] = useState(0);
 
-      {/* ============================= */}
-      {/* Hero（farm.png） */}
-      {/* ============================= */}
-      <section className="relative h-[70vh] overflow-hidden">
+  /* =======================================
+     スライダー（2秒ごとに切り替え）
+  ======================================= */
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % slides.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <main className="px-6 pb-24 text-[#333]">
+
+      {/* ================================ */}
+      {/* ① トップビジュアル（farm.png） */}
+      {/* ================================ */}
+      <section className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden rounded-xl shadow-lg mt-6 max-w-6xl mx-auto">
         <Image
           src="/mikan/farm.png"
           alt="山川みかん農園"
           fill
           priority
-          className="object-cover brightness-90"
+          className="object-cover brightness-[0.95]"
         />
-        <div className="absolute inset-0 bg-black/30"></div>
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6">
-          <h1 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
-            自然に囲まれた山川の農園
-          </h1>
-          <p className="mt-4 text-lg md:text-xl drop-shadow">
-            日当たり・海風・水はけの良さが揃う最高の土地
+        <div className="absolute inset-0 bg-black/20" />
+
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-white drop-shadow-2xl text-center px-6">
+          <h1 className="text-4xl md:text-5xl font-bold">山川みかん農園について</h1>
+          <p className="text-lg md:text-xl mt-4 max-w-2xl leading-relaxed opacity-90">
+            海風・日当たり・水はけの良い山川の大地で育つ、高品質なみかん。
+            手作業のこだわりと自然の恵みをご紹介します。
           </p>
         </div>
       </section>
 
-      {/* ============================= */}
-      {/* 農園の特徴 */}
-      {/* ============================= */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-
-        <h2 className="text-3xl font-bold text-center">山川みかん農園の特徴</h2>
-
-        <p className="text-center text-gray-600 mt-4 leading-relaxed">
-          山川町は古くからみかん作りが盛んな地域。  
-          海風と太陽、そして肥えた大地が、香り高いみかんを育てます。
+      {/* ================================ */}
+      {/* ② 農園紹介テキスト */}
+      {/* ================================ */}
+      <section className="max-w-4xl mx-auto text-center py-12">
+        <p className="text-gray-700 leading-relaxed">
+          福岡県みやま市山川町は、みかん栽培に最適な自然環境が整う地域。
+          海風の通り道となる地形と、日当たりが良く水はけのよい土壌が、
+          甘味・香りの強い山川みかんを育てています。
         </p>
+      </section>
 
-        <div className="grid md:grid-cols-3 gap-10 mt-14">
+      {/* ================================ */}
+      {/* ③ キャンペーンスライダー（３枚） */}
+      {/* ================================ */}
+      <section className="max-w-5xl mx-auto mt-4">
+        <div className="relative w-full h-[250px] md:h-[320px] rounded-2xl overflow-hidden shadow-xl">
 
-          <Feature
-            img="/mikan/premium.png"
-            title="甘味と香りのあるみかん"
-            text="海風と日照の恩恵を受け、味のバランスが良く香り豊か。"
-          />
+          {slides.map((src, i) => (
+            <Image
+              key={i}
+              src={src}
+              alt={`キャンペーンバナー${i + 1}`}
+              fill
+              className={`object-cover transition-opacity duration-700 ${
+                i === index ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
 
-          <Feature
-            img="/mikan/hand.png"
-            title="ひとつひとつ丁寧に収穫"
-            text="熟度を見ながら最適なタイミングで手摘みしています。"
-          />
-
-          <Feature
-            img="/mikan/shelf.png"
-            title="無人販売による地域の文化"
-            text="新鮮なみかんが家庭にすぐ届く、信頼のある販売方法です。"
-          />
         </div>
       </section>
 
-      {/* ============================= */}
-      {/* ストーリー */}
-      {/* ============================= */}
-      <section className="bg-[#fafafa] py-20 border-t">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold">農園の想い</h2>
-
-          <p className="text-gray-700 leading-relaxed text-lg mt-6">
-            山川みかん農園では「また食べたい」と思っていただける  
-            みかん作りを目指しています。
-            <br /><br />
-            土づくりから収穫、選別まで心を込めて行い、  
-            地域の恵みをそのままお届けします。
-          </p>
+      {/* ================================ */}
+      {/* ④ 農園写真セクション */}
+      {/* ================================ */}
+      <section className="max-w-5xl mx-auto mt-16">
+        <div className="relative w-full h-[400px] md:h-[480px] rounded-2xl overflow-hidden shadow-md">
+          <Image
+            src="/mikan/farm.png"
+            alt="農園風景"
+            fill
+            className="object-cover scale-[1.03]"
+          />
         </div>
+
+        <p className="text-center text-gray-600 mt-6 leading-relaxed max-w-3xl mx-auto">
+          収穫はすべて手作業。一つひとつの実を確認しながら、
+          食べ頃を逃さないタイミングで丁寧に摘み取っています。
+        </p>
       </section>
     </main>
-  );
-}
-
-/* ---- Feature Component ---- */
-function Feature({
-  img,
-  title,
-  text,
-}: {
-  img: string;
-  title: string;
-  text: string;
-}) {
-  const fade = useFadeIn();
-  return (
-    <div
-      ref={fade}
-      className="opacity-0 translate-y-6 transition-all duration-700 text-center bg-white rounded-xl shadow-md p-8 border"
-    >
-      <Image
-        src={img}
-        alt={title}
-        width={180}
-        height={180}
-        className="mx-auto rounded-lg"
-      />
-      <h3 className="text-xl font-semibold mt-6">{title}</h3>
-      <p className="text-gray-600 mt-3 leading-relaxed">{text}</p>
-    </div>
   );
 }

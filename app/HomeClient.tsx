@@ -39,19 +39,19 @@ export default function Home() {
      スライダー制御
   ============================ */
   const sliderImages = [
-  {
-    src: "/mikan/bnr_shipping_campaign.png",
-    caption: "九州 送料無料キャンペーン",
-  },
-  {
-    src: "/mikan/bnr_open_special.png",
-    caption: "新設サイト記念 ＋1kg",
-  },
-  {
-    src: "/mikan/bnr_oseibo.png",
-    caption: "冬ギフト受付中",
-  },
-];
+    {
+      src: "/mikan/bnr_shipping_campaign.png",
+      caption: "九州 送料無料キャンペーン",
+    },
+    {
+      src: "/mikan/bnr_open_special.png",
+      caption: "新設サイト記念 ＋1kg",
+    },
+    {
+      src: "/mikan/bnr_oseibo.png",
+      caption: "冬ギフト受付中",
+    },
+  ];
 
   const [index, setIndex] = useState(0);
 
@@ -77,7 +77,7 @@ export default function Home() {
     <main className="text-[#333]">
 
       {/* ============================================ */}
-      {/* ① ヒーロー → ★ z-20 を追加 ★ */}
+      {/* ① ヒーロー */}
       {/* ============================================ */}
       <section className="relative h-[80vh] overflow-hidden z-20">
         <div
@@ -111,13 +111,15 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ② スワイプスライダー → ★ z-10 を追加 ★ */}
+      {/* ② スワイプスライダー（高さ調整版） */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-16 relative z-10">
         <div
           className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
           onClick={() =>
-            document.getElementById("campaign-banners")?.scrollIntoView({ behavior: "smooth" })
+            document
+              .getElementById("campaign-banners")
+              ?.scrollIntoView({ behavior: "smooth" })
           }
         >
           <div
@@ -125,8 +127,21 @@ export default function Home() {
             style={{ transform: `translateX(-${index * 100}%)` }}
           >
             {sliderImages.map((item, i) => (
-              <div key={i} className="slider-item relative">
-                <Image src={item.src} alt={item.caption} fill className="object-cover" />
+              <div
+                key={i}
+                className="
+                  slider-item 
+                  relative 
+                  h-[360px]      /* ←★スマホの高さ調整ここ★ */
+                  sm:h-[620px]   /* ←★PCの高さ調整ここ★ */
+                "
+              >
+                <Image
+                  src={item.src}
+                  alt={item.caption}
+                  fill
+                  className="object-cover"
+                />
 
                 <div className="slider-caption">{item.caption}</div>
               </div>
@@ -136,17 +151,19 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ③ 100円みかんの理由（カード背景＝安定OK） */}
+      {/* ③ 100円みかんの理由 */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
-        <div className="
+        <div
+          className="
           max-w-3xl mx-auto mt-6
           bg-white/60 backdrop-blur-sm rounded-2xl shadow-md
           p-6 md:p-8 leading-relaxed text-gray-700 text-center
-        ">
-          傷があっても味は抜群。  
+        "
+        >
+          傷があっても味は抜群。
           “山川みかんを気軽に味わってほしい” という想いから訳あり品を特別価格で提供しています。
         </div>
 
@@ -162,10 +179,12 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ④ ギャラリー（背景カードOK） */}
+      {/* ④ ギャラリー */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
-        <h2 className="text-3xl font-bold text-center mb-12">山川みかんギャラリー</h2>
+        <h2 className="text-3xl font-bold text-center mb-12">
+          山川みかんギャラリー
+        </h2>
 
         <div className="grid md:grid-cols-3 gap-10">
           <GalleryItem
@@ -205,21 +224,34 @@ export default function Home() {
 }
 
 /* ===========================
-   ギャラリーアイテム（カード化）
+   ギャラリーコンポーネント
 =========================== */
-function GalleryItem({ src, title, text }: { src: string; title: string; text: string }) {
+function GalleryItem({
+  src,
+  title,
+  text,
+}: {
+  src: string;
+  title: string;
+  text: string;
+}) {
   const fade = useFadeIn();
 
   return (
-    <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
+    <div
+      ref={fade}
+      className="opacity-0 translate-y-6 transition-all duration-700"
+    >
       <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
         <Image src={src} alt={title} fill className="object-cover" />
       </div>
 
-      <div className="
+      <div
+        className="
         bg-white/60 backdrop-blur-sm rounded-2xl shadow-md
         p-6 mt-4
-      ">
+      "
+      >
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-gray-600 text-sm mt-1">{text}</p>
       </div>

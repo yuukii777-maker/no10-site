@@ -1,21 +1,47 @@
 @import "tailwindcss";
 
+/* ===================================== */
+/* 全体ベース設定（和紙背景適用） */
+/* ===================================== */
 html,
 body {
   margin: 0;
   padding: 0;
   font-family: "Yu Gothic Medium", "Hiragino Sans", sans-serif;
-  background: #faf7f2;
+
+  /* ▼▼ 和紙背景を全ページに適用 ▼▼ */
+  background-image: url("/mikan/bg_washi.png");
+  background-size: cover;           /* 画面いっぱいにフィット */
+  background-repeat: repeat;        /* 繰り返しで継ぎ目を自然に */
+  background-attachment: fixed;     /* スクロールで奥行き演出 */
+  background-position: center;      /* 画面中央 */
+  background-color: #faf7f2;        /* 読み込み前の予備色 */
+
   color: #36332e;
+  scroll-behavior: smooth;
 }
 
+/* 全リンク共通 */
 a {
   text-decoration: none;
   color: inherit;
 }
-/* ================================ */
-/* フェードイン */
-/* ================================ */
+
+/* ===================================== */
+/* 和紙の上に“薄い白ベール”を乗せて可読性UP */
+/* ===================================== */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.45);  /* 白の薄いベール */
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ===================================== */
+/* フェードインアニメーション */
+/* ===================================== */
 .fade-in {
   opacity: 0;
   transform: translateY(30px);
@@ -27,9 +53,9 @@ a {
   transform: translateY(0);
 }
 
-/* ================================ */
-/* Pure CSS Slider */
-/* ================================ */
+/* ===================================== */
+/* 既存スライダー（今後リプレース予定）*/
+/* ===================================== */
 .slider {
   position: relative;
   height: 260px;
@@ -49,11 +75,8 @@ a {
 }
 
 @keyframes slide {
-  0% { transform: translateX(0); }
-  33% { transform: translateX(-100%); }
-  66% { transform: translateX(-200%); }
+  0%   { transform: translateX(0); }
+  33%  { transform: translateX(-100%); }
+  66%  { transform: translateX(-200%); }
   100% { transform: translateX(0); }
-}
-html, body {
-  scroll-behavior: smooth;
 }

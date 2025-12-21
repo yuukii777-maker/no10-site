@@ -98,7 +98,7 @@ export default function Home() {
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-bold">山川みかん農園</h1>
           <h2 className="text-xl md:text-3xl mt-4 opacity-90">
-            北原早生・山川ブランド — 旬の甘さそのままに
+            山川ブランド — 旬の甘さそのままに
           </h2>
 
           <a

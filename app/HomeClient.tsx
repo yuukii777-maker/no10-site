@@ -31,9 +31,12 @@ function useFadeIn() {
   return ref;
 }
 
+/* ===========================
+   メインコンポーネント
+=========================== */
 export default function Home() {
   /* ===========================
-     スライダー制御（スワイプ式）
+     スライダー制御（スワイプ）
   ============================ */
   const sliderImages = [
     {
@@ -55,14 +58,15 @@ export default function Home() {
   useEffect(() => {
     const id = setInterval(() => {
       setIndex((prev) => (prev + 1) % sliderImages.length);
-    }, 4000);
+    }, 4000); // ゆっくり切替
     return () => clearInterval(id);
   }, []);
 
   /* ===========================
-     パララックス
+     パララックス効果
   ============================ */
   const [offset, setOffset] = useState(0);
+
   useEffect(() => {
     const onScroll = () => setOffset(window.scrollY * 0.4);
     window.addEventListener("scroll", onScroll);
@@ -73,23 +77,26 @@ export default function Home() {
     <main className="text-[#333]">
 
       {/* ============================================ */}
-      {/* ① ヒーロー */}
+      {/* ① ヒーロー（和紙背景との一体感強化） */}
       {/* ============================================ */}
       <section className="relative h-[80vh] overflow-hidden">
         <div
           className="absolute inset-0"
-          style={{ transform: `translateY(${offset * 0.15}px)` }}
+          style={{
+            transform: `translateY(${offset * 0.15}px)`,
+          }}
         >
           <Image
             src="/mikan/hiro.png"
             alt="山川みかん農園"
             fill
             priority
-            className="object-cover brightness-[0.85]"
+            className="object-cover brightness-[0.88]"
           />
         </div>
 
-        <div className="absolute inset-0 bg-black/25" />
+        {/* 和風の味を引き立てるオーバーレイ */}
+        <div className="absolute inset-0 hero-overlay" />
 
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-bold">
@@ -109,12 +116,11 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ② スワイプ式スライダー（縦420px） */}
+      {/* ② スワイプ式スライダー（420px固定） */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div
-          className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer"
-          style={{ height: "420px" }}
+          className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
           onClick={() =>
             document
               .getElementById("campaign-banners")
@@ -122,21 +128,22 @@ export default function Home() {
           }
         >
           <div
-            className="flex transition-transform duration-[1400ms] ease-in-out"
-            style={{ transform: `translateX(-${index * 100}%)` }}
+            className="slider-track"
+            style={{
+              transform: `translateX(-${index * 100}%)`,
+            }}
           >
             {sliderImages.map((item, i) => (
-              <div key={i} className="min-w-full h-[420px] relative">
+              <div key={i} className="slider-item relative">
                 <Image
                   src={item.src}
                   alt={item.caption}
                   fill
                   className="object-cover"
                 />
-                <div className="absolute bottom-0 w-full bg-black/40 py-3 text-center">
-                  <p className="text-white text-xl font-semibold drop-shadow-md tracking-wide">
-                    {item.caption}
-                  </p>
+
+                <div className="slider-caption">
+                  {item.caption}
                 </div>
               </div>
             ))}
@@ -150,8 +157,8 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
-        <p className="text-center text-gray-600 mt-4">
-          傷があっても味は抜群。"山川みかんを気軽に味わってほしい"  
+        <p className="text-center text-gray-600 mt-4 leading-relaxed">
+          傷があっても味は抜群。“山川みかんを気軽に味わってほしい”  
           という想いから訳あり品を特別価格で提供しています。
         </p>
 
@@ -203,7 +210,7 @@ export default function Home() {
           <GalleryItem
             src="/mikan/top.png"
             title="袋いっぱいのみかん"
-            text="贈り物にも最適な山川みかん。"
+            text="贈り物にも人気の山川みかん。"
           />
         </div>
       </section>
@@ -225,7 +232,10 @@ function GalleryItem({
 }) {
   const fade = useFadeIn();
   return (
-    <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
+    <div
+      ref={fade}
+      className="opacity-0 translate-y-6 transition-all duration-700"
+    >
       <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
         <Image src={src} alt={title} fill className="object-cover" />
       </div>

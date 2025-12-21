@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ===================================== */
-/* 全体ベース設定（和紙背景適用） */
+/* 和紙背景（C-3最適化） */
 /* ===================================== */
 html,
 body {
@@ -9,74 +9,107 @@ body {
   padding: 0;
   font-family: "Yu Gothic Medium", "Hiragino Sans", sans-serif;
 
-  /* ▼▼ 和紙背景を全ページに適用 ▼▼ */
   background-image: url("/mikan/bg_washi.png");
-  background-size: cover;           /* 画面いっぱいにフィット */
-  background-repeat: repeat;        /* 繰り返しで継ぎ目を自然に */
-  background-attachment: fixed;     /* スクロールで奥行き演出 */
-  background-position: center;      /* 画面中央 */
-  background-color: #faf7f2;        /* 読み込み前の予備色 */
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: fixed;
+  background-position: center;
+  background-color: #faf7f2;
 
   color: #36332e;
   scroll-behavior: smooth;
 }
 
-/* 全リンク共通 */
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* ===================================== */
-/* 和紙の上に“薄い白ベール”を乗せて可読性UP */
-/* ===================================== */
+/* 和紙の上に薄い白ベール（可読性UP） */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.45);  /* 白の薄いベール */
+  background: rgba(255, 255, 255, 0.45);
   pointer-events: none;
   z-index: -1;
 }
 
 /* ===================================== */
-/* フェードインアニメーション */
+/* Header 改良（影＋グラデ） */
 /* ===================================== */
-.fade-in {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+header {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  background: rgba(255, 255, 255, 0.93);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.fade-in.show {
-  opacity: 1;
-  transform: translateY(0);
+/* グラデ（下にほんのり影） */
+header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 8px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.04), transparent);
+  pointer-events: none;
 }
 
 /* ===================================== */
-/* 既存スライダー（今後リプレース予定）*/
+/* Hero 画像の和風トーン調整 */
 /* ===================================== */
-.slider {
+.hero-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.25),
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.1)
+  );
+}
+
+/* ===================================== */
+/* 新スライダー（右→左にスムーズ移動） */
+/* ===================================== */
+.slider-container {
   position: relative;
-  height: 260px;
-  max-height: 40vh;
+  overflow: hidden;
+  border-radius: 12px;
+  height: 380px; /* 文字切れ防止 */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
-.slide-track {
+.slider-track {
   display: flex;
-  width: calc(1600px * 3);
-  animation: slide 16s infinite linear;
+  transition: transform 1s ease-in-out;
 }
 
-.slide-img {
+.slider-item {
+  min-width: 100%;
+  position: relative;
+}
+
+.slider-item img {
   width: 100%;
-  height: 260px;
+  height: 380px;
   object-fit: cover;
 }
 
-@keyframes slide {
-  0%   { transform: translateX(0); }
-  33%  { transform: translateX(-100%); }
-  66%  { transform: translateX(-200%); }
-  100% { transform: translateX(0); }
+/* 下の黒帯（説明） */
+.slider-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+  backdrop-filter: blur(3px);
+}
+
+@media (max-width: 640px) {
+  .slider-container {
+    height: 300px;
+  }
+  .slider-item img {
+    height: 300px;
+  }
 }

@@ -1,119 +1,14 @@
-"use client";
+/* ===========================
+   SEO（サーバーコンポーネント）
+=========================== */
+export const metadata = {
+  title: "山川みかん農園｜北原早生・訳あり100円みかん",
+  description:
+    "福岡県みやま市山川町の山川みかん農園。北原早生を中心に、自然の恵みを生かした丁寧な栽培で、甘味・香りの強いみかんを育てています。無人販売で訳あり100円みかんも提供。",
+};
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import HomeClient from "./HomeClient";
 
-export default function Home() {
-  const [offset, setOffset] = useState(0);
-
-  useEffect(() => {
-    const onScroll = () => setOffset(window.scrollY * 0.4);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <main className="text-[#333]">
-      {/* ============================================ */}
-      {/* ① ヒーローセクション（パララックス） */}
-      {/* ============================================ */}
-      <section className="relative h-[80vh] overflow-hidden">
-
-        <div
-          className="absolute inset-0"
-          style={{
-            transform: `translateY(${offset * 0.2}px)`,
-            transition: "transform 0.1s linear",
-          }}
-        >
-          <Image
-            src="/mikan/farm.png"
-            alt="山川みかん農園"
-            fill
-            priority
-            className="object-cover brightness-90"
-          />
-        </div>
-
-        <div className="absolute inset-0 bg-black/30" />
-
-        <div className="absolute bottom-5 right-5 z-10 hidden md:block">
-          <Image
-            src="/mikan/hand.png"
-            alt="100円みかん"
-            width={280}
-            height={280}
-            className="rounded-lg shadow-xl"
-          />
-        </div>
-
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-            山川みかん農園
-          </h1>
-          <h2 className="text-2xl md:text-3xl mt-4">
-            北原早生・山川ブランド — 無人直売所
-          </h2>
-
-          <p className="mt-6 text-lg md:text-xl font-light">
-            “驚きの100円みかん”を、旬の鮮度そのままに。
-          </p>
-
-          <a
-            href="/products"
-            className="mt-8 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full text-lg shadow-lg transition"
-          >
-            🧺 みかんを購入する
-          </a>
-        </div>
-      </section>
-
-      {/* 以下は今のあなたの Home 部分をそのまま残して OK */}
-      {/* ============================================ */}
-      {/* ② なぜ100円なのか？ */}
-      {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
-
-        <p className="text-center text-gray-600 mt-4 leading-relaxed">
-          傷があっても味は抜群。
-          “山川みかんを気軽に味わってほしい”という想いから、訳あり品を特別価格で提供しています。
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-10 mt-14">
-          <div className="bg-white rounded-xl shadow-md p-6 border">
-            <Image
-              src="/mikan/defect.png"
-              alt="訳あり"
-              width={600}
-              height={400}
-              className="rounded-lg mx-auto"
-            />
-            <h3 className="text-xl font-semibold mt-6 text-center">
-              見た目に傷があるだけ
-            </h3>
-            <p className="text-gray-600 mt-3 text-center">
-              味・鮮度・香りは通常品と同じ。
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md p-6 border">
-            <Image
-              src="/mikan/shelf.png"
-              alt="直売所"
-              width={600}
-              height={400}
-              className="rounded-lg mx-auto"
-            />
-            <h3 className="text-xl font-semibold mt-6 text-center">
-              無人販売だからこそ実現
-            </h3>
-            <p className="text-gray-600 mt-3 text-center">
-              手間を省き、お客様に還元しています。
-            </p>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+export default function Page() {
+  return <HomeClient />;
 }

@@ -39,19 +39,19 @@ export default function Home() {
      スライダー制御
   ============================ */
   const sliderImages = [
-    {
-      src: "/mikan/bnr_shipping_campaign.png",
-      caption: "九州 送料無料キャンペーン",
-    },
-    {
-      src: "/mikan/bnr_open_special.png",
-      caption: "新設サイト記念 ＋1kg",
-    },
-    {
-      src: "/mikan/bnr_oseibo.png",
-      caption: "冬ギフト受付中",
-    },
-  ];
+  {
+    src: "/mikan/bnr_shipping_campaign.png",
+    caption: "九州 送料無料キャンペーン",
+  },
+  {
+    src: "/mikan/bnr_open_special.png",
+    caption: "新設サイト記念 ＋1kg",
+  },
+  {
+    src: "/mikan/bnr_oseibo.png",
+    caption: "冬ギフト受付中",
+  },
+];
 
   const [index, setIndex] = useState(0);
 

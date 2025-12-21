@@ -15,12 +15,11 @@ export default function MikanNav() {
   return (
     <nav
       className="
-        w-full 
-        bg-white/60 
-        backdrop-blur-md 
-        py-3 
-        shadow 
+        w-full
+        bg-white/60 backdrop-blur-md 
+        py-3 shadow
         mikan-nav-container
+        hidden sm:block   /* ←スマホでは消える */
         z-[40]
       "
     >
@@ -36,7 +35,6 @@ export default function MikanNav() {
               alt={item.label}
               fill
               className="object-contain"
-              sizes="110px"
             />
           </Link>
         ))}

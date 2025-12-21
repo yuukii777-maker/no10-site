@@ -16,34 +16,35 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 shadow-md bg-white/80 backdrop-blur-xl">
-      {/* 上段：ロゴ＋ハンバーガー */}
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl shadow-md">
+
+      {/* ▼ 上段：ロゴ & ハンバーガー（スマホ限定） */}
       <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
+
         <Link href="/" className="text-xl font-bold text-[#333]">
           山川みかん農園
         </Link>
 
+        {/* ハンバーガー（PCでは非表示） */}
         <button
-          className="p-2 border rounded-md shadow-sm bg-white/70 backdrop-blur-sm hover:bg-white"
+          className="p-2 rounded-md bg-orange-500 hover:bg-orange-600 sm:hidden"
           onClick={() => setOpen(!open)}
         >
-          <Image
-            src="/icons/menu.svg"
-            alt="menu"
-            width={24}
-            height={24}
-          />
+          <Image src="/icons/menu.svg" alt="menu" width={24} height={24} />
         </button>
+
       </div>
 
-      {/* ドロワーメニュー（縦の画像メニュー） */}
+      {/* ▼ 縦メニュー（スマホのみ） */}
       {open && (
-        <div className="
+        <div
+          className="
+          sm:hidden      /* ← PCでは絶対表示しない */
           absolute right-4 mt-2 w-[150px]
           p-4 rounded-xl shadow-lg
-          bg-white/80 backdrop-blur-xl
-          animate-fadeSlide
-        ">
+          bg-white/90 backdrop-blur-xl
+        "
+        >
           {navItems.map((item) => (
             <Link
               href={item.href}
@@ -57,7 +58,6 @@ export default function Header() {
                   alt={item.label}
                   fill
                   className="object-contain"
-                  sizes="150px"
                 />
               </div>
             </Link>

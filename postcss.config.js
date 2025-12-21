@@ -1,6 +1,7 @@
-// postcss.config.js (Tailwind v4)
+/** @type {import('postcss-load-config').Config} */
 module.exports = {
   plugins: {
     "@tailwindcss/postcss": {},
+    autoprefixer: {},
   },
 };

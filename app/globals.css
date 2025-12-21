@@ -20,7 +20,7 @@ body {
   color: #36332e;
   scroll-behavior: smooth;
 
-  /* ❌ これを入れると画像が消える（絶対に入れない）
+  /* ❌ 画像が消える原因になるので絶対に入れない
      position: relative;
      z-index: 0;
   */
@@ -34,16 +34,14 @@ body::before {
   position: fixed;
   inset: 0;
 
-  /* 景色を邪魔せず文字を読みやすくする黄金値 */
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.45); /* 読みやすさの黄金比 */
   pointer-events: none;
 
-  /* 和紙の完全裏側へ */
-  z-index: -10;
+  z-index: -10; /* 完全に裏側 */
 }
 
 /* ===================================== */
-/* Header（透明白 + グラデ影） */
+/* Header（透明白 + 影） */
 /* ===================================== */
 header {
   position: fixed;
@@ -60,7 +58,7 @@ header {
   z-index: 50;
 }
 
-/* Header 下の自然な影（プロ品質） */
+/* Header 下の自然な影 */
 header::after {
   content: "";
   position: absolute;
@@ -80,18 +78,17 @@ header::after {
 }
 
 /* ===================================== */
-/* 画像ナビ（MikanNav） */
+/* MikanNav（画像ボタンナビ） */
 /* ===================================== */
 .mikan-nav-container {
   position: relative;
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(8px);
-
-  z-index: 40; /* header より下、body::before より上 */
+  z-index: 40;
 }
 
 /* ===================================== */
-/* Hero Overlay（和風トーン） */
+/* Hero Overlay（和風フィルタ） */
 /* ===================================== */
 .hero-overlay {
   background: linear-gradient(
@@ -105,7 +102,7 @@ header::after {
 }
 
 /* ===================================== */
-/* スライダー（背景馴染ませ + 影調整） */
+/* スライダー（背景馴染ませ + 影） */
 /* ===================================== */
 .slider-container {
   position: relative;
@@ -126,20 +123,22 @@ header::after {
   transition: transform 1s ease-in-out;
 }
 
+/* 画像が表示されない原因はここだった */
+/* ★ 必須：fillが働くための高さ ★ */
 .slider-item {
   min-width: 100%;
   position: relative;
+  height: 380px;   /* ← これで絶対写る */
 }
 
 .slider-caption {
   position: absolute;
   bottom: 0;
   width: 100%;
-
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(3px);
-
   padding: 10px;
+
   color: white;
   text-align: center;
   font-size: 1.2rem;
@@ -151,7 +150,7 @@ header::after {
   .slider-container {
     height: 300px;
   }
-  .slider-item img {
+  .slider-item {
     height: 300px;
   }
 }

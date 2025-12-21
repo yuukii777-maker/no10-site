@@ -13,9 +13,9 @@ a {
   text-decoration: none;
   color: inherit;
 }
-/* ================================
-   フェードイン
-================================ */
+/* ================================ */
+/* フェードイン */
+/* ================================ */
 .fade-in {
   opacity: 0;
   transform: translateY(30px);
@@ -27,9 +27,9 @@ a {
   transform: translateY(0);
 }
 
-/* ================================
-   Pure CSS Slider（超軽量）
-================================ */
+/* ================================ */
+/* Pure CSS Slider */
+/* ================================ */
 .slider {
   position: relative;
   height: 260px;
@@ -49,16 +49,8 @@ a {
 }
 
 @keyframes slide {
-  0% {
-    transform: translateX(0);
-  }
-  33% {
-    transform: translateX(-100%);
-  }
-  66% {
-    transform: translateX(-200%);
-  }
-  100% {
-    transform: translateX(0);
-  }
+  0% { transform: translateX(0); }
+  33% { transform: translateX(-100%); }
+  66% { transform: translateX(-200%); }
+  100% { transform: translateX(0); }
 }

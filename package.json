@@ -25,16 +25,20 @@
   },
   "devDependencies": {
     "@squoosh/cli": "0.7.1",
-    "@tailwindcss/postcss": "^4.1.17",
-    "@types/node": "20.12.12",
-    "@types/react": "18.3.3",
-    "@types/react-dom": "18.3.0",
+
+    "@tailwindcss/postcss": "^4.1.17",   // ← Tailwind v4 plugin
+    "tailwindcss": "^4.1.17",             // ← Tailwind 本体 v4
+
+    "postcss": "^8.4.35",
     "autoprefixer": "^10.4.22",
+
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
-    "postcss": "^8.5.6",
     "sharp": "0.34.3",
-    "tailwindcss": "^4.1.17",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+
+    "@types/node": "20.12.12",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0"
   }
 }

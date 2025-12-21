@@ -31,7 +31,7 @@ function useFadeIn() {
   return ref;
 }
 
-export default function Home() {
+export default function HomeClient() {
   /* ===========================
      スライダー制御
   ============================ */
@@ -59,6 +59,7 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  /* パララックス */
   const [offset, setOffset] = useState(0);
   useEffect(() => {
     const onScroll = () => setOffset(window.scrollY * 0.4);
@@ -72,7 +73,7 @@ export default function Home() {
       {/* ============================================ */}
       {/* ① ヒーロー */}
       {/* ============================================ */}
-      <section className="relative h-[80vh] overflow-hidden">
+      <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
         <div
           className="absolute inset-0"
           style={{ transform: `translateY(${offset * 0.15}px)` }}
@@ -85,20 +86,19 @@ export default function Home() {
             className="object-cover brightness-[0.85]"
           />
         </div>
-
         <div className="absolute inset-0 bg-black/25" />
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
-          <h1 className="text-4xl md:text-6xl font-bold">
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6">
+          <h1 className="text-3xl md:text-6xl font-bold drop-shadow-lg">
             山川みかん農園
           </h1>
-          <h2 className="text-xl md:text-3xl mt-4 opacity-90">
+          <h2 className="text-lg md:text-3xl mt-4 opacity-90">
             北原早生・山川ブランド — 旬の甘さそのままに
           </h2>
 
           <a
             href="/products"
-            className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition"
+            className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full text-lg shadow-lg transition"
           >
             🧺 みかんを購入する
           </a>
@@ -106,12 +106,14 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ② スライダー（横長ヘッダー） */}
+      {/* ② スライダー（完全レスポンシブ） */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
+      <section className="max-w-6xl mx-auto px-4 md:px-6 py-16">
         <div
-          className="relative w-full rounded-xl overflow-hidden shadow-xl cursor-pointer"
-          style={{ height: "420px" }}   // ← 高さを調整！
+          className="
+            relative w-full rounded-xl overflow-hidden shadow-xl cursor-pointer
+            h-[180px] sm:h-[220px] md:h-[300px] lg:h-[380px]
+          "
           onClick={() =>
             document
               .getElementById("campaign-banners")
@@ -120,14 +122,13 @@ export default function Home() {
         >
           <Image
             src={sliderImages[index].src}
-            alt="キャンペーンバナー"
+            alt={sliderImages[index].caption}
             fill
-            className="object-cover transition-all duration-700"
+            className="object-cover transition-all duration-500"
           />
 
-          {/* 黒帯オーバーレイ（濃さアップで文字見やすく） */}
-          <div className="absolute bottom-0 w-full bg-black/55 py-4 text-center">
-            <p className="text-white text-xl font-semibold drop-shadow-md tracking-wide">
+          <div className="absolute bottom-0 w-full bg-black/40 py-3 text-center">
+            <p className="text-white text-base sm:text-lg md:text-xl font-semibold tracking-wide">
               {sliderImages[index].caption}
             </p>
           </div>
@@ -135,13 +136,14 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ③ 100円みかんの理由 */}
+      {/* ③ 100円みかん POP */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section className="max-w-6xl mx-auto px-4 md:px-6 py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
-        <p className="text-center text-gray-600 mt-4">
-          傷があっても味は抜群。"山川みかんを気軽に味わってほしい"
+        <p className="text-center text-gray-600 mt-4 leading-relaxed">
+          傷があっても味は抜群。
+          “山川みかんを気軽に味わってほしい”
           という想いから訳あり品を特別価格で提供しています。
         </p>
 
@@ -149,9 +151,9 @@ export default function Home() {
           <Image
             src="/mikan/pop-100yen.jpg"
             alt="100円みかんPOP"
-            width={800}
-            height={600}
-            className="rounded-xl shadow-xl"
+            width={900}
+            height={700}
+            className="rounded-xl shadow-xl w-full max-w-3xl object-cover"
           />
         </div>
       </section>
@@ -159,12 +161,12 @@ export default function Home() {
       {/* ============================================ */}
       {/* ④ ギャラリー */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
+      <section className="max-w-6xl mx-auto px-4 md:px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">
           山川みかんギャラリー
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-10">
           <GalleryItem
             src="/mikan/defect.png"
             title="訳ありみかん"
@@ -215,21 +217,17 @@ function GalleryItem({
 }) {
   const fade = useFadeIn();
   return (
-    <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
-      <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
+    <div
+      ref={fade}
+      className="opacity-0 translate-y-6 transition-all duration-700"
+    >
+      <div className="relative w-full h-[140px] sm:h-[160px] md:h-[180px] lg:h-[200px] rounded-xl overflow-hidden shadow-md">
         <Image src={src} alt={title} fill className="object-cover" />
       </div>
-      <h3 className="text-lg font-semibold mt-4">{title}</h3>
-      <p className="text-gray-600 text-sm mt-1">{text}</p>
+      <h3 className="text-base md:text-lg font-semibold mt-3">{title}</h3>
+      <p className="text-gray-600 text-xs md:text-sm mt-1 leading-relaxed">
+        {text}
+      </p>
     </div>
   );
 }
-
-/* ===========================
-   SEO
-=========================== */
-export const metadata = {
-  title: "山川みかん農園｜北原早生・訳あり100円みかん",
-  description:
-    "福岡県みやま市山川町の山川みかん農園。旬の甘さをそのままに、無人販売の訳あり100円みかんや正規品をお届けします。",
-};

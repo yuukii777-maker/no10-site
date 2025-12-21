@@ -1,6 +1,7 @@
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MikanNav from "@/components/MikanNav";
 
 export const metadata = {
   title: "山川みかん農園 | 北原早生・直売所",
@@ -13,6 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja">
       <body className="bg-[#faf7f2] text-[#36332e]">
         <Header />
+
+        {/* 🍊 みかん画像ナビ（追加） */}
+        <MikanNav />
+
         <main className="main-container">{children}</main>
         <Footer />
       </body>

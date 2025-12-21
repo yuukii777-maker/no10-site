@@ -77,9 +77,9 @@ export default function Home() {
     <main className="text-[#333]">
 
       {/* ============================================ */}
-      {/* ① ヒーロー */}
+      {/* ① ヒーロー → ★ z-20 を追加 ★ */}
       {/* ============================================ */}
-      <section className="relative h-[80vh] overflow-hidden">
+      <section className="relative h-[80vh] overflow-hidden z-20">
         <div
           className="absolute inset-0"
           style={{ transform: `translateY(${offset * 0.15}px)` }}
@@ -111,9 +111,9 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ② スワイプスライダー */}
+      {/* ② スワイプスライダー → ★ z-10 を追加 ★ */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
+      <section className="max-w-6xl mx-auto px-6 py-16 relative z-10">
         <div
           className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
           onClick={() =>
@@ -136,7 +136,7 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ③ 100円みかんの理由（カード背景適用） */}
+      {/* ③ 100円みかんの理由（カード背景＝安定OK） */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
@@ -162,7 +162,7 @@ export default function Home() {
       </section>
 
       {/* ============================================ */}
-      {/* ④ ギャラリー（各説明カード適用） */}
+      {/* ④ ギャラリー（背景カードOK） */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">山川みかんギャラリー</h2>

@@ -20,7 +20,7 @@ body {
   color: #36332e;
   scroll-behavior: smooth;
 
-  /* ❌ 画像が消える原因になるので絶対に入れない
+  /* ❌ 画像が消えるので入れない
      position: relative;
      z-index: 0;
   */
@@ -41,7 +41,7 @@ body::before {
 }
 
 /* ===================================== */
-/* Header（透明白 + 影） */
+/* Header（透明白 + 和紙ガラス + 影） */
 /* ===================================== */
 header {
   position: fixed;
@@ -123,12 +123,11 @@ header::after {
   transition: transform 1s ease-in-out;
 }
 
-/* 画像が表示されない原因はここだった */
-/* ★ 必須：fillが働くための高さ ★ */
+/* ★ 画像が表示されない原因はここだった → 高さ必須 ★ */
 .slider-item {
   min-width: 100%;
   position: relative;
-  height: 380px;   /* ← これで絶対写る */
+  height: 380px;   /* ← これがないと fill が機能しない */
 }
 
 .slider-caption {
@@ -145,7 +144,9 @@ header::after {
   font-weight: 600;
 }
 
+/* ===================================== */
 /* スマホ最適化 */
+/* ===================================== */
 @media (max-width: 640px) {
   .slider-container {
     height: 300px;
@@ -153,4 +154,22 @@ header::after {
   .slider-item {
     height: 300px;
   }
+}
+
+/* ===================================== */
+/* ドロワーメニュー（ハンバーガー展開） */
+/* ===================================== */
+@keyframes fadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeSlide {
+  animation: fadeSlide 0.25s ease-out forwards;
 }

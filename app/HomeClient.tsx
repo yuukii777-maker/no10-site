@@ -29,7 +29,7 @@ function useFadeIn() {
   return ref;
 }
 
-export default function Home() {
+export default function HomeClient() {
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function Home() {
   );
 }
 
-/* ========== ギャラリーコンポーネント ========== */
+/* ギャラリーコンポーネント */
 function GalleryItem({ src, title, text }: { src: string; title: string; text: string }) {
   const fade = useFadeIn();
   return (

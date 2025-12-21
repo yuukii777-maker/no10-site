@@ -31,9 +31,9 @@ function useFadeIn() {
   return ref;
 }
 
-export default function HomeClient() {
+export default function Home() {
   /* ===========================
-     スライダー制御
+     スライダー制御（スワイプ式）
   ============================ */
   const sliderImages = [
     {
@@ -55,11 +55,13 @@ export default function HomeClient() {
   useEffect(() => {
     const id = setInterval(() => {
       setIndex((prev) => (prev + 1) % sliderImages.length);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(id);
   }, []);
 
-  /* パララックス */
+  /* ===========================
+     パララックス
+  ============================ */
   const [offset, setOffset] = useState(0);
   useEffect(() => {
     const onScroll = () => setOffset(window.scrollY * 0.4);
@@ -73,7 +75,7 @@ export default function HomeClient() {
       {/* ============================================ */}
       {/* ① ヒーロー */}
       {/* ============================================ */}
-      <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
+      <section className="relative h-[80vh] overflow-hidden">
         <div
           className="absolute inset-0"
           style={{ transform: `translateY(${offset * 0.15}px)` }}
@@ -86,19 +88,20 @@ export default function HomeClient() {
             className="object-cover brightness-[0.85]"
           />
         </div>
+
         <div className="absolute inset-0 bg-black/25" />
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6">
-          <h1 className="text-3xl md:text-6xl font-bold drop-shadow-lg">
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+          <h1 className="text-4xl md:text-6xl font-bold">
             山川みかん農園
           </h1>
-          <h2 className="text-lg md:text-3xl mt-4 opacity-90">
+          <h2 className="text-xl md:text-3xl mt-4 opacity-90">
             北原早生・山川ブランド — 旬の甘さそのままに
           </h2>
 
           <a
             href="/products"
-            className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full text-lg shadow-lg transition"
+            className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition"
           >
             🧺 みかんを購入する
           </a>
@@ -106,44 +109,49 @@ export default function HomeClient() {
       </section>
 
       {/* ============================================ */}
-      {/* ② スライダー（完全レスポンシブ） */}
+      {/* ② スワイプ式スライダー（縦420px） */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-4 md:px-6 py-16">
+      <section className="max-w-6xl mx-auto px-6 py-16">
         <div
-          className="
-            relative w-full rounded-xl overflow-hidden shadow-xl cursor-pointer
-            h-[180px] sm:h-[220px] md:h-[300px] lg:h-[380px]
-          "
+          className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer"
+          style={{ height: "420px" }}
           onClick={() =>
             document
               .getElementById("campaign-banners")
               ?.scrollIntoView({ behavior: "smooth" })
           }
         >
-          <Image
-            src={sliderImages[index].src}
-            alt={sliderImages[index].caption}
-            fill
-            className="object-cover transition-all duration-500"
-          />
-
-          <div className="absolute bottom-0 w-full bg-black/40 py-3 text-center">
-            <p className="text-white text-base sm:text-lg md:text-xl font-semibold tracking-wide">
-              {sliderImages[index].caption}
-            </p>
+          <div
+            className="flex transition-transform duration-[1400ms] ease-in-out"
+            style={{ transform: `translateX(-${index * 100}%)` }}
+          >
+            {sliderImages.map((item, i) => (
+              <div key={i} className="min-w-full h-[420px] relative">
+                <Image
+                  src={item.src}
+                  alt={item.caption}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute bottom-0 w-full bg-black/40 py-3 text-center">
+                  <p className="text-white text-xl font-semibold drop-shadow-md tracking-wide">
+                    {item.caption}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ============================================ */}
-      {/* ③ 100円みかん POP */}
+      {/* ③ 100円みかんの理由 */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-4 md:px-6 py-24">
+      <section className="max-w-6xl mx-auto px-6 py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
-        <p className="text-center text-gray-600 mt-4 leading-relaxed">
-          傷があっても味は抜群。
-          “山川みかんを気軽に味わってほしい”
+        <p className="text-center text-gray-600 mt-4">
+          傷があっても味は抜群。"山川みかんを気軽に味わってほしい"  
           という想いから訳あり品を特別価格で提供しています。
         </p>
 
@@ -151,9 +159,9 @@ export default function HomeClient() {
           <Image
             src="/mikan/pop-100yen.jpg"
             alt="100円みかんPOP"
-            width={900}
-            height={700}
-            className="rounded-xl shadow-xl w-full max-w-3xl object-cover"
+            width={820}
+            height={620}
+            className="rounded-xl shadow-xl"
           />
         </div>
       </section>
@@ -161,12 +169,12 @@ export default function HomeClient() {
       {/* ============================================ */}
       {/* ④ ギャラリー */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-4 md:px-6 pb-32 pt-12">
+      <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">
           山川みかんギャラリー
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-10">
+        <div className="grid md:grid-cols-3 gap-10">
           <GalleryItem
             src="/mikan/defect.png"
             title="訳ありみかん"
@@ -195,7 +203,7 @@ export default function HomeClient() {
           <GalleryItem
             src="/mikan/top.png"
             title="袋いっぱいのみかん"
-            text="1袋に4〜6個入り（大きさによる）。家庭用・贈り物に最適。"
+            text="贈り物にも最適な山川みかん。"
           />
         </div>
       </section>
@@ -217,17 +225,12 @@ function GalleryItem({
 }) {
   const fade = useFadeIn();
   return (
-    <div
-      ref={fade}
-      className="opacity-0 translate-y-6 transition-all duration-700"
-    >
-      <div className="relative w-full h-[140px] sm:h-[160px] md:h-[180px] lg:h-[200px] rounded-xl overflow-hidden shadow-md">
+    <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
+      <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
         <Image src={src} alt={title} fill className="object-cover" />
       </div>
-      <h3 className="text-base md:text-lg font-semibold mt-3">{title}</h3>
-      <p className="text-gray-600 text-xs md:text-sm mt-1 leading-relaxed">
-        {text}
-      </p>
+      <h3 className="text-lg font-semibold mt-4">{title}</h3>
+      <p className="text-gray-600 text-sm mt-1">{text}</p>
     </div>
   );
 }

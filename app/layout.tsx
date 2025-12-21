@@ -13,12 +13,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body className="bg-[#faf7f2] text-[#36332e]">
+        {/* 🟧 固定ヘッダー（ロゴのみ） */}
         <Header />
 
-        {/* 🍊 みかん画像ナビ（追加） */}
-        <MikanNav />
+        {/* 🍊 画像ナビ（テキストナビを完全置き換え） */}
+        <div className="pt-[64px]"> 
+          {/* Header が fixed なのでその高さ分余白を入れる */}
+          <MikanNav />
+        </div>
 
-        <main className="main-container">{children}</main>
+        {/* 🟧 メインコンテンツ（画像ナビの高さも考慮して余白を調整） */}
+        <main className="main-container mt-4">
+          {children}
+        </main>
+
         <Footer />
       </body>
     </html>

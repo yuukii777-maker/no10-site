@@ -111,7 +111,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div
           className="relative w-full rounded-xl overflow-hidden shadow-xl cursor-pointer"
-          style={{ height: "350px" }}
+          style={{ height: "420px" }}   // ← 高さを調整！
           onClick={() =>
             document
               .getElementById("campaign-banners")
@@ -125,8 +125,8 @@ export default function Home() {
             className="object-cover transition-all duration-700"
           />
 
-          {/* 黒帯オーバーレイ */}
-          <div className="absolute bottom-0 w-full bg-black/40 py-3 text-center">
+          {/* 黒帯オーバーレイ（濃さアップで文字見やすく） */}
+          <div className="absolute bottom-0 w-full bg-black/55 py-4 text-center">
             <p className="text-white text-xl font-semibold drop-shadow-md tracking-wide">
               {sliderImages[index].caption}
             </p>
@@ -141,7 +141,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
         <p className="text-center text-gray-600 mt-4">
-          傷があっても味は抜群。"山川みかんを気軽に味わってほしい"  
+          傷があっても味は抜群。"山川みかんを気軽に味わってほしい"
           という想いから訳あり品を特別価格で提供しています。
         </p>
 

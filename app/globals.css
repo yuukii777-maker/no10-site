@@ -30,7 +30,9 @@ body::before {
   z-index: -10;
 }
 
+/* ===================================== */
 /* Header */
+/* ===================================== */
 header {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
@@ -54,7 +56,9 @@ header::after {
   pointer-events: none;
 }
 
+/* ===================================== */
 /* Hero Overlay */
+/* ===================================== */
 .hero-overlay {
   background: linear-gradient(
     to bottom,
@@ -66,50 +70,89 @@ header::after {
   z-index: 5;
 }
 
-/* スライダー */
+/* ===================================== */
+/* スライダー（重要：完全修正版） */
+/* ===================================== */
+
+/* 外枠（PCは縦に余裕を持たせる） */
 .slider-container {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  height: 380px;
+
+  /* ★ PC高さ：ここを変えるだけで全体調整 */
+  height: 640px;
+
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(4px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+/* 横スライド */
 .slider-track {
   display: flex;
+  height: 100%;
   transition: transform 1s ease-in-out;
 }
 
+/* 各スライド */
 .slider-item {
   min-width: 100%;
   position: relative;
-  height: 380px;
+
+  /* ★ containerに完全追従 */
+  height: 100%;
 }
 
+/* スライド内画像（文字切れ対策） */
+.slider-item img {
+  object-fit: cover;
+
+  /* ★ 文字が多い画像を上寄せ */
+  object-position: center top;
+}
+
+/* キャプション */
 .slider-caption {
   position: absolute;
   bottom: 0;
   width: 100%;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(3px);
-  padding: 10px;
+  padding: 12px;
   color: white;
   text-align: center;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
-/* スマホ */
+/* ===================================== */
+/* スマホ最適化（文字が絶対切れない） */
+/* ===================================== */
 @media (max-width: 640px) {
-  .slider-container,
+  .slider-container {
+    /* ★ スマホ高さ：ここだけ触ればOK */
+    height: 360px;
+  }
+
   .slider-item {
-    height: 300px;
+    height: 100%;
+  }
+
+  .slider-item img {
+    /* ★ スマホはさらに上寄せ */
+    object-position: center 20%;
+  }
+
+  .slider-caption {
+    font-size: 1rem;
+    padding: 8px;
   }
 }
 
+/* ===================================== */
 /* ドロワーアニメ */
+/* ===================================== */
 @keyframes fadeSlide {
   from {
     opacity: 0;

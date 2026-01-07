@@ -4,6 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+/* ===========================
+   アニメーション設定（←ここだけ触る）
+=========================== */
+const STAGGER_DELAY = 0.05; // ← 秒数を変えるだけで速度調整
+
 export default function Header() {
   const [open, setOpen] = useState(false);
 
@@ -20,8 +25,7 @@ export default function Header() {
       className="
         fixed top-0 left-0 right-0 z-50
         bg-white/80 backdrop-blur-xl shadow-md
-        h-[64px]
-        flex items-center
+        h-[64px] flex items-center
       "
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
@@ -32,7 +36,7 @@ export default function Header() {
         </Link>
 
         <button
-          className="p-2 rounded-md bg-orange-500 hover:bg-orange-600 sm:hidden"
+          className="p-2 rounded-md bg-orange-500 hover:bg-orange-600 sm:hidden active:scale-95 transition"
           onClick={() => setOpen(!open)}
           aria-label="メニューを開く"
         >
@@ -40,36 +44,61 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 縦メニュー（スマホのみ） */}
+      {/* 背景オーバーレイ */}
       {open && (
         <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-[2px]"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* ドロワーメニュー */}
+      {open && (
+        <nav
           className="
             sm:hidden
-            absolute right-4 top-[72px]
-            w-[150px]
-            p-4 rounded-xl shadow-lg
+            fixed right-4 top-[72px]
+            w-[180px]
+            p-4 rounded-2xl shadow-xl
             bg-white/90 backdrop-blur-xl
-            animate-fadeSlide
           "
         >
-          {navItems.map((item) => (
-            <Link
-              href={item.href}
-              key={item.href}
-              className="block mb-3 last:mb-0"
-              onClick={() => setOpen(false)}
-            >
-              <div className="w-full h-[50px] relative">
-                <Image
-                  src={item.src}
-                  alt={item.label}
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </Link>
-          ))}
-        </div>
+          <ul className="space-y-2">
+            {navItems.map((item, i) => (
+              <li
+                key={item.href}
+                className="animate-fadeSlide"
+                style={{
+                  animationDelay: `${i * STAGGER_DELAY}s`,
+                }}
+              >
+                <Link
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="
+                    flex items-center gap-3
+                    h-[48px] px-3 rounded-lg
+                    hover:bg-orange-50
+                    active:scale-[0.97]
+                    transition
+                  "
+                >
+                  <div className="relative w-8 h-8">
+                    <Image
+                      src={item.src}
+                      alt={item.label}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-[#333]">
+                    {item.label}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
     </header>
   );

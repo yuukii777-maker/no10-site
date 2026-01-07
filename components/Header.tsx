@@ -8,7 +8,7 @@ import Link from "next/link";
    アニメーション設定
    ※ この数値だけ変えれば速度調整できる
 =========================== */
-const STAGGER_DELAY = 0.05; // 秒
+const STAGGER_DELAY = 0.08; // 秒
 
 export default function Header() {
   const [open, setOpen] = useState(false);

@@ -57,7 +57,7 @@ header::after {
 }
 
 /* ===================================== */
-/* Hero Overlay */
+/* Hero Overlay（★クリック修正済） */
 /* ===================================== */
 .hero-overlay {
   background: linear-gradient(
@@ -68,19 +68,22 @@ header::after {
   );
   mix-blend-mode: multiply;
   z-index: 5;
+
+  /* ★ これが超重要：ボタンを殺さない */
+  pointer-events: none;
 }
 
 /* ===================================== */
-/* スライダー（重要：完全修正版） */
+/* スライダー（完全修正版） */
 /* ===================================== */
 
-/* 外枠（PCは縦に余裕を持たせる） */
+/* 外枠（PC用：ここだけ数字触ればOK） */
 .slider-container {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
 
-  /* ★ PC高さ：ここを変えるだけで全体調整 */
+  /* ★ PC高さ */
   height: 640px;
 
   background: rgba(255, 255, 255, 0.35);
@@ -99,16 +102,14 @@ header::after {
 .slider-item {
   min-width: 100%;
   position: relative;
-
-  /* ★ containerに完全追従 */
   height: 100%;
 }
 
-/* スライド内画像（文字切れ対策） */
+/* 画像（文字切れ対策の本体） */
 .slider-item img {
   object-fit: cover;
 
-  /* ★ 文字が多い画像を上寄せ */
+  /* ★ 文字が上にあるバナー用 */
   object-position: center top;
 }
 
@@ -127,12 +128,12 @@ header::after {
 }
 
 /* ===================================== */
-/* スマホ最適化（文字が絶対切れない） */
+/* スマホ最適化（ここも数字だけ調整） */
 /* ===================================== */
 @media (max-width: 640px) {
   .slider-container {
-    /* ★ スマホ高さ：ここだけ触ればOK */
-    height: 360px;
+    /* ★ スマホ高さ */
+    height: 350px;
   }
 
   .slider-item {

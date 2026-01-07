@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 /* ===========================
-   アニメーション設定（←ここだけ触る）
+   アニメーション設定
+   ※ この数値だけ変えれば速度調整できる
 =========================== */
-const STAGGER_DELAY = 0.05; // ← 秒数を変えるだけで速度調整
+const STAGGER_DELAY = 0.05; // 秒
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -29,22 +30,34 @@ export default function Header() {
       "
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      {/* 上段：ロゴ & ハンバーガー */}
+      {/* ===================== */}
+      {/* 上段：ロゴ & メニュー */}
+      {/* ===================== */}
       <div className="max-w-6xl mx-auto w-full px-4 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-[#333]">
           山川みかん農園
         </Link>
 
+        {/* ★ 文字ハンバーガー（SVG廃止・iOS安定） */}
         <button
-          className="p-2 rounded-md bg-orange-500 hover:bg-orange-600 sm:hidden active:scale-95 transition"
+          className="
+            w-10 h-10
+            flex items-center justify-center
+            rounded-md
+            bg-orange-500 text-white text-xl
+            sm:hidden
+            active:scale-95 transition
+          "
           onClick={() => setOpen(!open)}
           aria-label="メニューを開く"
         >
-          <Image src="/icons/menu.svg" alt="menu" width={24} height={24} />
+          ☰
         </button>
       </div>
 
+      {/* ===================== */}
       {/* 背景オーバーレイ */}
+      {/* ===================== */}
       {open && (
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-[2px]"
@@ -52,38 +65,40 @@ export default function Header() {
         />
       )}
 
+      {/* ===================== */}
       {/* ドロワーメニュー */}
+      {/* ===================== */}
       {open && (
         <nav
           className="
             sm:hidden
             fixed right-4 top-[72px]
-            w-[180px]
+            w-[200px]
             p-4 rounded-2xl shadow-xl
             bg-white/90 backdrop-blur-xl
           "
         >
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {navItems.map((item, i) => (
               <li
                 key={item.href}
                 className="animate-fadeSlide"
-                style={{
-                  animationDelay: `${i * STAGGER_DELAY}s`,
-                }}
+                style={{ animationDelay: `${i * STAGGER_DELAY}s` }}
               >
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className="
-                    flex items-center gap-3
-                    h-[48px] px-3 rounded-lg
-                    hover:bg-orange-50
+                    block
+                    w-full h-[48px]
+                    rounded-lg overflow-hidden
+                    shadow-sm
                     active:scale-[0.97]
                     transition
                   "
                 >
-                  <div className="relative w-8 h-8">
+                  {/* ★ 画像だけで分かるメニュー */}
+                  <div className="relative w-full h-full">
                     <Image
                       src={item.src}
                       alt={item.label}
@@ -91,9 +106,6 @@ export default function Header() {
                       className="object-contain"
                     />
                   </div>
-                  <span className="text-sm font-medium text-[#333]">
-                    {item.label}
-                  </span>
                 </Link>
               </li>
             ))}

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 /* ===========================
    フェードインアニメ
@@ -35,6 +36,8 @@ function useFadeIn() {
    メインコンポーネント
 =========================== */
 export default function Home() {
+  const router = useRouter();
+
   /* ===========================
      スライダー制御
   ============================ */
@@ -73,9 +76,27 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  return (
-    <main className="text-[#333]">
+  /* ===========================
+     遷移フェード制御（数字変えるだけ）
+  ============================ */
+  const FADE_DURATION = 250; // ← 遷移スピード(ms)
+  const [leaving, setLeaving] = useState(false);
 
+  const goProducts = () => {
+    setLeaving(true);
+    setTimeout(() => {
+      router.push("/products");
+    }, FADE_DURATION);
+  };
+
+  return (
+    <main
+      className={`
+        text-[#333]
+        transition-opacity duration-300
+        ${leaving ? "opacity-0" : "opacity-100"}
+      `}
+    >
       {/* ============================================ */}
       {/* ① ヒーロー */}
       {/* ============================================ */}
@@ -101,24 +122,48 @@ export default function Home() {
             山川ブランド — 旬の甘さそのままに
           </h2>
 
-          <a
-            href="/products"
-            className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition"
-          >
-            🧺 みかんを購入する
-          </a>
+          {/* ★ 購入ボタン（演出付き） */}
+          <div className="relative mt-10 group">
+            <button
+              onClick={goProducts}
+              className="
+                bg-orange-500 hover:bg-orange-600
+                text-white
+                px-10 py-3 rounded-full text-lg
+                shadow-lg
+                transition-all duration-200
+                active:scale-95 active:translate-y-[1px]
+              "
+            >
+              🧺 みかんを購入する
+            </button>
+
+            <div
+              className="
+                absolute left-1/2 -translate-x-1/2
+                mt-2
+                text-sm text-white/90
+                opacity-0 translate-y-1
+                transition-all duration-200
+                group-hover:opacity-100
+                group-hover:translate-y-0
+              "
+            >
+              商品一覧へ →
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ============================================ */}
-      {/* ② スワイプスライダー（ジャンプ付き） */}
+      {/* ② スワイプスライダー */}
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div
           className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
-          onClick={() => {
-            window.location.href = "/products#campaign-banners";
-          }}
+          onClick={() =>
+            (window.location.href = "/products#campaign-banners")
+          }
         >
           <div
             className="slider-track"
@@ -127,12 +172,7 @@ export default function Home() {
             {sliderImages.map((item, i) => (
               <div
                 key={i}
-                className="
-                  slider-item 
-                  relative 
-                  h-[360px]      /* ←スマホ高さ */
-                  sm:h-[800px]   /* ←PC高さ */
-                "
+                className="slider-item relative h-[360px] sm:h-[800px]"
               >
                 <Image
                   src={item.src}
@@ -140,7 +180,6 @@ export default function Home() {
                   fill
                   className="object-cover"
                 />
-
                 <div className="slider-caption">{item.caption}</div>
               </div>
             ))}
@@ -154,13 +193,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
-        <div
-          className="
-            max-w-3xl mx-auto mt-6
-            bg-white/60 backdrop-blur-sm rounded-2xl shadow-md
-            p-6 md:p-8 leading-relaxed text-gray-700 text-center
-          "
-        >
+        <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 text-center text-gray-700">
           傷があっても味は抜群。
           “山川みかんを気軽に味わってほしい” という想いから訳あり品を特別価格で提供しています。
         </div>
@@ -185,36 +218,12 @@ export default function Home() {
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10">
-          <GalleryItem
-            src="/mikan/defect.png"
-            title="訳ありみかん"
-            text="見た目に傷がありますが甘さは本物。一袋100円、当サイト人気No.1。"
-          />
-          <GalleryItem
-            src="/mikan/premium.png"
-            title="選別された正規品"
-            text="プロが厳選した美しいみかん。1kg600円。直買でよりお得に。"
-          />
-          <GalleryItem
-            src="/mikan/hand.png"
-            title="手作業で丁寧に収穫"
-            text="一つひとつ状態を確認しながら収穫します。"
-          />
-          <GalleryItem
-            src="/mikan/farm.png"
-            title="自然に囲まれた農園"
-            text="海風と日当たりの良い山川の土壌で育つみかん。"
-          />
-          <GalleryItem
-            src="/mikan/shelf.png"
-            title="無人販売所"
-            text="1袋100円の地域文化。地元でも大人気の販売方法。"
-          />
-          <GalleryItem
-            src="/mikan/top.png"
-            title="袋いっぱいのみかん"
-            text="贈り物にも人気の山川みかん。"
-          />
+          <GalleryItem src="/mikan/defect.png" title="訳ありみかん" text="見た目に傷がありますが甘さは本物。一袋100円、当サイト人気No.1。" />
+          <GalleryItem src="/mikan/premium.png" title="選別された正規品" text="プロが厳選した美しいみかん。1kg600円。直買でよりお得に。" />
+          <GalleryItem src="/mikan/hand.png" title="手作業で丁寧に収穫" text="一つひとつ状態を確認しながら収穫します。" />
+          <GalleryItem src="/mikan/farm.png" title="自然に囲まれた農園" text="海風と日当たりの良い山川の土壌で育つみかん。" />
+          <GalleryItem src="/mikan/shelf.png" title="無人販売所" text="1袋100円の地域文化。地元でも大人気の販売方法。" />
+          <GalleryItem src="/mikan/top.png" title="袋いっぱいのみかん" text="贈り物にも人気の山川みかん。" />
         </div>
       </section>
     </main>
@@ -222,7 +231,7 @@ export default function Home() {
 }
 
 /* ===========================
-   ギャラリーコンポーネント
+   ギャラリー
 =========================== */
 function GalleryItem({
   src,

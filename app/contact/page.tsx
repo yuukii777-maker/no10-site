@@ -1,64 +1,138 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
+type FAQ = {
+  q: string;
+  a: string;
+};
+
 export default function ContactPage() {
-  const faqs = [
+  const faqs: FAQ[] = [
     {
-      q: "傷や形に訳があるから安いようですが、傷みやすかったり、味にばらつきが多かったりしますか？",
-      a: "傷みやすいことはありませんが、自然物のため稀に傷みが早い個体がある場合があります。購入後は冷暗所で保管し、できるだけ早めにお召し上がりください。また、味のばらつきは個体差がありますので予めご了承ください。",
+      q: "本当に100円みかんなんですか？なぜこんなに安いのですか？",
+      a: "はい。山川の直売所では、実際に1袋100円で販売している家庭用みかんです。見た目に傷や不揃いがあるため市場には出回りにくいですが、味・量ともに問題のないみかんを、箱詰めして全国へお届けしています。",
     },
     {
-      q: "状態が悪いものは返品可能ですか？",
-      a: "自然物を手作業で選別しているため、1〜2個程度の傷みについては返品が難しい場合があります。ただし、複数個が腐敗していたり、全体的に状態が悪い場合は返金対応いたします。",
+      q: "どのような商品が届きますか？",
+      a: "ご家庭用のみかんです。大きさ・形にばらつきがあり、表面に傷があるものも含まれますが、食味には問題ありません。見た目より「量と味」を重視される方向けの商品です。",
     },
     {
-      q: "送料はいくらですか？",
-      a: "イベント期間中は、九州のお客様は 送料無料。その他の地域は 300円引き、北海道・沖縄など一部地域は 100円引きとなります。（詳細は商品ページをご確認ください）",
+      q: "内容量はどれくらいですか？",
+      a: "1箱あたり約10kgを目安にお届けします。1袋約600g換算で、16〜18袋分相当となります。自然物のため多少前後する場合があります。",
     },
     {
-      q: "100円みかんはどれくらい入っていますか？",
-      a: "大きさにより変動しますが、1袋に4〜6個前後入っています。収穫時期や品種により多少変動があります。",
+      q: "価格はいくらですか？追加料金はかかりますか？",
+      a: "価格は送料込みで【1箱 3,000円】、【2箱 5,500円】です。全国一律料金で、表示金額以外の追加費用は一切かかりません。",
     },
     {
-      q: "どれくらい日持ちしますか？",
-      a: "冬場は1〜2週間、暖かい時期は5〜7日が日持ちの目安です。風通しの良い冷暗所での保管をおすすめします。",
+      q: "発送はいつ頃になりますか？",
+      a: "ご注文確定後、原則として3日以内に発送します。収穫状況や天候により前後する場合がありますが、できるだけ新鮮な状態でお届けします。",
     },
     {
-      q: "発送はどれくらいで届きますか？",
-      a: "新鮮な状態でお届けするため、ご注文から1〜3日以内に発送いたします。（天候・収穫状況により前後あり）",
+      q: "日持ちはどれくらいしますか？",
+      a: "冬場は1〜2週間、暖かい時期は5〜7日が目安です。風通しの良い冷暗所で保管し、傷みやすいものから先にお召し上がりください。",
     },
     {
-      q: "ギフト用はありますか？",
-      a: "はい。冬ギフトとして綺麗な正規品のみを詰めたギフトみかんをご用意しています。",
+      q: "返品・交換はできますか？",
+      a: "家庭用商品のため、見た目や個体差による返品・交換はお受けできません。ただし、到着時に多数の腐敗や明らかな品質不良があった場合は、状況を確認のうえ対応いたします。",
+    },
+    {
+      q: "ギフトや贈答用として使えますか？",
+      a: "本商品は家庭用のため、贈答用途にはあまり向いていません。見た目を重視される場合は、正規品みかん（販売時期限定）をご検討ください。",
+    },
+    {
+      q: "支払い方法は何がありますか？",
+      a: "現在は PayPay送金・銀行振込に対応しています。表示された金額ぴったりをお支払いいただき、注文IDを必ずご入力ください。",
+    },
+    {
+      q: "注文後の流れを教えてください。",
+      a: "① 注文フォーム送信 → ② 注文ID発行 → ③ PayPay送金または銀行振込 → ④ 入金確認 → ⑤ 発送、という流れになります。",
     },
   ];
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-20 text-[#333]">
-      <h1 className="text-4xl font-bold text-center mb-10">よくある質問</h1>
+    <main className="max-w-4xl mx-auto px-6 pt-28 pb-24 text-[#333]">
+      {/* タイトル */}
+      <h1 className="text-4xl font-bold text-center mb-6">
+        よくある質問
+      </h1>
 
-      <div className="space-y-8">
-        {faqs.map((item, idx) => (
-          <div
-            key={idx}
-            className="bg-white shadow-md rounded-xl p-6 border border-gray-100"
-          >
-            <h2 className="text-lg font-semibold mb-2">{item.q}</h2>
-            <p className="text-gray-700 leading-relaxed">{item.a}</p>
-          </div>
+      <p className="text-center text-gray-600 mb-12 leading-relaxed">
+        山川100円みかんについて、<br className="sm:hidden" />
+        ご購入前に多くいただくご質問をまとめました。
+      </p>
+
+      {/* FAQ */}
+      <div className="space-y-4">
+        {faqs.map((item, index) => (
+          <AccordionItem key={index} q={item.q} a={item.a} />
         ))}
       </div>
 
-      {/* お問い合わせボタン */}
-      <div className="text-center mt-16">
+      {/* 導線 */}
+      <div className="mt-16 flex flex-col sm:flex-row gap-4 justify-center">
         <Link
-          href="mailto:example@example.com" // あなたのメールに変える
-          className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg transition inline-block"
+          href="/products"
+          className="
+            bg-orange-500 hover:bg-orange-600
+            text-white font-semibold
+            px-10 py-4 rounded-full
+            shadow-lg transition text-center
+          "
         >
-          お問い合わせはこちら
+          商品一覧へ戻る →
+        </Link>
+
+        <Link
+          href="/order"
+          className="
+            border border-orange-400
+            text-orange-600 font-semibold
+            px-10 py-4 rounded-full
+            hover:bg-orange-50 transition text-center
+          "
+        >
+          今すぐ注文する
         </Link>
       </div>
     </main>
+  );
+}
+
+/* ===========================
+   アコーディオン
+=========================== */
+function AccordionItem({ q, a }: FAQ) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100 overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="
+          w-full flex justify-between items-center
+          px-6 py-5 text-left
+          font-semibold text-[#333]
+          hover:bg-orange-50 transition
+        "
+      >
+        <span className="pr-4">{q}</span>
+        <span
+          className={`text-xl transition-transform ${
+            open ? "rotate-45" : ""
+          }`}
+        >
+          ＋
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-6 pb-6 text-gray-700 leading-relaxed">
+          {a}
+        </div>
+      )}
+    </div>
   );
 }

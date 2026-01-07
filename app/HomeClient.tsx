@@ -113,11 +113,9 @@ export default function Home() {
       {/* ============================================ */}
       {/* ② スワイプスライダー（ジャンプ付き） */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 py-16 relative z-10">
+      <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div
           className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
-
-          /* 🚀 ここが重要（クリックで products#campaign-banners へ遷移） */
           onClick={() => {
             window.location.href = "/products#campaign-banners";
           }}
@@ -153,15 +151,15 @@ export default function Home() {
       {/* ============================================ */}
       {/* ③ 100円みかんの理由 */}
       {/* ============================================ */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
 
         <div
           className="
-          max-w-3xl mx-auto mt-6
-          bg-white/60 backdrop-blur-sm rounded-2xl shadow-md
-          p-6 md:p-8 leading-relaxed text-gray-700 text-center
-        "
+            max-w-3xl mx-auto mt-6
+            bg-white/60 backdrop-blur-sm rounded-2xl shadow-md
+            p-6 md:p-8 leading-relaxed text-gray-700 text-center
+          "
         >
           傷があっても味は抜群。
           “山川みかんを気軽に味わってほしい” という想いから訳あり品を特別価格で提供しています。
@@ -246,12 +244,7 @@ function GalleryItem({
         <Image src={src} alt={title} fill className="object-cover" />
       </div>
 
-      <div
-        className="
-        bg-white/60 backdrop-blur-sm rounded-2xl shadow-md
-        p-6 mt-4
-      "
-      >
+      <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 mt-4">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-gray-600 text-sm mt-1">{text}</p>
       </div>

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ===================================== */
-/* 和紙背景（最適化済） */
+/* ベース */
 /* ===================================== */
 html,
 body {
@@ -9,7 +9,6 @@ body {
   padding: 0;
   font-family: "Yu Gothic Medium", "Hiragino Sans", sans-serif;
 
-  /* 和紙背景 */
   background-image: url("/mikan/bg_washi.png");
   background-size: 600px;
   background-repeat: repeat;
@@ -19,46 +18,27 @@ body {
 
   color: #36332e;
   scroll-behavior: smooth;
-
-  /* ❌ 画像が消えるので入れない
-     position: relative;
-     z-index: 0;
-  */
 }
 
-/* ===================================== */
-/* 和紙の上に薄い白ベール（固定・最背面） */
-/* ===================================== */
+/* 和紙の白ベール */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-
-  background: rgba(255, 255, 255, 0.45); /* 読みやすさの黄金比 */
+  background: rgba(255, 255, 255, 0.45);
   pointer-events: none;
-
-  z-index: -10; /* 完全に裏側 */
+  z-index: -10;
 }
 
-/* ===================================== */
-/* Header（透明白 + 和紙ガラス + 影） */
-/* ===================================== */
+/* Header */
 header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
-
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.07);
-
-  z-index: 50;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }
 
-/* Header 下の自然な影 */
+/* Header下の影 */
 header::after {
   content: "";
   position: absolute;
@@ -66,30 +46,15 @@ header::after {
   right: 0;
   bottom: -10px;
   height: 10px;
-
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.08),
+    rgba(0, 0, 0, 0.08),
     transparent
   );
   pointer-events: none;
-
-  z-index: -1;
 }
 
-/* ===================================== */
-/* MikanNav（画像ボタンナビ） */
-/* ===================================== */
-.mikan-nav-container {
-  position: relative;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(8px);
-  z-index: 40;
-}
-
-/* ===================================== */
-/* Hero Overlay（和風フィルタ） */
-/* ===================================== */
+/* Hero Overlay */
 .hero-overlay {
   background: linear-gradient(
     to bottom,
@@ -101,21 +66,15 @@ header::after {
   z-index: 5;
 }
 
-/* ===================================== */
-/* スライダー（背景馴染ませ + 影） */
-/* ===================================== */
+/* スライダー */
 .slider-container {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
   height: 380px;
-
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(4px);
-
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-
-  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .slider-track {
@@ -123,11 +82,10 @@ header::after {
   transition: transform 1s ease-in-out;
 }
 
-/* ★ 画像が表示されない原因はここだった → 高さ必須 ★ */
 .slider-item {
   min-width: 100%;
   position: relative;
-  height: 380px;   /* ← これがないと fill が機能しない */
+  height: 380px;
 }
 
 .slider-caption {
@@ -137,34 +95,27 @@ header::after {
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(3px);
   padding: 10px;
-
   color: white;
   text-align: center;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
-/* ===================================== */
-/* スマホ最適化 */
-/* ===================================== */
+/* スマホ */
 @media (max-width: 640px) {
-  .slider-container {
-    height: 300px;
-  }
+  .slider-container,
   .slider-item {
     height: 300px;
   }
 }
 
-/* ===================================== */
-/* ドロワーメニュー（ハンバーガー展開） */
-/* ===================================== */
+/* ドロワーアニメ */
 @keyframes fadeSlide {
-  0% {
+  from {
     opacity: 0;
     transform: translateY(-8px);
   }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }

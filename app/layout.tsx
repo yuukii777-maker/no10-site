@@ -9,13 +9,17 @@ export const metadata = {
     "太陽と海風が育てた山川みかん。北原早生を中心に、旬の味を農家直売でお届けします。",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="ja">
-      {/* ⚠️ Tailwind の bg を完全削除 → globals.css の背景を活かす */}
       <body className="text-[#36332e]">
         <Header />
 
+        {/* Header高さ分をここで一元管理 */}
         <div className="pt-[64px]">
           <MikanNav />
         </div>

@@ -6,9 +6,8 @@ import Link from "next/link";
 
 /* ===========================
    アニメーション設定
-   ※ この数値だけ変えれば速度調整できる
 =========================== */
-const STAGGER_DELAY = 0.08; // 秒
+const STAGGER_DELAY = 0.08; // 秒（ここだけ触れば速度調整）
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -26,19 +25,21 @@ export default function Header() {
       className="
         fixed top-0 left-0 right-0 z-50
         bg-white/80 backdrop-blur-xl shadow-md
-        h-[64px] flex items-center
+        h-[56px] sm:h-[64px]
+        flex items-center
       "
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      {/* ===================== */}
-      {/* 上段：ロゴ & メニュー */}
-      {/* ===================== */}
+      {/* ロゴ & ハンバーガー */}
       <div className="max-w-6xl mx-auto w-full px-4 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold text-[#333]">
+        <Link
+          href="/"
+          className="text-lg sm:text-xl font-bold text-[#333]"
+        >
           山川みかん農園
         </Link>
 
-        {/* ★ 文字ハンバーガー（SVG廃止・iOS安定） */}
+        {/* 文字ハンバーガー（iOS安定） */}
         <button
           className="
             w-10 h-10
@@ -55,27 +56,23 @@ export default function Header() {
         </button>
       </div>
 
-      {/* ===================== */}
       {/* 背景オーバーレイ */}
-      {/* ===================== */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-[2px]"
+          className="fixed inset-0 bg-black/25 backdrop-blur-[2px]"
           onClick={() => setOpen(false)}
         />
       )}
 
-      {/* ===================== */}
       {/* ドロワーメニュー */}
-      {/* ===================== */}
       {open && (
         <nav
           className="
             sm:hidden
             fixed right-4 top-[72px]
-            w-[200px]
+            w-[240px]
             p-4 rounded-2xl shadow-xl
-            bg-white/90 backdrop-blur-xl
+            bg-white/95 backdrop-blur-xl
           "
         >
           <ul className="space-y-3">
@@ -89,21 +86,19 @@ export default function Header() {
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className="
-                    block
-                    w-full h-[48px]
-                    rounded-lg overflow-hidden
+                    block w-full h-[56px]
+                    rounded-xl overflow-hidden
                     shadow-sm
-                    active:scale-[0.97]
+                    active:scale-[0.96]
                     transition
                   "
                 >
-                  {/* ★ 画像だけで分かるメニュー */}
                   <div className="relative w-full h-full">
                     <Image
                       src={item.src}
                       alt={item.label}
                       fill
-                      className="object-contain"
+                      className="object-cover"
                     />
                   </div>
                 </Link>

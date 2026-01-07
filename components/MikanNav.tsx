@@ -15,26 +15,29 @@ export default function MikanNav() {
   return (
     <nav
       className="
+        hidden sm:block
         w-full
-        bg-white/60 backdrop-blur-md 
-        py-3 shadow
-        mikan-nav-container
-        hidden sm:block   /* ←スマホでは消える */
+        bg-white/60 backdrop-blur-md
+        py-2 shadow
         z-[40]
       "
     >
-      <div className="max-w-5xl mx-auto px-3 flex gap-4 overflow-x-auto scrollbar-hide">
+      <div className="max-w-6xl mx-auto px-4 flex gap-4">
         {navItems.map((item) => (
           <Link
             href={item.href}
             key={item.href}
-            className="flex-shrink-0 w-[110px] h-[50px] relative active:scale-95 transition"
+            className="
+              relative w-[120px] h-[56px]
+              rounded-lg overflow-hidden
+              active:scale-95 transition
+            "
           >
             <Image
               src={item.src}
               alt={item.label}
               fill
-              className="object-contain"
+              className="object-cover"
             />
           </Link>
         ))}

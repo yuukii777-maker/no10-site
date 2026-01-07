@@ -172,7 +172,7 @@ export default function Home() {
             {sliderImages.map((item, i) => (
               <div
                 key={i}
-                className="slider-item relative h-[360px] sm:h-[800px]"
+                className="slider-item relative h-[360px] sm:h-[900px]"
               >
                 <Image
                   src={item.src}

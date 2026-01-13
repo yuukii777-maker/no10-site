@@ -4,10 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-/* ===========================
-   アニメーション設定
-=========================== */
-const STAGGER_DELAY = 0.08; // 秒（ここだけ触れば速度調整）
+const STAGGER_DELAY = 0.08;
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -25,21 +22,19 @@ export default function Header() {
       className="
         fixed top-0 left-0 right-0 z-50
         bg-white/80 backdrop-blur-xl shadow-md
-        h-[56px] sm:h-[64px]
+        h-[48px] sm:h-[70px]
         flex items-center
       "
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      {/* ロゴ & ハンバーガー */}
       <div className="max-w-6xl mx-auto w-full px-4 flex justify-between items-center">
         <Link
           href="/"
           className="text-lg sm:text-xl font-bold text-[#333]"
         >
-          山川みかん農園
+          山口みかん農園
         </Link>
 
-        {/* 文字ハンバーガー（iOS安定） */}
         <button
           className="
             w-10 h-10
@@ -56,7 +51,6 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 背景オーバーレイ */}
       {open && (
         <div
           className="fixed inset-0 bg-black/25 backdrop-blur-[2px]"
@@ -64,7 +58,6 @@ export default function Header() {
         />
       )}
 
-      {/* ドロワーメニュー */}
       {open && (
         <nav
           className="

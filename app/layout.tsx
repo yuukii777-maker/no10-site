@@ -4,9 +4,9 @@ import Footer from "@/components/Footer";
 import MikanNav from "@/components/MikanNav";
 
 export const metadata = {
-  title: "山川みかん農園 | 北原早生・直売所",
+  title: "山口みかん農園 | 北原早生・直売所",
   description:
-    "太陽と海風が育てた山川みかん。北原早生を中心に、旬の味を農家直売でお届けします。",
+    "太陽と海風が育てた山口みかん。北原早生を中心に、旬の味を農家直売でお届けします。",
 };
 
 export default function RootLayout({

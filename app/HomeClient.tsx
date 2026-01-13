@@ -107,7 +107,7 @@ export default function Home() {
         >
           <Image
             src="/mikan/hiro.png"
-            alt="山川みかん農園"
+            alt="山口みかん農園"
             fill
             priority
             className="object-cover brightness-[0.88]"
@@ -117,9 +117,9 @@ export default function Home() {
         <div className="absolute inset-0 hero-overlay" />
 
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
-          <h1 className="text-4xl md:text-6xl font-bold">山川みかん農園</h1>
+          <h1 className="text-4xl md:text-6xl font-bold">山口みかん農園</h1>
           <h2 className="text-xl md:text-3xl mt-4 opacity-90">
-            山川ブランド — 旬の甘さそのままに
+            山口ブランド — 旬の甘さそのままに
           </h2>
 
           {/* ★ 購入ボタン（演出付き） */}
@@ -195,7 +195,7 @@ export default function Home() {
 
         <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 text-center text-gray-700">
           傷があっても味は抜群。
-          “山川みかんを気軽に味わってほしい” という想いから訳あり品を特別価格で提供しています。
+          “山口みかんを気軽に味わってほしい” という想いから訳あり品を特別価格で提供しています。
         </div>
 
         <div className="mt-10 flex justify-center">
@@ -214,16 +214,16 @@ export default function Home() {
       {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">
-          山川みかんギャラリー
+          山口みかんギャラリー
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10">
           <GalleryItem src="/mikan/defect.png" title="訳ありみかん" text="見た目に傷がありますが甘さは本物。一袋100円、当サイト人気No.1。" />
           <GalleryItem src="/mikan/premium.png" title="選別された正規品" text="プロが厳選した美しいみかん。1kg600円。直買でよりお得に。" />
           <GalleryItem src="/mikan/hand.png" title="手作業で丁寧に収穫" text="一つひとつ状態を確認しながら収穫します。" />
-          <GalleryItem src="/mikan/farm.png" title="自然に囲まれた農園" text="海風と日当たりの良い山川の土壌で育つみかん。" />
+          <GalleryItem src="/mikan/farm.png" title="自然に囲まれた農園" text="海風と日当たりの良い山口の土壌で育つみかん。" />
           <GalleryItem src="/mikan/shelf.png" title="無人販売所" text="1袋100円の地域文化。地元でも大人気の販売方法。" />
-          <GalleryItem src="/mikan/top.png" title="袋いっぱいのみかん" text="贈り物にも人気の山川みかん。" />
+          <GalleryItem src="/mikan/top.png" title="糖度抜群の甘さ" text="甘くて新鮮なみかんをご家庭へ。" />
         </div>
       </section>
     </main>

@@ -2,7 +2,7 @@
    SEO
 =========================== */
 export const metadata = {
-  title: "山川みかん農園｜農園について",
+  title: "山口みかん農園｜農園について",
   description:
     "福岡県みやま市山川町の自然豊かな農園。海風・日当たりの良い土壌で育つ山川みかんの魅力をご紹介します。",
 };
@@ -26,7 +26,7 @@ export default function Page() {
         <div className="absolute inset-0 bg-black/40" />
 
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6">
-          <h1 className="text-4xl md:text-5xl font-bold">山川みかん農園について</h1>
+          <h1 className="text-4xl md:text-5xl font-bold">山口みかん農園について</h1>
 
           <div className="
             mt-6 max-w-3xl

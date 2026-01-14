@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-/* ベース */
+/* ===========================
+   ベース
+=========================== */
 html,
 body {
   margin: 0;
@@ -16,42 +18,61 @@ body {
 
   color: #36332e;
   scroll-behavior: smooth;
+
+  /* ★ stacking context 安定化 */
+  position: relative;
 }
 
-/* 和紙の白ベール */
+/* ===========================
+   和紙の白ベール（修正版）
+=========================== */
 body::before {
   content: "";
-  position: fixed;
+  position: absolute; /* ← fixed をやめる */
   inset: 0;
   background: rgba(255, 255, 255, 0.45);
   pointer-events: none;
-  z-index: -10;
+  z-index: 0; /* ← 負のz-indexをやめる */
 }
 
-/* Header */
+/* ===========================
+   Header
+=========================== */
 header {
+  position: relative;
+  z-index: 10;
+
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }
 
-/* Hero overlay */
+/* ===========================
+   Hero overlay
+=========================== */
 .hero-overlay {
   pointer-events: none;
 }
 
-/* スライダー */
+/* ===========================
+   スライダー
+=========================== */
 .slider-container {
   position: relative;
+  z-index: 1; /* ★ 画像は必ずベールより上 */
   overflow: hidden;
   border-radius: 14px;
   height: 680px;
+
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(4px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+/* ===========================
+   📱 スマホ
+=========================== */
 @media (max-width: 640px) {
   .slider-container {
     height: 420px;

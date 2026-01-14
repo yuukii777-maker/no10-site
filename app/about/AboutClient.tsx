@@ -79,7 +79,7 @@ export default function AboutClient() {
       {/* ============================= */}
       {/* 手作業 */}
       {/* ============================= */}
-      <section className="max-w-5xl mx-auto px-6 py-20 bg-[#fafafa] rounded-xl">
+      <section className="max-w-5xl mx-auto px-6 py-20 section-soft">
         <h2 className="text-3xl font-bold text-center">
           ひとつひとつ、丁寧な手作業
         </h2>

@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* ===================================== */
 /* ベース */
@@ -22,17 +20,48 @@ body {
   scroll-behavior: smooth;
 }
 
-/* 和紙の白ベール */
+/* ===================================== */
+/* 和紙の白ベール（通常エリア用） */
+/* ===================================== */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background: rgba(255, 255, 255, 0.45);
   pointer-events: none;
-  z-index: -10;
+  z-index: 0;
 }
 
-/* Hero Overlay */
+/* ===================================== */
+/* ★ Hero表示中は和紙ベールを完全無効化 */
+/* ===================================== */
+body:has(.hero-root)::before {
+  display: none;
+}
+
+/* ===================================== */
+/* Hero専用：3Dを守るため独立レイヤー化 */
+/* ===================================== */
+.hero-root {
+  position: relative;
+  z-index: 10;
+  isolation: isolate;          /* ★ これが超重要 */
+  transform-style: preserve-3d;
+}
+
+/* ===================================== */
+/* Header */
+/* ===================================== */
+header {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ===================================== */
+/* Hero Overlay（和紙影） */
+/* ===================================== */
 .hero-overlay {
   background: linear-gradient(
     to bottom,
@@ -41,5 +70,167 @@ body::before {
     rgba(0, 0, 0, 0.05)
   );
   mix-blend-mode: multiply;
+  z-index: 5;
   pointer-events: none;
+}
+
+/* ===================================== */
+/* スライダー（完全最終・安定版） */
+/* ===================================== */
+
+/* 外枠 */
+.slider-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  height: 680px;
+
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* 横スライド */
+.slider-track {
+  display: flex;
+  height: 100%;
+  transition: transform 1s ease-in-out;
+}
+
+/* 各スライド */
+.slider-item {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* PC：文字切れ防止 */
+.slider-item img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* キャプション */
+.slider-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 0, 0, 0)
+  );
+  color: white;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ===================================== */
+/* 📱 スマホ完全対応 */
+/* ===================================== */
+@media (max-width: 640px) {
+  .slider-container {
+    height: 420px;
+  }
+
+  .slider-item {
+    background-position: center;
+    background-size: cover;
+  }
+
+  .slider-item::before {
+    content: "";
+    position: absolute;
+    inset: -10%;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px) brightness(0.92);
+    transform: scale(1.15);
+    z-index: 0;
+  }
+
+  .slider-item img {
+    position: relative;
+    z-index: 1;
+    object-fit: contain;
+    object-position: center;
+    background: transparent;
+  }
+
+  .slider-caption {
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+}
+
+/* ===================================== */
+/* 📱 メニュー（既存そのまま） */
+/* ===================================== */
+@media (max-width: 640px) {
+  nav ul li a {
+    height: 44px;
+    padding: 0 10px;
+  }
+
+  nav ul li span {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  nav ul li img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ===================================== */
+/* ドロワーアニメ */
+/* ===================================== */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeSlide {
+  animation: fadeSlide 0.25s ease-out forwards;
+}
+
+/* ===================================== */
+/* フルスクリーンメニュー用 */
+/* ===================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.35s ease-out both;
 }

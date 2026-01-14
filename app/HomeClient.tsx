@@ -57,7 +57,7 @@ export default function Home() {
   }, []);
 
   /* ===========================
-     パララックス
+     パララックス（既存）
   ============================ */
   const [offset, setOffset] = useState(0);
 
@@ -86,23 +86,57 @@ export default function Home() {
         leaving ? "opacity-0" : "opacity-100"
       }`}
     >
-      {/* ① ヒーロー */}
+      {/* ===========================
+          ① ヒーロー（3レイヤーパララックス）
+      ============================ */}
       <section className="relative h-[80vh] overflow-hidden z-20">
+
+        {/* Z-3 背景（山・空） */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translateY(${offset * 0.08}px)` }}
+        >
+          <Image
+            src="/mikan/hero/hero_z3_mountain_mist.jpg"
+            alt="山の背景"
+            fill
+            priority
+            className="object-cover brightness-[0.9]"
+          />
+        </div>
+
+        {/* Z-2 中景（木箱） */}
         <div
           className="absolute inset-0"
           style={{ transform: `translateY(${offset * 0.15}px)` }}
         >
           <Image
-            src="/mikan/hiro.png"
-            alt="山口みかん農園"
+            src="/mikan/hero/hero_z2_wooden_crate.jpg"
+            alt="木箱のみかん"
             fill
             priority
-            className="object-cover brightness-[0.88]"
+            className="object-cover"
           />
         </div>
 
+        {/* Z-1 前景（みかん寄り） */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translateY(${offset * 0.25}px)` }}
+        >
+          <Image
+            src="/mikan/hero/hero_z1_orange_closeup.jpg"
+            alt="みかんの寄り"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
+
+        {/* 和紙影 */}
         <div className="absolute inset-0 hero-overlay" />
 
+        {/* テキスト */}
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-bold">山口みかん農園</h1>
           <h2 className="text-xl md:text-3xl mt-4 opacity-90">
@@ -145,7 +179,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ★ 追加：みかんのメリット（折り畳み） */}
+      {/* ★ みかんのメリット */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
           <summary className="cursor-pointer list-none text-center">
@@ -162,7 +196,7 @@ export default function Home() {
             <p>・ビタミンとクエン酸で体の回復をサポート。</p>
             <p className="text-xs text-gray-500">
               ※ みかんは1日1〜2個を目安にお楽しみください。
-４つ以上はお腹がゆるくなることがあります。
+              ４つ以上はお腹がゆるくなることがあります。
             </p>
           </div>
         </details>

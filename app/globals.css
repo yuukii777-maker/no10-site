@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* ===========================
-   ベース
-=========================== */
+/* ===================================== */
+/* ベース */
+/* ===================================== */
 html,
 body {
   margin: 0;
@@ -18,51 +18,56 @@ body {
 
   color: #36332e;
   scroll-behavior: smooth;
-
-  /* ★ stacking context 安定化 */
-  position: relative;
 }
 
-/* ===========================
-   和紙の白ベール（修正版）
-=========================== */
+/* 和紙の白ベール */
 body::before {
   content: "";
-  position: absolute; /* ← fixed をやめる */
+  position: fixed;
   inset: 0;
   background: rgba(255, 255, 255, 0.45);
   pointer-events: none;
-  z-index: 0; /* ← 負のz-indexをやめる */
+  z-index: -10;
 }
 
-/* ===========================
-   Header
-=========================== */
+/* ===================================== */
+/* Header */
+/* ===================================== */
 header {
-  position: relative;
-  z-index: 10;
-
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }
 
-/* ===========================
-   Hero overlay
-=========================== */
+/* ===================================== */
+/* Hero Overlay */
+/* ===================================== */
 .hero-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.22),
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.1)
+  );
+  mix-blend-mode: multiply;
+  z-index: 5;
+
+  /* ★ 修正はこの1行のみ */
   pointer-events: none;
 }
 
-/* ===========================
-   スライダー
-=========================== */
+/* ===================================== */
+/* スライダー（完全最終・安定版） */
+/* ===================================== */
+
+/* 外枠 */
 .slider-container {
   position: relative;
-  z-index: 1; /* ★ 画像は必ずベールより上 */
   overflow: hidden;
   border-radius: 14px;
+
+  /* ★ PC：ここだけで縦調整 */
   height: 680px;
 
   background: rgba(255, 255, 255, 0.35);
@@ -70,11 +75,99 @@ header {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
-/* ===========================
-   📱 スマホ
-=========================== */
+/* 横スライド */
+.slider-track {
+  display: flex;
+  height: 100%;
+  transition: transform 1s ease-in-out;
+}
+
+/* 各スライド */
+.slider-item {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* PC：文字切れ防止のため上寄せ */
+.slider-item img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* キャプション */
+.slider-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 0, 0, 0)
+  );
+  color: white;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ===================================== */
+/* 📱 スマホ完全対応（文字が絶対切れない） */
+/* ===================================== */
 @media (max-width: 640px) {
   .slider-container {
+    /* ★ iPhone：ここだけ触ればOK */
     height: 420px;
   }
+
+  /* ★ スマホは画像全体を必ず表示 */
+  .slider-item img {
+    object-fit: contain;
+    object-position: center;
+    background: #000; /* 余白が出ても自然 */
+  }
+
+  .slider-caption {
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+}
+
+/* ===================================== */
+/* 📱 メニュー（iPhone 視認性改善） */
+/* ===================================== */
+@media (max-width: 640px) {
+  nav ul li a {
+    height: 44px;
+    padding: 0 10px;
+  }
+
+  nav ul li span {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  nav ul li img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ===================================== */
+/* ドロワーアニメ */
+/* ===================================== */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeSlide {
+  animation: fadeSlide 0.25s ease-out forwards;
 }

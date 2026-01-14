@@ -38,23 +38,13 @@ export default function ProductsPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
-          {/* 画像 */}
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image
-              src="/mikan/defect.png"
-              alt="傷あり青島みかん"
-              fill
-              className="object-cover"
-            />
+            <Image src="/mikan/defect.png" alt="傷あり青島みかん" fill className="object-cover" />
           </div>
 
-          {/* 購入カード */}
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-2">
-              規格・価格
-            </h3>
+            <h3 className="text-2xl font-bold mb-2">規格・価格</h3>
 
-            {/* 規格選択 */}
             <div className="mt-4">
               <label className="block text-sm font-medium mb-1">
                 内容量を選択
@@ -79,9 +69,7 @@ export default function ProductsPage() {
 
             <button
               onClick={() => {
-                router.push(
-                  `/order?size=${size}&price=${price}`
-                );
+                router.push(`/order?size=${size}&price=${price}`);
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >
@@ -90,6 +78,99 @@ export default function ProductsPage() {
 
             <p className="text-xs text-gray-500 mt-3 text-center">
               ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================== */}
+      {/* 青果みかん（Premium） */}
+      {/* ====================== */}
+      <section className="mt-24">
+        <h2 className="text-3xl font-semibold text-red-700">
+          青果みかん（Premium）
+        </h2>
+
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+          贈答用・青果基準で選別した高品質みかんです。
+          現在は収穫終了のため販売を停止しています。
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
+          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
+            <Image src="/mikan/premium.png" alt="青果みかん（Premium）" fill className="object-cover" />
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+            <h3 className="text-2xl font-bold mb-4">青果みかん（Premium）</h3>
+
+            <ul className="text-sm text-gray-700 space-y-1 mb-4">
+              <li>・5kg：4,500円（送料込み）</li>
+              <li>・10kg：8,000円（送料込み）</li>
+            </ul>
+
+            <button
+              disabled
+              className="w-full bg-red-500 text-white text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
+            >
+              現在売り切れ
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================== */}
+      {/* 文旦 */}
+      {/* ====================== */}
+      <section className="mt-24">
+        <h2 className="text-3xl font-semibold">文旦（単品）</h2>
+
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+          さっぱりとした甘さと爽やかな香りが特徴の文旦です。
+          1個からご注文いただけます。
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
+          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
+            <Image src="/mikan/buntan.jpg" alt="文旦" fill className="object-cover" />
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+            <h3 className="text-2xl font-bold mb-2">文旦</h3>
+
+            <p className="text-sm text-gray-700 mb-4">
+              価格：<strong>1個 1,000円（送料込み）</strong>
+            </p>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">
+                個数を選択
+              </label>
+              <select
+                defaultValue="1"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                onChange={(e) => {
+                  const count = Number(e.target.value);
+                  router.push(`/order?size=${count}個&price=${count * 1000}`);
+                }}
+              >
+                <option value={1}>1個（1,000円）</option>
+                <option value={2}>2個（2,000円）</option>
+                <option value={3}>3個（3,000円）</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => {
+                router.push(`/order?size=1個&price=1000`);
+              }}
+              className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+            >
+              購入手続きへ
+            </button>
+
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              ※ 生鮮品のため、お早めにお召し上がりください
             </p>
           </div>
         </div>

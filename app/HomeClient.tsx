@@ -149,7 +149,7 @@ export default function Home() {
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
           <summary className="cursor-pointer list-none text-center">
-            <span className="text-lg font-semibold">🍊 みかんメリット</span>
+            <span className="text-lg font-semibold">🍊 みかんのメリット＆デメリット</span>
             <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
               タップして読む →
             </span>
@@ -162,7 +162,7 @@ export default function Home() {
             <p>・ビタミンとクエン酸で体の回復をサポート。</p>
             <p className="text-xs text-gray-500">
               ※ みかんは1日1〜2個を目安にお楽しみください。
-食べすぎるとお腹がゆるくなることがあります。
+１日４つ以上はお腹がゆるくなることがあります。
             </p>
           </div>
         </details>

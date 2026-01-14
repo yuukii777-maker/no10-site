@@ -28,9 +28,16 @@ export default function MikanNav() {
               className={`
                 relative w-[120px] h-[56px]
                 overflow-hidden
+                opacity-100
                 transition-all duration-200
                 active:scale-95
-                ${isActive ? "outline outline-2 outline-orange-400" : ""}
+
+                /* 木箱に置いた札感 */
+                shadow-[0_4px_8px_rgba(0,0,0,0.18)]
+                hover:-translate-y-[1px]
+                hover:shadow-[0_6px_14px_rgba(0,0,0,0.22)]
+
+                ${isActive ? "ring-2 ring-orange-400 ring-offset-2 ring-offset-transparent" : ""}
               `}
             >
               <Image
@@ -44,7 +51,17 @@ export default function MikanNav() {
                   hover:saturate-110
                 "
               />
-              <div className="absolute inset-0 bg-black/10 opacity-0 hover:opacity-100 transition" />
+
+              {/* 木箱の影・紙感のための極薄ハイライト */}
+              <div
+                className="
+                  absolute inset-0
+                  pointer-events-none
+                  bg-gradient-to-b
+                  from-white/20
+                  to-transparent
+                "
+              />
             </Link>
           );
         })}

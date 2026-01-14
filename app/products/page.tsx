@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 export default function ProductsPage() {
   const router = useRouter();
 
-  // 規格と価格（送料別・みかん原体のみ）
+  // 規格と価格（送料込み）
   const PRICE_TABLE: Record<"5kg" | "10kg", number> = {
-    "5kg": 1500,
-    "10kg": 2500,
+    "5kg": 2500,
+    "10kg": 3500,
   };
 
   const [size, setSize] = useState<"5kg" | "10kg">("5kg");
@@ -43,7 +43,7 @@ export default function ProductsPage() {
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-2">規格・価格</h3>
+            <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-1">
@@ -54,8 +54,8 @@ export default function ProductsPage() {
                 onChange={(e) => setSize(e.target.value as "5kg" | "10kg")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
-                <option value="5kg">5kg（1,500円）</option>
-                <option value="10kg">10kg（2,500円）</option>
+                <option value="5kg">5kg（2,500円）</option>
+                <option value="10kg">10kg（3,500円）</option>
               </select>
             </div>
 
@@ -64,7 +64,7 @@ export default function ProductsPage() {
             </p>
 
             <p className="text-sm text-gray-600 mt-2">
-              ※ 送料は別途必要です
+              ※ 送料込みです。
             </p>
 
             <button
@@ -84,11 +84,11 @@ export default function ProductsPage() {
       </section>
 
       {/* ====================== */}
-      {/* 青果みかん（Premium） */}
+      {/* 青果みかん（状態良） */}
       {/* ====================== */}
       <section className="mt-24">
         <h2 className="text-3xl font-semibold text-red-700">
-          青果みかん（Premium）
+          青果みかん
         </h2>
 
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
@@ -98,11 +98,11 @@ export default function ProductsPage() {
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image src="/mikan/premium.png" alt="青果みかん（Premium）" fill className="object-cover" />
+            <Image src="/mikan/premium.png" alt="青果みかん(状態良)" fill className="object-cover" />
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-4">青果みかん（Premium）</h3>
+            <h3 className="text-2xl font-bold mb-4">青果</h3>
 
             <ul className="text-sm text-gray-700 space-y-1 mb-4">
               <li>・5kg：4,500円（送料込み）</li>

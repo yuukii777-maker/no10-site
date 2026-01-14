@@ -32,14 +32,11 @@ function useFadeIn() {
   return ref;
 }
 
-/* ===========================
-   メインコンポーネント
-=========================== */
 export default function Home() {
   const router = useRouter();
 
   /* ===========================
-     スライダー制御
+     スライダー制御（復活）
   ============================ */
   const sliderImages = [
     { src: "/mikan/bnr_shipping_campaign.png", caption: "山川の100円みかんを箱に詰めました。" },
@@ -57,13 +54,13 @@ export default function Home() {
   }, []);
 
   /* ===========================
-     パララックス
+     パララックス制御
   ============================ */
-  const [offset, setOffset] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    const onScroll = () => setOffset(window.scrollY * 0.4);
-    window.addEventListener("scroll", onScroll);
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -86,41 +83,74 @@ export default function Home() {
         leaving ? "opacity-0" : "opacity-100"
       }`}
     >
-      {/* ① ヒーロー */}
+      {/* ===========================
+          HERO：3Dパララックス
+      ============================ */}
       <section className="relative h-[80vh] overflow-hidden z-20">
+        {/* Z-3 背景（山・霧） */}
         <div
           className="absolute inset-0"
-          style={{ transform: `translateY(${offset * 0.15}px)` }}
+          style={{ transform: `translateY(${scrollY * 0.08}px)` }}
         >
           <Image
-            src="/mikan/hiro.png"
-            alt="山口みかん農園"
+            src="/mikan/hero/hero_z3_mountain_mist.jpg"
+            alt="山と霧"
             fill
             priority
-            className="object-cover brightness-[0.88]"
+            className="object-cover"
           />
         </div>
 
-        <div className="absolute inset-0 hero-overlay" />
+        {/* Z-2 中景（木箱） */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+        >
+          <Image
+            src="/mikan/hero/hero_z2_wooden_crate.jpg"
+            alt="木箱のみかん"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+        {/* Z-1 前景（みかん寄り） */}
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translateY(${scrollY * 0.25}px)` }}
+        >
+          <Image
+            src="/mikan/hero/hero_z1_orange_closeup.jpg"
+            alt="みかんの寄り"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
+
+        {/* 和紙影 */}
+        <div className="absolute inset-0 hero-overlay z-[5]" />
+
+        {/* テキスト */}
+        <div className="absolute inset-0 z-10 flex flex-col justify-center items-center text-center px-6 text-white drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-bold">山口みかん農園</h1>
           <h2 className="text-xl md:text-3xl mt-4 opacity-90">
             — 自然の旬の甘さそのままに —
           </h2>
 
-          <div className="relative mt-10 group">
-            <button
-              onClick={goProducts}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
-            >
-              🧺 みかんを購入する
-            </button>
-          </div>
+          <button
+            onClick={goProducts}
+            className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
+          >
+            🧺 みかんを購入する
+          </button>
         </div>
       </section>
 
-      {/* ② スライダー */}
+      {/* ===========================
+          ② スライダー
+      ============================ */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
           <div
@@ -137,7 +167,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ③ 100円みかんの理由 */}
+      {/* ===========================
+          ③ 100円みかんの理由
+      ============================ */}
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
         <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
@@ -145,30 +177,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ★ 追加：みかんのメリット（折り畳み） */}
-      <section className="max-w-4xl mx-auto px-6 pb-20">
-        <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
-          <summary className="cursor-pointer list-none text-center">
-            <span className="text-lg font-semibold">🍊 みかんのメリット＆デメリット</span>
-            <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
-              タップして読む →
-            </span>
-          </summary>
-
-          <div className="mt-4 space-y-2 text-sm text-gray-700 leading-relaxed">
-            <p>・手軽に食べれて、皮をお風呂に入れてリラックスできる。</p>
-            <p>・朝一番と深夜のエネルギー、水分不足を一個で解決。</p>
-            <p>・βカロテンで美肌効果あり。</p>
-            <p>・ビタミンとクエン酸で体の回復をサポート。</p>
-            <p className="text-xs text-gray-500">
-              ※ みかんは1日1〜2個を目安にお楽しみください。
-１日４つ以上はお腹がゆるくなることがあります。
-            </p>
-          </div>
-        </details>
-      </section>
-
-      {/* ④ ギャラリー */}
+      {/* ===========================
+          ④ ギャラリー
+      ============================ */}
       <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">
           山口みかんギャラリー

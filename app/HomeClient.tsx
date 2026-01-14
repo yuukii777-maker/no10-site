@@ -42,9 +42,9 @@ export default function Home() {
      スライダー制御
   ============================ */
   const sliderImages = [
-    { src: "/mikan/bnr_shipping_campaign.png", caption: "九州 送料無料キャンペーン" },
-    { src: "/mikan/bnr_open_special.png", caption: "新設サイト記念 ＋1kg" },
-    { src: "/mikan/bnr_oseibo.png", caption: "冬ギフト受付中" },
+    { src: "/mikan/bnr_shipping_campaign.png", caption: "山川の100円みかんを箱に詰めました。" },
+    { src: "/mikan/bnr_open_special.png", caption: "みかん購入で豪華なおまけ付き!!" },
+    { src: "/mikan/bnr_oseibo.png", caption: "二種の支払い方法" },
   ];
 
   const [index, setIndex] = useState(0);
@@ -149,18 +149,20 @@ export default function Home() {
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
           <summary className="cursor-pointer list-none text-center">
-            <span className="text-lg font-semibold">🍊 みかんが選ばれる理由</span>
+            <span className="text-lg font-semibold">🍊 みかんメリット</span>
             <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
               タップして読む →
             </span>
           </summary>
 
           <div className="mt-4 space-y-2 text-sm text-gray-700 leading-relaxed">
-            <p>・皮をむくだけですぐ食べられる手軽さ</p>
-            <p>・甘さと酸味のバランスで毎日食べやすい</p>
-            <p>・香りがよく、冬のリラックスタイムにも◎</p>
+            <p>・手軽に食べれて、皮をお風呂に入れてリラックスできる。</p>
+            <p>・朝一番と深夜のエネルギー、水分不足を一個で解決。</p>
+            <p>・βカロテンで美肌効果あり。</p>
+            <p>・ビタミンとクエン酸で体の回復をサポート。</p>
             <p className="text-xs text-gray-500">
-              ※ 食生活の一部としてお楽しみください
+              ※ みかんは1日1〜2個を目安にお楽しみください。
+食べすぎるとお腹がゆるくなることがあります。
             </p>
           </div>
         </details>

@@ -54,20 +54,16 @@ export default function Home() {
   }, []);
 
   /* ===========================
-     パララックス制御（既存）
+     パララックス制御（安全版）
   ============================ */
   const [scrollY, setScrollY] = useState(0);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  /* ===========================
-     ★ 追加：マウス3D視差
-  ============================ */
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -99,15 +95,9 @@ export default function Home() {
       }`}
     >
       {/* ===========================
-          HERO：3Dパララックス
+          HERO：安定パララックス
       ============================ */}
-      <section
-  className="hero-root relative h-[80vh] overflow-hidden z-20"
-  style={{
-    perspective: "1200px",
-    transformStyle: "preserve-3d",
-  }}
->
+      <section className="hero-root relative h-[80vh] overflow-hidden z-20">
         {/* Z-3 背景（山・霧） */}
         <div
           className="absolute inset-0 will-change-transform"
@@ -115,9 +105,7 @@ export default function Home() {
             transform: `
               translateY(${scrollY * 0.08}px)
               translateX(${mouse.x * 6}px)
-              translateZ(-120px)
-              rotateX(${mouse.y * 1}deg)
-              rotateY(${mouse.x * 1}deg)
+              scale(1.02)
             `,
           }}
         >
@@ -137,9 +125,7 @@ export default function Home() {
             transform: `
               translateY(${scrollY * 0.15}px)
               translateX(${mouse.x * 10}px)
-              translateZ(-40px)
-              rotateX(${mouse.y * 2}deg)
-              rotateY(${mouse.x * 2}deg)
+              scale(1.04)
             `,
           }}
         >
@@ -159,10 +145,7 @@ export default function Home() {
             transform: `
               translateY(${scrollY * 0.25}px)
               translateX(${mouse.x * 16}px)
-              translateZ(40px)
-              rotateX(${mouse.y * 3}deg)
-              rotateY(${mouse.x * 3}deg)
-              scale(1.05)
+              scale(1.08)
             `,
           }}
         >

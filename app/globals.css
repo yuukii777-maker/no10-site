@@ -41,7 +41,7 @@ header {
 }
 
 /* ===================================== */
-/* Hero Overlay（★黒を和紙影に改善） */
+/* Hero Overlay（和紙影） */
 /* ===================================== */
 .hero-overlay {
   background: linear-gradient(
@@ -64,8 +64,6 @@ header {
   position: relative;
   overflow: hidden;
   border-radius: 14px;
-
-  /* ★ PC：ここだけで縦調整 */
   height: 680px;
 
   background: rgba(255, 255, 255, 0.35);
@@ -87,7 +85,7 @@ header {
   position: relative;
 }
 
-/* PC：文字切れ防止のため上寄せ */
+/* PC：文字切れ防止 */
 .slider-item img {
   object-fit: cover;
   object-position: center top;
@@ -111,27 +109,39 @@ header {
 }
 
 /* ===================================== */
-/* 📱 スマホ完全対応（黒背景を和紙に変更） */
+/* 📱 スマホ完全対応（背景ミス完全解消） */
 /* ===================================== */
 @media (max-width: 640px) {
   .slider-container {
-    /* ★ iPhone：ここだけ触ればOK */
     height: 420px;
   }
 
-  /* ★ 黒背景を完全撤廃 → 和紙展示風 */
+  /* スライド自体を背景として使う */
+  .slider-item {
+    background-position: center;
+    background-size: cover;
+  }
+
+  /* 背景ぼかしレイヤー（黒・白を使わない） */
+  .slider-item::before {
+    content: "";
+    position: absolute;
+    inset: -10%;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px) brightness(0.92);
+    transform: scale(1.15);
+    z-index: 0;
+  }
+
+  /* メイン画像 */
   .slider-item img {
+    position: relative;
+    z-index: 1;
     object-fit: contain;
     object-position: center;
-    background:
-      radial-gradient(
-        ellipse at center,
-        rgba(255, 255, 255, 0.85),
-        rgba(250, 247, 242, 0.95)
-      ),
-      url("/mikan/bg_washi.png");
-    background-size: cover, 600px;
-    background-repeat: no-repeat, repeat;
+    background: transparent;
   }
 
   .slider-caption {
@@ -141,7 +151,7 @@ header {
 }
 
 /* ===================================== */
-/* 📱 メニュー（iPhone 視認性改善） */
+/* 📱 メニュー（既存そのまま） */
 /* ===================================== */
 @media (max-width: 640px) {
   nav ul li a {

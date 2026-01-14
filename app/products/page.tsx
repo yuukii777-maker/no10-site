@@ -14,6 +14,7 @@ export default function ProductsPage() {
   };
 
   const [size, setSize] = useState<"5kg" | "10kg">("5kg");
+  const [withBuntan, setWithBuntan] = useState(true); // ★ 追加
   const price = PRICE_TABLE[size];
 
   return (
@@ -39,12 +40,18 @@ export default function ProductsPage() {
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image src="/mikan/defect.png" alt="傷あり青島みかん" fill className="object-cover" />
+            <Image
+              src="/mikan/defect.png"
+              alt="傷あり青島みかん"
+              fill
+              className="object-cover"
+            />
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
             <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
 
+            {/* 規格選択 */}
             <div className="mt-4">
               <label className="block text-sm font-medium mb-1">
                 内容量を選択
@@ -59,6 +66,7 @@ export default function ProductsPage() {
               </select>
             </div>
 
+            {/* 価格 */}
             <p className="text-2xl font-bold text-green-700 mt-6">
               価格：{price.toLocaleString()}円
             </p>
@@ -67,9 +75,39 @@ export default function ProductsPage() {
               ※ 送料込みです。
             </p>
 
+            {/* ★ 期間限定 文旦無料 */}
+            <label
+              className="
+                mt-4 flex items-center gap-3
+                bg-orange-50/70 backdrop-blur-sm
+                border border-orange-200
+                rounded-xl px-4 py-3
+                cursor-pointer
+              "
+            >
+              <input
+                type="checkbox"
+                checked={withBuntan}
+                onChange={(e) => setWithBuntan(e.target.checked)}
+                className="w-5 h-5 accent-orange-500"
+              />
+
+              <div className="text-sm leading-tight">
+                <p className="font-semibold text-orange-700">
+                  【期間限定】文旦1個 無料で付ける
+                </p>
+                <p className="text-gray-600 text-xs mt-1">
+                  ※ 数量限定・無くなり次第終了
+                </p>
+              </div>
+            </label>
+
+            {/* 購入 */}
             <button
               onClick={() => {
-                router.push(`/order?size=${size}&price=${price}`);
+                router.push(
+                  `/order?size=${size}&price=${price}&buntan=${withBuntan}`
+                );
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >
@@ -98,7 +136,12 @@ export default function ProductsPage() {
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image src="/mikan/premium.png" alt="青果みかん(状態良)" fill className="object-cover" />
+            <Image
+              src="/mikan/premium.png"
+              alt="青果みかん(状態良)"
+              fill
+              className="object-cover"
+            />
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
@@ -132,7 +175,12 @@ export default function ProductsPage() {
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image src="/mikan/buntan.jpg" alt="文旦" fill className="object-cover" />
+            <Image
+              src="/mikan/buntan.jpg"
+              alt="文旦"
+              fill
+              className="object-cover"
+            />
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
@@ -151,7 +199,9 @@ export default function ProductsPage() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
                 onChange={(e) => {
                   const count = Number(e.target.value);
-                  router.push(`/order?size=${count}個&price=${count * 1000}`);
+                  router.push(
+                    `/order?size=${count}個&price=${count * 1000}&buntan=false`
+                  );
                 }}
               >
                 <option value={1}>1個（1,000円）</option>
@@ -162,7 +212,7 @@ export default function ProductsPage() {
 
             <button
               onClick={() => {
-                router.push(`/order?size=1個&price=1000`);
+                router.push(`/order?size=1個&price=1000&buntan=false`);
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >

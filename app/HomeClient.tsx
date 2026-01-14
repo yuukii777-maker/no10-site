@@ -42,18 +42,9 @@ export default function Home() {
      スライダー制御
   ============================ */
   const sliderImages = [
-    {
-      src: "/mikan/bnr_shipping_campaign.png",
-      caption: "九州 送料無料キャンペーン",
-    },
-    {
-      src: "/mikan/bnr_open_special.png",
-      caption: "新設サイト記念 ＋1kg",
-    },
-    {
-      src: "/mikan/bnr_oseibo.png",
-      caption: "冬ギフト受付中",
-    },
+    { src: "/mikan/bnr_shipping_campaign.png", caption: "九州 送料無料キャンペーン" },
+    { src: "/mikan/bnr_open_special.png", caption: "新設サイト記念 ＋1kg" },
+    { src: "/mikan/bnr_oseibo.png", caption: "冬ギフト受付中" },
   ];
 
   const [index, setIndex] = useState(0);
@@ -77,9 +68,9 @@ export default function Home() {
   }, []);
 
   /* ===========================
-     遷移フェード制御（数字変えるだけ）
+     遷移フェード
   ============================ */
-  const FADE_DURATION = 250; // ← 遷移スピード(ms)
+  const FADE_DURATION = 250;
   const [leaving, setLeaving] = useState(false);
 
   const goProducts = () => {
@@ -91,15 +82,11 @@ export default function Home() {
 
   return (
     <main
-      className={`
-        text-[#333]
-        transition-opacity duration-300
-        ${leaving ? "opacity-0" : "opacity-100"}
-      `}
+      className={`text-[#333] transition-opacity duration-300 ${
+        leaving ? "opacity-0" : "opacity-100"
+      }`}
     >
-      {/* ============================================ */}
       {/* ① ヒーロー */}
-      {/* ============================================ */}
       <section className="relative h-[80vh] overflow-hidden z-20">
         <div
           className="absolute inset-0"
@@ -119,67 +106,30 @@ export default function Home() {
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-bold">山口みかん農園</h1>
           <h2 className="text-xl md:text-3xl mt-4 opacity-90">
-            山口ブランド — 旬の甘さそのままに
+            — 自然の旬の甘さそのままに —
           </h2>
 
-          {/* ★ 購入ボタン（演出付き） */}
           <div className="relative mt-10 group">
             <button
               onClick={goProducts}
-              className="
-                bg-orange-500 hover:bg-orange-600
-                text-white
-                px-10 py-3 rounded-full text-lg
-                shadow-lg
-                transition-all duration-200
-                active:scale-95 active:translate-y-[1px]
-              "
+              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
             >
               🧺 みかんを購入する
             </button>
-
-            <div
-              className="
-                absolute left-1/2 -translate-x-1/2
-                mt-2
-                text-sm text-white/90
-                opacity-0 translate-y-1
-                transition-all duration-200
-                group-hover:opacity-100
-                group-hover:translate-y-0
-              "
-            >
-              商品一覧へ →
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ============================================ */}
-      {/* ② スワイプスライダー */}
-      {/* ============================================ */}
+      {/* ② スライダー */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
-        <div
-          className="relative w-full overflow-hidden rounded-xl shadow-xl cursor-pointer slider-container"
-          onClick={() =>
-            (window.location.href = "/products#campaign-banners")
-          }
-        >
+        <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
           <div
             className="slider-track"
             style={{ transform: `translateX(-${index * 100}%)` }}
           >
             {sliderImages.map((item, i) => (
-              <div
-                key={i}
-                className="slider-item relative h-[360px] sm:h-[850px]"
-              >
-                <Image
-                  src={item.src}
-                  alt={item.caption}
-                  fill
-                  className="object-cover"
-                />
+              <div key={i} className="slider-item relative h-[360px] sm:h-[850px]">
+                <Image src={item.src} alt={item.caption} fill className="object-cover" />
                 <div className="slider-caption">{item.caption}</div>
               </div>
             ))}
@@ -187,43 +137,45 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============================================ */}
       {/* ③ 100円みかんの理由 */}
-      {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
-
-        <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 text-center text-gray-700">
-          傷があっても味は抜群。
-          “山口みかんを気軽に味わってほしい” という想いから訳あり品を特別価格で提供しています。
-        </div>
-
-        <div className="mt-10 flex justify-center">
-          <Image
-            src="/mikan/pop-100yen.jpg"
-            alt="100円みかんPOP"
-            width={820}
-            height={620}
-            className="rounded-xl shadow-xl"
-          />
+        <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
+          傷があっても味は抜群。気軽に楽しんでほしい想いから生まれました。
         </div>
       </section>
 
-      {/* ============================================ */}
+      {/* ★ 追加：みかんのメリット（折り畳み） */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
+          <summary className="cursor-pointer list-none text-center">
+            <span className="text-lg font-semibold">🍊 みかんが選ばれる理由</span>
+            <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
+              タップして読む →
+            </span>
+          </summary>
+
+          <div className="mt-4 space-y-2 text-sm text-gray-700 leading-relaxed">
+            <p>・皮をむくだけですぐ食べられる手軽さ</p>
+            <p>・甘さと酸味のバランスで毎日食べやすい</p>
+            <p>・香りがよく、冬のリラックスタイムにも◎</p>
+            <p className="text-xs text-gray-500">
+              ※ 食生活の一部としてお楽しみください
+            </p>
+          </div>
+        </details>
+      </section>
+
       {/* ④ ギャラリー */}
-      {/* ============================================ */}
       <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">
           山口みかんギャラリー
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10">
-          <GalleryItem src="/mikan/defect.png" title="訳ありみかん" text="見た目に傷がありますが甘さは本物。一袋100円、当サイト人気No.1。" />
-          <GalleryItem src="/mikan/premium.png" title="選別された正規品" text="プロが厳選した美しいみかん。1kg600円。直買でよりお得に。" />
-          <GalleryItem src="/mikan/hand.png" title="手作業で丁寧に収穫" text="一つひとつ状態を確認しながら収穫します。" />
-          <GalleryItem src="/mikan/farm.png" title="自然に囲まれた農園" text="海風と日当たりの良い山口の土壌で育つみかん。" />
-          <GalleryItem src="/mikan/shelf.png" title="無人販売所" text="1袋100円の地域文化。地元でも大人気の販売方法。" />
-          <GalleryItem src="/mikan/top.png" title="糖度抜群の甘さ" text="甘くて新鮮なみかんをご家庭へ。" />
+          <GalleryItem src="/mikan/defect.png" title="訳ありみかん" text="甘さは本物。人気No.1。" />
+          <GalleryItem src="/mikan/premium.png" title="正規品" text="贈答にも選ばれる品質。" />
+          <GalleryItem src="/mikan/hand.png" title="手作業収穫" text="一つずつ丁寧に。" />
         </div>
       </section>
     </main>
@@ -233,26 +185,14 @@ export default function Home() {
 /* ===========================
    ギャラリー
 =========================== */
-function GalleryItem({
-  src,
-  title,
-  text,
-}: {
-  src: string;
-  title: string;
-  text: string;
-}) {
+function GalleryItem({ src, title, text }: { src: string; title: string; text: string }) {
   const fade = useFadeIn();
 
   return (
-    <div
-      ref={fade}
-      className="opacity-0 translate-y-6 transition-all duration-700"
-    >
+    <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
       <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
         <Image src={src} alt={title} fill className="object-cover" />
       </div>
-
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 mt-4">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-gray-600 text-sm mt-1">{text}</p>

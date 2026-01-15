@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 export default function AppleFloat() {
   const appleRef = useRef<HTMLDivElement>(null);
 
-  // 内部状態（惰性用）
   const current = useRef({
     y: 0,
     rotateX: 0,
@@ -27,18 +26,15 @@ export default function AppleFloat() {
     const onScroll = () => {
       const scrollY = window.scrollY;
       const heroRange = window.innerHeight * 0.9;
-
       const progress = Math.min(scrollY / heroRange, 1);
 
-      // === melaenvy 的パラメータ ===
-      target.current.y = progress * 60;              // 上下移動
-      target.current.rotateY = progress * 420;       // 横回転（主役）
-      target.current.rotateX = progress * 160;       // 縦回転
-      target.current.z = progress * 220;              // 奥行き（超重要）
+      target.current.y = progress * 60;
+      target.current.rotateY = progress * 420;
+      target.current.rotateX = progress * 160;
+      target.current.z = progress * 220;
     };
 
     const animate = () => {
-      // 惰性（lerp）
       current.current.y += (target.current.y - current.current.y) * 0.08;
       current.current.rotateY +=
         (target.current.rotateY - current.current.rotateY) * 0.08;
@@ -73,7 +69,7 @@ export default function AppleFloat() {
     <div
       className="
         pointer-events-none
-        fixed inset-0
+        absolute inset-0   /* ★ fixed → absolute */
         z-[9]
         perspective-[1400px]
       "

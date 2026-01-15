@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import AppleFloat from "./AppleFloat"; // ★ 修正① 追加（これだけ）
 
 /* ===========================
    フェードインアニメ
@@ -89,7 +90,9 @@ export default function Home() {
       {/* ===========================
           ① ヒーロー（3レイヤーパララックス）
       ============================ */}
-      <section className="relative h-[80vh] overflow-hidden z-20">
+      <section className="hero-root relative h-[80vh] overflow-hidden z-20">
+        {/* ★ 修正② hero-root 追加 */}
+        <AppleFloat /> {/* ★ 修正③ 追加（位置そのまま） */}
 
         {/* Z-3 背景（山・空） */}
         <div

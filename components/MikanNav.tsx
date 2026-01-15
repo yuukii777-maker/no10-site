@@ -9,7 +9,7 @@ export default function MikanNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // ★ 並び順を統一（ホーム→商品→農園→お知らせ→お問い合わせ）
+  // 並び順を完全統一
   const navItems = [
     { href: "/", src: "/mikan/nav_home.png", label: "ホーム" },
     { href: "/products", src: "/mikan/nav_products.png", label: "商品" },
@@ -66,7 +66,7 @@ export default function MikanNav() {
       />
 
       {/* ========================= */}
-      {/* SPナビ（商品デザインで完全統一） */}
+      {/* SPナビ（商品ボタン仕様で完全統一） */}
       {/* ========================= */}
       {open && (
         <nav

@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 
 /* ===========================
    melaenvy / luxury LP 完全版
+   iOS対応・完成形
 =========================== */
 
 export default function AppleFloat() {
@@ -48,13 +49,13 @@ export default function AppleFloat() {
 
       const rawProgress = Math.min(scrollY / heroRange, 1);
 
-      // ★ スクロールを一度“溜める”
+      // スクロールを一度溜める（慣性）
       scrollSmooth.current +=
         (rawProgress - scrollSmooth.current) * 0.04;
 
       const eased = easeOutCubic(scrollSmooth.current);
 
-      // 品のある最大量（過剰禁止）
+      // 上品な最大量
       target.current.y = eased * 42;
       target.current.z = eased * 160;
       target.current.rotateY = eased * 260;
@@ -67,12 +68,12 @@ export default function AppleFloat() {
     const animate = () => {
       t += 0.016;
 
-      /* --- 微細自律浮遊（背景ノイズ） --- */
+      // 微細自律浮遊（生命感）
       const floatY = Math.sin(t * 0.7) * 3;
       const floatZ = Math.sin(t * 0.5) * 2;
       const floatRot = Math.sin(t * 0.6) * 1.6;
 
-      /* --- 慣性補間（重さ） --- */
+      // 慣性補間（重さ）
       const inertia = 0.045;
 
       current.current.y +=
@@ -84,7 +85,7 @@ export default function AppleFloat() {
       current.current.rotateX +=
         (target.current.rotateX - current.current.rotateX) * inertia;
 
-      /* --- Z連動の視覚補正 --- */
+      // Z連動の視覚補正
       const scale = 1 + current.current.z / 1600;
       const blur = Math.min(current.current.z / 220, 1.6);
 
@@ -98,9 +99,7 @@ export default function AppleFloat() {
           scale(${scale})
         `;
 
-        appleRef.current.style.filter = `
-          blur(${blur}px)
-        `;
+        appleRef.current.style.filter = `blur(${blur}px)`;
       }
 
       rafId = requestAnimationFrame(animate);
@@ -117,14 +116,16 @@ export default function AppleFloat() {
   }, []);
 
   /* ===========================
-     View
+     View（iOS安全構成）
   =========================== */
   return (
     <div
       className="
         pointer-events-none
-        absolute inset-0
-        z-[9]
+        absolute top-0 left-0
+        w-full
+        h-[80vh]          /* hero 内だけ */
+        z-[1]             /* 背景演出レイヤー */
         perspective-[1800px]
       "
     >
@@ -133,7 +134,7 @@ export default function AppleFloat() {
         className="
           absolute
           top-1/2
-          left-[62%]   /* ★ 修正：中央 → 右寄せ（文字・CTA保護） */
+          left-[62%]       /* 文字・CTA保護 */
           transform-gpu
           will-change-transform
           drop-shadow-[0_40px_80px_rgba(120,70,20,0.35)]

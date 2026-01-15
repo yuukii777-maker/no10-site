@@ -9,7 +9,7 @@ export default function MikanNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // 並び順を完全統一
+  // 並び順はここで完全統一
   const navItems = [
     { href: "/", src: "/mikan/nav_home.png", label: "ホーム" },
     { href: "/products", src: "/mikan/nav_products.png", label: "商品" },
@@ -57,7 +57,7 @@ export default function MikanNav() {
       </nav>
 
       {/* ========================= */}
-      {/* SP用：開くトリガー（UI変更なし） */}
+      {/* SP用：開くトリガー（既存仕様） */}
       {/* ========================= */}
       <button
         onClick={() => setOpen(true)}
@@ -66,13 +66,14 @@ export default function MikanNav() {
       />
 
       {/* ========================= */}
-      {/* SPナビ（商品ボタン仕様で完全統一） */}
+      {/* SPナビ（統一デザイン・間隔最適化） */}
       {/* ========================= */}
       {open && (
         <nav
           className="
             sm:hidden fixed inset-0 z-50
-            flex flex-col items-center justify-center gap-5
+            flex flex-col items-center justify-center
+            gap-4
             bg-[#faf7f2]
             animate-navFade
             before:content-['']
@@ -88,13 +89,13 @@ export default function MikanNav() {
               href={item.href}
               className="
                 w-[260px]
-                animate-navItem
                 transition
                 active:scale-95
                 hover:scale-[1.03]
                 drop-shadow-[0_10px_24px_rgba(180,120,20,0.45)]
+                animate-navItem
               "
-              style={{ animationDelay: `${100 + i * 70}ms` }}
+              style={{ animationDelay: `${80 + i * 60}ms` }}
             >
               <Image
                 src={item.src}

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 /* ===========================
    melaenvy / luxury LP
-   浮遊特化・回転完全廃止版
+   浮遊特化・斜め固定・溶け込み版
 =========================== */
 
 export default function AppleFloat() {
@@ -39,17 +39,15 @@ export default function AppleFloat() {
       scrollSmooth.current += (raw - scrollSmooth.current) * 0.05;
       const eased = easeOutCubic(scrollSmooth.current);
 
-      // 浮遊量だけを制御（Yのみ）
-      targetY.current = eased * 28;
+      targetY.current = eased * 26; // 控えめ
     };
 
     const animate = () => {
       t += 0.016;
 
-      // 自律浮遊（命）
-      const float = Math.sin(t * 0.8) * (isSP ? 4 : 6);
+      // 自律浮遊（ごく静か）
+      const float = Math.sin(t * 0.7) * (isSP ? 3 : 4);
 
-      // 慣性
       currentY.current +=
         (targetY.current - currentY.current) * 0.08;
 
@@ -57,6 +55,8 @@ export default function AppleFloat() {
         appleRef.current.style.transform = `
           translate(-50%, -50%)
           translateY(${currentY.current + float}px)
+          rotateZ(-8deg)
+          rotateX(6deg)
         `;
       }
 
@@ -79,30 +79,33 @@ export default function AppleFloat() {
         pointer-events-none
         absolute top-0 left-0
         w-full h-[80vh]
-        z-[1]
+        z-[0]          /* ★ 文字より後ろ */
       "
     >
       <div
         ref={appleRef}
         className="
           absolute
-          top-[62%]
-          left-[68%]
+          top-[64%]
+          left-[70%]
           transform-gpu
           will-change-transform
         "
         style={{
           filter:
-            "drop-shadow(0 30px 50px rgba(120,70,20,0.35)) drop-shadow(0 90px 140px rgba(0,0,0,0.28))",
+            "drop-shadow(0 40px 70px rgba(120,70,20,0.28)) drop-shadow(0 120px 180px rgba(0,0,0,0.22))",
         }}
       >
         <Image
           src="/mikan/hero/hero_orange_float.png"
           alt="浮遊するみかん"
-          width={isSP ? 380 : 560}
-          height={isSP ? 380 : 560}
+          width={isSP ? 420 : 620}   // ★ melaenvy寄せサイズ
+          height={isSP ? 420 : 620}
           priority
-          className="brightness-[1.02] saturate-[1]"
+          className="
+            brightness-[0.96]
+            saturate-[0.92]
+          "
         />
       </div>
     </div>

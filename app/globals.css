@@ -234,3 +234,30 @@ header {
 .animate-slideUp {
   animation: slideUp 0.35s ease-out both;
 }
+/* ナビ全体フェード */
+@keyframes navFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-navFade {
+  animation: navFade 0.35s ease-out forwards;
+}
+
+/* 各アイテムふわっと */
+@keyframes navItem {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-navItem {
+  animation: navItem 0.45s ease-out forwards;
+}

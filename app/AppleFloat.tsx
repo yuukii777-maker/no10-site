@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /* ===========================
    melaenvy / luxury LP 完全版
@@ -10,6 +10,15 @@ import { useEffect, useRef } from "react";
 
 export default function AppleFloat() {
   const appleRef = useRef<HTMLDivElement>(null);
+  const [isSP, setIsSP] = useState(false);
+
+  // SP判定（iOS含む）
+  useEffect(() => {
+    const check = () => setIsSP(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // 現在値（物体）
   const current = useRef({
@@ -86,7 +95,7 @@ export default function AppleFloat() {
         (target.current.rotateX - current.current.rotateX) * inertia;
 
       // Z連動の視覚補正
-      const scale = 1 + current.current.z / 1600;
+      const scale = 1 + current.current.z / (isSP ? 1100 : 1600);
       const blur = Math.min(current.current.z / 220, 1.6);
 
       if (appleRef.current) {
@@ -113,7 +122,7 @@ export default function AppleFloat() {
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [isSP]);
 
   /* ===========================
      View（iOS安全構成）
@@ -124,8 +133,8 @@ export default function AppleFloat() {
         pointer-events-none
         absolute top-0 left-0
         w-full
-        h-[80vh]          /* hero 内だけ */
-        z-[1]             /* 背景演出レイヤー */
+        h-[80vh]
+        z-[1]
         perspective-[1800px]
       "
     >
@@ -133,18 +142,21 @@ export default function AppleFloat() {
         ref={appleRef}
         className="
           absolute
-          top-1/2
-          left-[62%]       /* 文字・CTA保護 */
+          top-[58%]        /* ★ 微調整：文字より下 */
+          left-[66%]       /* ★ 微調整：文字・CTA完全回避 */
           transform-gpu
           will-change-transform
-          drop-shadow-[0_40px_80px_rgba(120,70,20,0.35)]
         "
+        style={{
+          filter:
+            "drop-shadow(0 22px 40px rgba(120,70,20,0.35)) drop-shadow(0 70px 110px rgba(0,0,0,0.25))",
+        }}
       >
         <Image
           src="/mikan/hero/hero_orange_float.png"
           alt="浮遊するみかん"
-          width={520}
-          height={520}
+          width={isSP ? 320 : 520}   /* ★ SPで主役サイズ */
+          height={isSP ? 320 : 520}
           priority
           className="
             brightness-[0.98]

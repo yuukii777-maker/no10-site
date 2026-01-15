@@ -3,12 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react"; // ★ 修正① 追加
+import { useState } from "react";
 
 export default function MikanNav() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false); // ★ 修正② 追加
+  const [open, setOpen] = useState(false);
 
+  // ★ 並び順を統一（ホーム→商品→農園→お知らせ→お問い合わせ）
   const navItems = [
     { href: "/", src: "/mikan/nav_home.png", label: "ホーム" },
     { href: "/products", src: "/mikan/nav_products.png", label: "商品" },
@@ -65,13 +66,13 @@ export default function MikanNav() {
       />
 
       {/* ========================= */}
-      {/* SPナビ（ハンバーガー内 完全版） */}
+      {/* SPナビ（商品デザインで完全統一） */}
       {/* ========================= */}
-      {open && ( // ★ 修正③ 表示制御
+      {open && (
         <nav
           className="
             sm:hidden fixed inset-0 z-50
-            flex flex-col items-center justify-center gap-6
+            flex flex-col items-center justify-center gap-5
             bg-[#faf7f2]
             animate-navFade
             before:content-['']
@@ -79,58 +80,32 @@ export default function MikanNav() {
             before:bg-[radial-gradient(ellipse_at_top,_rgba(255,210,120,0.35),_transparent_65%)]
             before:pointer-events-none
           "
-          onClick={() => setOpen(false)} // ★ 修正④ タップで閉じる
+          onClick={() => setOpen(false)}
         >
-          {/* 商品：金ボタン（主役） */}
-          <Link
-            href="/products"
-            className="
-              w-[260px]
-              mb-4
-              animate-navItem delay-[100ms]
-              transition
-              active:scale-95
-              hover:scale-[1.03]
-              drop-shadow-[0_10px_24px_rgba(180,120,20,0.45)]
-            "
-          >
-            <Image
-              src="/mikan/nav_products.png"
-              alt="商品"
-              width={520}
-              height={200}
-              className="w-full h-auto"
-              priority
-            />
-          </Link>
-
-          {/* その他ナビ（木札） */}
-          <div className="flex flex-col gap-4 items-center">
-            {navItems
-              .filter((item) => item.href !== "/products")
-              .map((item, i) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="
-                    relative w-[220px] h-[56px]
-                    overflow-hidden
-                    animate-navItem
-                    shadow-[0_4px_12px_rgba(0,0,0,0.18)]
-                    active:scale-95
-                  "
-                  style={{ animationDelay: `${200 + i * 70}ms` }}
-                >
-                  <Image
-                    src={item.src}
-                    alt={item.label}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent pointer-events-none" />
-                </Link>
-              ))}
-          </div>
+          {navItems.map((item, i) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="
+                w-[260px]
+                animate-navItem
+                transition
+                active:scale-95
+                hover:scale-[1.03]
+                drop-shadow-[0_10px_24px_rgba(180,120,20,0.45)]
+              "
+              style={{ animationDelay: `${100 + i * 70}ms` }}
+            >
+              <Image
+                src={item.src}
+                alt={item.label}
+                width={520}
+                height={200}
+                className="w-full h-auto"
+                priority={i === 0}
+              />
+            </Link>
+          ))}
         </nav>
       )}
     </>

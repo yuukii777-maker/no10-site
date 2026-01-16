@@ -1,3 +1,4 @@
+// app/(whatever)/OrderClient.tsx など
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -15,7 +16,7 @@ const PREFECTURES = [
   "沖縄県"
 ];
 
-// ✅ 新GASエンドポイント（action=order）
+// ✅ デプロイしたGAS（orderハンドラ）
 const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
@@ -36,7 +37,7 @@ export default function OrderClient() {
   const [email, setEmail] = useState(""); // 任意
 
   const [loading, setLoading] = useState(false);
-  const sentOnceRef = useRef(false); // 二重送信ガード（念のため）
+  const sentOnceRef = useRef(false); // 二重送信ガード
 
   // 郵便番号 → 住所自動補完
   const fetchAddress = async (zip: string) => {
@@ -59,14 +60,12 @@ export default function OrderClient() {
       alert("必須項目をすべて入力してください");
       return;
     }
-    // 二重クリック防止
-    if (sentOnceRef.current) return;
+    if (sentOnceRef.current) return; // 二重クリック防止
 
     setLoading(true);
     sentOnceRef.current = true;
 
     try {
-      // iOS/Safari/CORS 安定のため x-www-form-urlencoded + keepalive
       const payload = {
         product: "傷あり青島みかん（箱詰め）",
         size,
@@ -80,34 +79,30 @@ export default function OrderClient() {
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
       };
 
-      const res = await fetch(GAS_URL, {
+      // ★ CORS 回避：no-cors にしてレスポンスは読まない（opaque）
+      await fetch(GAS_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
         },
         body: new URLSearchParams({ payload: JSON.stringify(payload) }).toString(),
         keepalive: true,
+        mode: "no-cors",
       });
 
-      // GASは 200でも {ok:false} を返す実装にしていることが多いのでJSON判定
-      let json: any = null;
-      try {
-        json = await res.json();
-      } catch {
-        // JSON以外ならレスポンス本文を見ずにエラー扱い
-        throw new Error("invalid_response");
-      }
-
-      if (!json || json.ok !== true) {
-        throw new Error(json?.error || "送信失敗");
-      }
+      // （任意）ビーコン式ログで到達チェック：レスポンス不要なのでCORSに引っかからない
+      new Image().src =
+        "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec" +
+        "?action=log&rid=order_submit&ua=" + encodeURIComponent(
+          typeof navigator !== "undefined" ? navigator.userAgent : ""
+        );
 
       alert("ご注文を受け付けました。送料については後ほどご案内します。");
       router.push("/");
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
-      sentOnceRef.current = false; // ユーザーが再送できるよう解除
+      sentOnceRef.current = false; // 再送できるよう解除
     } finally {
       setLoading(false);
     }
@@ -120,31 +115,19 @@ export default function OrderClient() {
       {/* 注文内容 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mb-10">
         <h2 className="text-xl font-bold mb-4">注文内容</h2>
-
         <p>商品：<strong>傷あり青島みかん</strong></p>
         <p className="mt-2">規格：<strong>{size}</strong></p>
-
         <p className="text-2xl font-bold text-green-700 mt-4">
           商品代金：{price.toLocaleString()}円
         </p>
-
-        <p className="text-sm text-gray-600 mt-2">
-          ※ 送料は別途ご案内します
-        </p>
+        <p className="text-sm text-gray-600 mt-2">※ 送料は別途ご案内します</p>
       </section>
 
       {/* お届け先 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
         <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
-
         <div className="space-y-4">
-          <input
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="お名前（必須）"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="お名前（必須）" value={name} onChange={(e) => setName(e.target.value)} />
           <input
             className="w-full border rounded-lg px-4 py-2"
             placeholder="郵便番号（7桁・必須）"
@@ -155,38 +138,13 @@ export default function OrderClient() {
               if (v.length === 7) fetchAddress(v);
             }}
           />
-
-          <select
-            className="w-full border rounded-lg px-4 py-2"
-            value={prefecture}
-            onChange={(e) => setPrefecture(e.target.value)}
-          >
+          <select className="w-full border rounded-lg px-4 py-2" value={prefecture} onChange={(e) => setPrefecture(e.target.value)}>
             <option value="">都道府県を選択（必須）</option>
-            {PREFECTURES.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
+            {PREFECTURES.map((p) => (<option key={p} value={p}>{p}</option>))}
           </select>
-
-          <input
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="市区町村・番地（必須）"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-
-          <input
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="電話番号（必須）"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-
-          <input
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="メールアドレス（任意）"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="市区町村・番地（必須）" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（必須）" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（任意）" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
 
         <button
@@ -197,10 +155,7 @@ export default function OrderClient() {
           {loading ? "送信中..." : "注文を確定する"}
         </button>
 
-        <button
-          onClick={() => router.back()}
-          className="mt-4 w-full text-sm text-gray-500 underline"
-        >
+        <button onClick={() => router.back()} className="mt-4 w-full text-sm text-gray-500 underline">
           商品ページに戻る
         </button>
       </section>

@@ -25,6 +25,7 @@ export default function OrderClient() {
   const router = useRouter();
 
   // URLから商品情報
+  const product = searchParams.get("product") || "商品名未設定"; // ← 追加
   const size = searchParams.get("size") || "5kg";
   const price = Number(searchParams.get("price")) || 1500;
 
@@ -67,7 +68,7 @@ export default function OrderClient() {
 
     try {
       const payload = {
-        product: "傷あり青島みかん（箱詰め）",
+        product, // ← 固定文字列をやめてURL由来に変更
         size,
         price,
         name,
@@ -90,7 +91,7 @@ export default function OrderClient() {
         mode: "no-cors",
       });
 
-      // （任意）ビーコン式ログで到達チェック：レスポンス不要なのでCORSに引っかからない
+      // （任意）ビーコン式ログ
       new Image().src =
         "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec" +
         "?action=log&rid=order_submit&ua=" + encodeURIComponent(
@@ -102,7 +103,7 @@ export default function OrderClient() {
     } catch (e) {
       console.error(e);
       alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
-      sentOnceRef.current = false; // 再送できるよう解除
+      sentOnceRef.current = false;
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export default function OrderClient() {
       {/* 注文内容 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mb-10">
         <h2 className="text-xl font-bold mb-4">注文内容</h2>
-        <p>商品：<strong>傷あり青島みかん</strong></p>
+        <p>商品：<strong>{product}</strong></p> {/* ← 表示も修正 */}
         <p className="mt-2">規格：<strong>{size}</strong></p>
         <p className="text-2xl font-bold text-green-700 mt-4">
           商品代金：{price.toLocaleString()}円

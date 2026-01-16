@@ -181,6 +181,8 @@ export default function Home() {
                   fill
                   sizes="100vw"            // 修正点③: 解像度選択を安定
                   priority={i === 0}       // 先頭のみ優先読み込み
+                  loading="eager"          // ★追加: 遅延読み込みを無効化
+                  unoptimized              // ★追加: Nextの最適化をバイパス（IO依存を回避）
                   className="object-cover"
                 />
                 <div className="slider-caption">{item.caption}</div>
@@ -244,7 +246,6 @@ export default function Home() {
           backface-visibility: hidden;
           transform: translate3d(0,0,0);
           contain: paint; /* 追加B: レイヤ分離 */
-          /* 追加Cは iOS/Safari で画像が消えるケースがあるため無効化 */
           -webkit-mask-image: none;
           mask-image: none;
         }
@@ -252,9 +253,9 @@ export default function Home() {
         .slider-item img {
           pointer-events: none;
           user-select: none;
-          -webkit-user-drag: none;     /* 追加D: iOSのドラッグ抑止 */
-          backface-visibility: hidden;  /* 追加E: 合成のブレ低減 */
-          transform: translateZ(0) scale(1.0001); /* 追加F: GPU合成をより強制 */
+          -webkit-user-drag: none;
+          backface-visibility: hidden;
+          transform: translateZ(0) scale(1.0001);
         }
         .slider-caption {
           position: absolute; left: 0; right: 0; bottom: 0.75rem;

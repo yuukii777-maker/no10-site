@@ -64,7 +64,6 @@ export default function Home() {
 
     // ーーー 追加A: iOS/Safari向け：ページ遷移キャッシュでの再開/停止 ーーー
     const onPageShow = (e: PageTransitionEvent) => {
-      // bfcache 復帰時（persisted=true）でも確実に再開
       // @ts-expect-error safari PageTransitionEvent persist
       if (e.persisted) start(); else start();
     };
@@ -105,9 +104,7 @@ export default function Home() {
           ① ヒーロー（Z2〜Z4の画像レイヤー廃止版）
           背景はCSSのみ（グラデ＋微粒子）、主役は AppleFloat
       ============================ */}
-      <section
-        className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20"
-      >
+      <section className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20">
         {/* 背景：みかん色グラデ（放射＋周辺減光） */}
         <div
           className="absolute inset-0 z-[0]"
@@ -165,26 +162,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ② スライダー（内容変更なし） */}
+      {/* ② スライダー（内容変更なし → 画像タグだけ置換） */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
-          {/* ーーー 修正点②: レイアウト固定・GPU合成 ーーー */}
           <div
             className="slider-track"
             style={{ transform: `translate3d(-${index * 100}%, 0, 0)` }}
           >
             {sliderImages.map((item, i) => (
               <div key={i} className="slider-item relative h-[360px] sm:h-[850px]">
-                <Image
+                {/* ▼▼ ここだけ <img> に変更（他は変更なし） ▼▼ */}
+                <img
                   src={item.src}
                   alt={item.caption}
-                  fill
-                  sizes="100vw"            // 修正点③: 解像度選択を安定
-                  priority={i === 0}       // 先頭のみ優先読み込み
-                  loading="eager"          // ★追加: 遅延読み込みを無効化
-                  unoptimized              // ★追加: Nextの最適化をバイパス（IO依存を回避）
-                  className="object-cover"
+                  decoding="async"
+                  loading="eager"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    WebkitUserDrag: "none",
+                    userSelect: "none",
+                    pointerEvents: "none",
+                    backfaceVisibility: "hidden",
+                    transform: "translateZ(0)",
+                  }}
                 />
+                {/* ▲▲ ここまで置換 ▲▲ */}
                 <div className="slider-caption">{item.caption}</div>
               </div>
             ))}
@@ -235,7 +241,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ーーー 修正点④: スライダーのグローバルCSS（レイアウト・トランジション） ーーー */}
+      {/* スライダーCSS（既存ベースのまま） */}
       <style jsx global>{`
         .slider-container { position: relative; overflow: hidden; }
         .slider-track {
@@ -245,18 +251,9 @@ export default function Home() {
           transition: transform 700ms cubic-bezier(.22,.61,.36,1);
           backface-visibility: hidden;
           transform: translate3d(0,0,0);
-          contain: paint; /* 追加B: レイヤ分離 */
-          -webkit-mask-image: none;
-          mask-image: none;
+          contain: paint;
         }
         .slider-item { flex: 0 0 100%; position: relative; }
-        .slider-item img {
-          pointer-events: none;
-          user-select: none;
-          -webkit-user-drag: none;
-          backface-visibility: hidden;
-          transform: translateZ(0) scale(1.0001);
-        }
         .slider-caption {
           position: absolute; left: 0; right: 0; bottom: 0.75rem;
           text-align: center; color: #fff;

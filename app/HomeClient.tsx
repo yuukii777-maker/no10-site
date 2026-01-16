@@ -61,11 +61,25 @@ export default function Home() {
       }
     };
     const onVis = () => (document.hidden ? stop() : start());
+
+    // ーーー 追加A: iOS/Safari向け：ページ遷移キャッシュでの再開/停止 ーーー
+    const onPageShow = (e: PageTransitionEvent) => {
+      // bfcache 復帰時（persisted=true）でも確実に再開
+      // @ts-expect-error safari PageTransitionEvent persist
+      if (e.persisted) start(); else start();
+    };
+    const onPageHide = () => stop();
+
     start();
     document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("pagehide", onPageHide);
+
     return () => {
       stop();
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("pagehide", onPageHide);
     };
   }, [sliderImages.length]);
 
@@ -179,14 +193,14 @@ export default function Home() {
       {/* ③ 100円みかんの理由（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
-        <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
+        <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text中心 text-gray-700">
           傷があっても味は抜群。気軽に楽しんでほしい想いから生まれました。
         </div>
       </section>
 
       {/* ★ みかんのメリット（内容変更なし） */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
-        <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
+        <details className="group bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
           <summary className="cursor-pointer list-none text-center">
             <span className="text-lg font-semibold">🍊 みかんのメリット＆デメリット</span>
             <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
@@ -229,8 +243,17 @@ export default function Home() {
           transition: transform 700ms cubic-bezier(.22,.61,.36,1);
           backface-visibility: hidden;
           transform: translate3d(0,0,0);
+          contain: paint; /* 追加B: レイヤ分離 */
+          -webkit-mask-image: -webkit-radial-gradient(white, black); /* 追加C: iOSレンダリング安定 */
         }
         .slider-item { flex: 0 0 100%; position: relative; }
+        .slider-item img {
+          pointer-events: none;
+          user-select: none;
+          -webkit-user-drag: none;     /* 追加D: iOSのドラッグ抑止 */
+          backface-visibility: hidden;  /* 追加E: 合成のブレ低減 */
+          transform: translateZ(0);     /* 追加F: GPU合成強制 */
+        }
         .slider-caption {
           position: absolute; left: 0; right: 0; bottom: 0.75rem;
           text-align: center; color: #fff;

@@ -106,7 +106,7 @@ export default function ProductsPage() {
             <button
               onClick={() => {
                 router.push(
-                  `/order?size=${size}&price=${price}&buntan=${withBuntan}`
+                  `/order?product=${encodeURIComponent("傷あり青島みかん（箱詰め）")}&size=${size}&price=${price}&buntan=${withBuntan}`
                 );
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
@@ -200,7 +200,7 @@ export default function ProductsPage() {
                 onChange={(e) => {
                   const count = Number(e.target.value);
                   router.push(
-                    `/order?size=${count}個&price=${count * 1000}&buntan=false`
+                    `/order?product=${encodeURIComponent("文旦")}&size=${count}個&price=${count * 1000}&buntan=false`
                   );
                 }}
               >
@@ -212,7 +212,9 @@ export default function ProductsPage() {
 
             <button
               onClick={() => {
-                router.push(`/order?size=1個&price=1000&buntan=false`);
+                router.push(
+                  `/order?product=${encodeURIComponent("文旦")}&size=1個&price=1000&buntan=false`
+                );
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >

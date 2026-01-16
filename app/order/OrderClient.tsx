@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -14,6 +14,10 @@ const PREFECTURES = [
   "福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県",
   "沖縄県"
 ];
+
+// ✅ 新GASエンドポイント（action=order）
+const GAS_URL =
+  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
 export default function OrderClient() {
   const searchParams = useSearchParams();
@@ -32,24 +36,19 @@ export default function OrderClient() {
   const [email, setEmail] = useState(""); // 任意
 
   const [loading, setLoading] = useState(false);
+  const sentOnceRef = useRef(false); // 二重送信ガード（念のため）
 
   // 郵便番号 → 住所自動補完
   const fetchAddress = async (zip: string) => {
     if (!/^\d{7}$/.test(zip)) return;
-
     try {
-      const res = await fetch(
-        `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`
-      );
+      const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`);
       const data = await res.json();
-
       if (data.results && data.results[0]) {
         setPrefecture(data.results[0].address1);
-        setAddress(
-          data.results[0].address2 + data.results[0].address3
-        );
+        setAddress(data.results[0].address2 + data.results[0].address3);
       }
-    } catch (e) {
+    } catch {
       console.error("住所取得失敗");
     }
   };
@@ -60,39 +59,55 @@ export default function OrderClient() {
       alert("必須項目をすべて入力してください");
       return;
     }
+    // 二重クリック防止
+    if (sentOnceRef.current) return;
 
     setLoading(true);
+    sentOnceRef.current = true;
 
     try {
-      const res = await fetch(
-        "https://script.google.com/macros/s/AKfycbyPr7e6l31p64tr_qbygG-DAPfwBG_qAXi4j0K25Tuap61ImT1zy7jOIQAMEsvxN5c/exec",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            secret: "YAMAKAWA_MIKAN_100",
+      // iOS/Safari/CORS 安定のため x-www-form-urlencoded + keepalive
+      const payload = {
+        product: "傷あり青島みかん（箱詰め）",
+        size,
+        price,
+        name,
+        postal,
+        prefecture,
+        address,
+        phone,
+        email, // 空でもOK
+        ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
+      };
 
-            product: "傷あり青島みかん（箱詰め）",
-            size,
-            price,
+      const res = await fetch(GAS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: new URLSearchParams({ payload: JSON.stringify(payload) }).toString(),
+        keepalive: true,
+      });
 
-            name,
-            postal,
-            prefecture,
-            address,
-            phone,
-            email, // 空でもOK
-          }),
-        }
-      );
+      // GASは 200でも {ok:false} を返す実装にしていることが多いのでJSON判定
+      let json: any = null;
+      try {
+        json = await res.json();
+      } catch {
+        // JSON以外ならレスポンス本文を見ずにエラー扱い
+        throw new Error("invalid_response");
+      }
 
-      if (!res.ok) throw new Error("送信失敗");
+      if (!json || json.ok !== true) {
+        throw new Error(json?.error || "送信失敗");
+      }
 
       alert("ご注文を受け付けました。送料については後ほどご案内します。");
       router.push("/");
-
-    } catch (e) {
-      alert("送信中にエラーが発生しました。");
+    } catch (e: any) {
+      console.error(e);
+      alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
+      sentOnceRef.current = false; // ユーザーが再送できるよう解除
     } finally {
       setLoading(false);
     }
@@ -123,7 +138,12 @@ export default function OrderClient() {
         <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
 
         <div className="space-y-4">
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="お名前（必須）" value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="お名前（必須）"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
           <input
             className="w-full border rounded-lg px-4 py-2"
@@ -147,11 +167,26 @@ export default function OrderClient() {
             ))}
           </select>
 
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="市区町村・番地（必須）" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="市区町村・番地（必須）"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
 
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（必須）" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="電話番号（必須）"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
 
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（任意）" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="メールアドレス（任意）"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
 
         <button

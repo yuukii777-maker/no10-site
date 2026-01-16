@@ -16,7 +16,6 @@ const PREFECTURES = [
   "沖縄県"
 ];
 
-// GAS エンドポイント
 const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
@@ -24,23 +23,23 @@ export default function OrderClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // URLから商品情報
   const product = searchParams.get("product") || "商品名未設定";
   const size = searchParams.get("size") || "5kg";
   const price = Number(searchParams.get("price")) || 1500;
 
-  // お客様情報
   const [name, setName] = useState("");
   const [postal, setPostal] = useState("");
   const [prefecture, setPrefecture] = useState("");
   const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");   // ← 任意
-  const [email, setEmail] = useState("");   // ← 必須
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
 
   const [loading, setLoading] = useState(false);
   const sentOnceRef = useRef(false);
 
-  // 郵便番号 → 住所自動補完
+  // ★ 追加：送信完了フラグ
+  const [submitted, setSubmitted] = useState(false);
+
   const fetchAddress = async (zip: string) => {
     if (!/^\d{7}$/.test(zip)) return;
     try {
@@ -50,13 +49,10 @@ export default function OrderClient() {
         setPrefecture(data.results[0].address1);
         setAddress(data.results[0].address2 + data.results[0].address3);
       }
-    } catch {
-      console.error("住所取得失敗");
-    }
+    } catch {}
   };
 
   const submitOrder = async () => {
-    // ✅ 必須チェック（メール必須・電話任意）
     if (!name || !postal || !prefecture || !address || !email) {
       alert("必須項目をすべて入力してください");
       return;
@@ -75,29 +71,22 @@ export default function OrderClient() {
         postal,
         prefecture,
         address,
-        phone, // 任意
-        email, // 必須
+        phone,
+        email,
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
       };
 
       await fetch(GAS_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
         body: new URLSearchParams({ payload: JSON.stringify(payload) }).toString(),
         keepalive: true,
         mode: "no-cors",
       });
 
-      new Image().src =
-        "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec" +
-        "?action=log&rid=order_submit&ua=" + encodeURIComponent(
-          typeof navigator !== "undefined" ? navigator.userAgent : ""
-        );
+      // ★ 追加：画面表示用に完了状態へ
+      setSubmitted(true);
 
-      alert("ご注文を受け付けました。確認メールをお送りしています。");
-      router.push("/");
     } catch (e) {
       console.error(e);
       alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
@@ -106,6 +95,26 @@ export default function OrderClient() {
       setLoading(false);
     }
   };
+
+  // ★ 追加：完了画面
+  if (submitted) {
+    return (
+      <main className="max-w-2xl mx-auto px-6 pt-40 pb-24 text-center text-[#333]">
+        <h1 className="text-3xl font-bold mb-6">ご購入ありがとうございます</h1>
+        <p className="text-lg leading-relaxed">
+          詳細は、ご登録いただいたメールアドレス宛へのメッセージをご確認の上、<br />
+          お支払いをお願いいたします。
+        </p>
+
+        <button
+          onClick={() => router.push("/")}
+          className="mt-10 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-xl"
+        >
+          トップページへ戻る
+        </button>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-3xl mx-auto px-6 pt-28 pb-24 text-[#333]">
@@ -127,10 +136,7 @@ export default function OrderClient() {
         <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
         <div className="space-y-4">
           <input className="w-full border rounded-lg px-4 py-2" placeholder="お名前（必須）" value={name} onChange={(e) => setName(e.target.value)} />
-          <input
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="郵便番号（7桁・必須）"
-            value={postal}
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="郵便番号（7桁・必須）" value={postal}
             onChange={(e) => {
               const v = e.target.value.replace(/\D/g, "");
               setPostal(v);

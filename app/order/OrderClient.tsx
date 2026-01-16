@@ -1,4 +1,4 @@
-// app/(whatever)/OrderClient.tsx など
+// app/(whatever)/OrderClient.tsx
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ const PREFECTURES = [
   "沖縄県"
 ];
 
-// ✅ デプロイしたGAS（orderハンドラ）
+// GAS エンドポイント
 const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
@@ -25,7 +25,7 @@ export default function OrderClient() {
   const router = useRouter();
 
   // URLから商品情報
-  const product = searchParams.get("product") || "商品名未設定"; // ← 追加
+  const product = searchParams.get("product") || "商品名未設定";
   const size = searchParams.get("size") || "5kg";
   const price = Number(searchParams.get("price")) || 1500;
 
@@ -34,11 +34,11 @@ export default function OrderClient() {
   const [postal, setPostal] = useState("");
   const [prefecture, setPrefecture] = useState("");
   const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState(""); // 任意
+  const [phone, setPhone] = useState("");   // ← 任意
+  const [email, setEmail] = useState("");   // ← 必須
 
   const [loading, setLoading] = useState(false);
-  const sentOnceRef = useRef(false); // 二重送信ガード
+  const sentOnceRef = useRef(false);
 
   // 郵便番号 → 住所自動補完
   const fetchAddress = async (zip: string) => {
@@ -56,31 +56,30 @@ export default function OrderClient() {
   };
 
   const submitOrder = async () => {
-    // 必須チェック（メール除外）
-    if (!name || !postal || !prefecture || !address || !phone) {
+    // ✅ 必須チェック（メール必須・電話任意）
+    if (!name || !postal || !prefecture || !address || !email) {
       alert("必須項目をすべて入力してください");
       return;
     }
-    if (sentOnceRef.current) return; // 二重クリック防止
+    if (sentOnceRef.current) return;
 
     setLoading(true);
     sentOnceRef.current = true;
 
     try {
       const payload = {
-        product, // ← 固定文字列をやめてURL由来に変更
+        product,
         size,
         price,
         name,
         postal,
         prefecture,
         address,
-        phone,
-        email, // 空でもOK
+        phone, // 任意
+        email, // 必須
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
       };
 
-      // ★ CORS 回避：no-cors にしてレスポンスは読まない（opaque）
       await fetch(GAS_URL, {
         method: "POST",
         headers: {
@@ -91,14 +90,13 @@ export default function OrderClient() {
         mode: "no-cors",
       });
 
-      // （任意）ビーコン式ログ
       new Image().src =
         "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec" +
         "?action=log&rid=order_submit&ua=" + encodeURIComponent(
           typeof navigator !== "undefined" ? navigator.userAgent : ""
         );
 
-      alert("ご注文を受け付けました。送料については後ほどご案内します。");
+      alert("ご注文を受け付けました。確認メールをお送りしています。");
       router.push("/");
     } catch (e) {
       console.error(e);
@@ -116,7 +114,7 @@ export default function OrderClient() {
       {/* 注文内容 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mb-10">
         <h2 className="text-xl font-bold mb-4">注文内容</h2>
-        <p>商品：<strong>{product}</strong></p> {/* ← 表示も修正 */}
+        <p>商品：<strong>{product}</strong></p>
         <p className="mt-2">規格：<strong>{size}</strong></p>
         <p className="text-2xl font-bold text-green-700 mt-4">
           商品代金：{price.toLocaleString()}円
@@ -144,8 +142,8 @@ export default function OrderClient() {
             {PREFECTURES.map((p) => (<option key={p} value={p}>{p}</option>))}
           </select>
           <input className="w-full border rounded-lg px-4 py-2" placeholder="市区町村・番地（必須）" value={address} onChange={(e) => setAddress(e.target.value)} />
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（必須）" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（任意）" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（任意）" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
 
         <button

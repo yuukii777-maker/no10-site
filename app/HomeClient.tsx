@@ -45,7 +45,7 @@ export default function Home() {
   ];
   const [index, setIndex] = useState(0);
 
-  // ーーー 修正点①: バックグラウンドでsetIntervalが溜まらないよう制御 ーーー
+  // ーーー 修正①: タイマー多重起動ガード（既存） ーーー
   const sliderTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => {
     const start = () => {
@@ -61,7 +61,6 @@ export default function Home() {
       }
     };
     const onVis = () => (document.hidden ? stop() : start());
-
     const onPageShow = () => start();
     const onPageHide = () => stop();
 
@@ -101,7 +100,7 @@ export default function Home() {
           背景はCSSのみ（グラデ＋微粒子）、主役は AppleFloat
       ============================ */}
       <section className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20">
-        {/* 背景：みかん色グラデ（放射＋周辺減光） */}
+        {/* 背景：みかん色グラデ */}
         <div
           className="absolute inset-0 z-[0]"
           style={{
@@ -113,7 +112,7 @@ export default function Home() {
           }}
         />
 
-        {/* きめ細かい“星屑”粒子（ごく控えめ） */}
+        {/* 微粒子 */}
         <div
           className="pointer-events-none absolute inset-0 z-[1] opacity-[.35] mix-blend-screen"
           style={{
@@ -123,7 +122,7 @@ export default function Home() {
           }}
         />
 
-        {/* ほんのり“もや” */}
+        {/* もや */}
         <div
           className="pointer-events-none absolute inset-0 z-[2] mix-blend-screen"
           style={{
@@ -133,7 +132,7 @@ export default function Home() {
           }}
         />
 
-        {/* 和紙影（既存クラス） */}
+        {/* 和紙影（既存） */}
         <div className="absolute inset-0 z-[5] hero-overlay" />
 
         {/* みかん（AppleFloat：主役） */}
@@ -141,7 +140,7 @@ export default function Home() {
           <AppleFloat />
         </div>
 
-        {/* テキスト（最前面） */}
+        {/* テキスト */}
         <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-bold">山口みかん農園</h1>
           <h2 className="text-xl md:text-3xl mt-4 opacity-90">
@@ -161,7 +160,7 @@ export default function Home() {
       {/* ② スライダー（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
-          {/* ーーー 修正点②: レイアウト固定・GPU合成（imgにtransformを当てない） ーーー */}
+          {/* ーーー 修正②: 余計な contain/GPU 指定を削除 ーーー */}
           <div
             className="slider-track"
             style={{ transform: `translate3d(-${index * 100}%, 0, 0)` }}
@@ -226,7 +225,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ーーー 修正点③: スライダーのグローバルCSS（imgへtransformを当てない） ーーー */}
+      {/* ーーー 修正③: スライダー CSS 最小限（img に transform 禁止） ーーー */}
       <style jsx global>{`
         .slider-container { position: relative; overflow: hidden; }
         .slider-track {
@@ -236,20 +235,15 @@ export default function Home() {
           transition: transform 700ms cubic-bezier(.22,.61,.36,1);
           backface-visibility: hidden;
           transform: translate3d(0,0,0);
-          contain: paint;
         }
         .slider-item { flex: 0 0 100%; position: relative; }
-        /* Next/Image の wrapper(span[data-nimg])側をGPU合成 */
-        .slider-item :global(span[data-nimg]) {
-          transform: translateZ(0);
-          will-change: transform;
-        }
-        /* img には transform を当てない（Safari描画飛び対策） */
         .slider-item img {
+          display: block;            /* Safari 安定 */
           pointer-events: none;
           user-select: none;
           -webkit-user-drag: none;
           backface-visibility: hidden;
+          /* transform 付与しないこと！ */
         }
         .slider-caption {
           position: absolute; left: 0; right: 0; bottom: 0.75rem;
@@ -273,7 +267,13 @@ function GalleryItem({ src, title, text }: { src: string; title: string; text: s
   return (
     <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
       <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
-        <Image src={src} alt={title} fill className="object-cover" />
+        <Image
+          src={src}
+          alt={title}
+          fill
+          sizes="(min-width: 768px) 33vw, 100vw"  /* 明示して安定 */
+          className="object-cover"
+        />
       </div>
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 mt-4">
         <h3 className="text-lg font-semibold">{title}</h3>

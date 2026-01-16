@@ -5,20 +5,17 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 /**
- * AppleFloat
- * - 背景：オレンジ基調のグラデ + 渦(同心円)を超ゆっくり回転
+ * - 背景：オレンジグラデ + 渦(同心円)を超ゆっくり回転（inline animationで確実に動作）
  * - 粒子：2層の自走ドリフト + スクロール連動パララックス
- * - 光　：SVGによるボリューメトリックライト(右上→左下)
- * - みかん：上下フロート + スクロールでレンジ変化、やや左寄せ
- *
- * 画像は /mikan/hero/hero_orange_float.png を想定（透過推奨）
+ * - 光　：SVGボリューメトリックライト(右上→左下)
+ * - みかん：上下フロート（iOS安定化のため translate3d）／SPはさらに左寄せ
  */
 export default function AppleFloat() {
   const orangeRef = useRef<HTMLDivElement>(null);
   const p1Ref = useRef<HTMLDivElement>(null);
   const p2Ref = useRef<HTMLDivElement>(null);
 
-  // みかんの上下フロート + 粒子パララックス
+  // --- みかんの上下フロート + 粒子パララックス ---
   const cur = useRef(0), tgt = useRef(0), s = useRef(0);
   useEffect(() => {
     let raf = 0, t = 0;
@@ -40,12 +37,14 @@ export default function AppleFloat() {
     };
 
     const loop = () => {
-      t += 0.016;
+      t += 0.016; // 約60fps
       cur.current += (tgt.current - cur.current) * 0.1;
       const float = Math.sin(t * 0.7) * 4;
+
       if (orangeRef.current) {
+        // iOS/Safari対策：translate3dでGPU化、-50%は別translate3dで合成
         orangeRef.current.style.transform =
-          `translate(-50%,-50%) translateY(${cur.current + float}px) rotateZ(-8deg) rotateX(6deg)`;
+          `translate3d(-50%, -50%, 0) translate3d(0, ${cur.current + float}px, 0) rotateZ(-8deg) rotateX(6deg)`;
       }
       raf = requestAnimationFrame(loop);
     };
@@ -73,9 +72,9 @@ export default function AppleFloat() {
         }}
       />
 
-      {/* 渦(同心円)を超ゆっくり回転 */}
+      {/* 渦(同心円) ー inline animationで確実に回す */}
       <div
-        className="absolute inset-0 z-[1] pointer-events-none animate-[af_spiral_80s_linear_infinite]"
+        className="absolute inset-0 z-[1] pointer-events-none"
         style={{
           background: `
             repeating-radial-gradient(
@@ -87,37 +86,40 @@ export default function AppleFloat() {
             )
           `,
           filter: "contrast(110%) saturate(105%)",
+          animation: "af_spiral 80s linear infinite",
         }}
       />
 
-      {/* 粒子レイヤー（遠景） */}
+      {/* 粒子レイヤー（遠景） 自走 + パララックス */}
       <div
         ref={p1Ref}
-        className="absolute inset-0 z-[9] opacity-30 mix-blend-screen animate-[af_driftSlow_38s_linear_infinite]"
+        className="absolute inset-0 z-[9] opacity-30 mix-blend-screen"
         style={{
           background:
             "repeating-radial-gradient(circle at 30% 20%, rgba(255,255,255,0.14) 0 1px, transparent 1px 8px), repeating-radial-gradient(circle at 70% 65%, rgba(255,240,180,0.12) 0 1px, transparent 1px 10px)",
           filter: "blur(0.6px)",
+          animation: "af_driftSlow 38s linear infinite",
         }}
       />
 
-      {/* 粒子レイヤー（近景） */}
+      {/* 粒子レイヤー（近景） 自走 + パララックス */}
       <div
         ref={p2Ref}
-        className="absolute inset-0 z-[10] opacity-40 mix-blend-screen animate-[af_driftFast_28s_linear_infinite]"
+        className="absolute inset-0 z-[10] opacity-40 mix-blend-screen"
         style={{
           background:
             "repeating-radial-gradient(circle at 60% 30%, rgba(255,255,255,0.20) 0 1.2px, transparent 1.2px 10px), repeating-radial-gradient(circle at 20% 80%, rgba(255,220,150,0.16) 0 1.2px, transparent 1.2px 12px)",
           filter: "blur(0.4px)",
+          animation: "af_driftFast 28s linear infinite",
         }}
       />
 
       {/* ボリューメトリック光（SVG） */}
       <VolumetricLight />
 
-      {/* みかん背後のハロ */}
+      {/* みかん背後のハロ（SPさらに左へ） */}
       <div
-        className="absolute top-[60%] left-[62%] sm:left-[70%] -translate-x-1/2 -translate-y-1/2 z-[19] mix-blend-screen"
+        className="absolute top-[60%] left-[54%] sm:left-[68%] -translate-x-1/2 -translate-y-1/2 z-[19] mix-blend-screen"
         style={{
           width: "clamp(520px, 60vw, 1200px)",
           height:"clamp(520px, 60vw, 1200px)",
@@ -127,10 +129,10 @@ export default function AppleFloat() {
         }}
       />
 
-      {/* みかん本体（SPはやや左寄せ） */}
+      {/* みかん本体（SPさらに左へ） */}
       <div
         ref={orangeRef}
-        className="absolute top-[60%] left-[62%] sm:left-[70%] z-[20] transform-gpu will-change-transform"
+        className="absolute top-[60%] left-[54%] sm:left-[68%] z-[20] transform-gpu will-change-transform"
         style={{
           width: "clamp(520px, 60vw, 1200px)",
           filter:
@@ -150,7 +152,7 @@ export default function AppleFloat() {
 
       {/* みかんの縁の回り込み（立体感） */}
       <div
-        className="absolute top-[62%] left-[58%] sm:left-[66%] -translate-x-1/2 -translate-y-1/2 z-[21] mix-blend-multiply"
+        className="absolute top-[62%] left-[50%] sm:left-[64%] -translate-x-1/2 -translate-y-1/2 z-[21] mix-blend-multiply"
         style={{
           width: "clamp(320px, 38vw, 900px)",
           height:"clamp(220px, 28vw, 640px)",
@@ -160,12 +162,12 @@ export default function AppleFloat() {
         }}
       />
 
-      {/* 省エネ設定対応含む keyframes（このファイルに内包） */}
+      {/* keyframes（このファイル内に同梱） */}
       <style jsx global>{`
         @keyframes af_spiral {
-          0%   { transform: rotate(0deg) scale(1);   opacity:.95; }
+          0%   { transform: rotate(0deg)   scale(1);   opacity:.95; }
           50%  { transform: rotate(180deg) scale(1.02); opacity:1; }
-          100% { transform: rotate(360deg) scale(1);  opacity:.95; }
+          100% { transform: rotate(360deg) scale(1);   opacity:.95; }
         }
         @keyframes af_driftSlow {
           0%   { transform: translate3d(0,0,0) }
@@ -178,9 +180,7 @@ export default function AppleFloat() {
           100% { transform: translate3d(0,0,0) }
         }
         @media (prefers-reduced-motion: reduce) {
-          .animate-[af_spiral_80s_linear_infinite],
-          .animate-[af_driftSlow_38s_linear_infinite],
-          .animate-[af_driftFast_28s_linear_infinite] { animation: none !important; }
+          * { animation: none !important; }
         }
       `}</style>
     </div>

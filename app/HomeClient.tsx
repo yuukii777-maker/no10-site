@@ -44,12 +44,30 @@ export default function Home() {
     { src: "/mikan/bnr_oseibo.png", caption: "二種の支払い方法" },
   ];
   const [index, setIndex] = useState(0);
+
+  // ーーー 修正点①: バックグラウンドでsetIntervalが溜まらないよう制御 ーーー
+  const sliderTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => {
-    const id = setInterval(() => {
-      setIndex((prev) => (prev + 1) % sliderImages.length);
-    }, 4000);
-    return () => clearInterval(id);
-  }, []);
+    const start = () => {
+      if (sliderTimerRef.current) return;
+      sliderTimerRef.current = window.setInterval(() => {
+        setIndex((prev) => (prev + 1) % sliderImages.length);
+      }, 4000);
+    };
+    const stop = () => {
+      if (sliderTimerRef.current) {
+        clearInterval(sliderTimerRef.current);
+        sliderTimerRef.current = undefined;
+      }
+    };
+    const onVis = () => (document.hidden ? stop() : start());
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [sliderImages.length]);
 
   /* ===========================
      遷移フェード（既存）
@@ -136,13 +154,21 @@ export default function Home() {
       {/* ② スライダー（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
+          {/* ーーー 修正点②: レイアウト固定・GPU合成 ーーー */}
           <div
             className="slider-track"
-            style={{ transform: `translateX(-${index * 100}%)` }}
+            style={{ transform: `translate3d(-${index * 100}%, 0, 0)` }}
           >
             {sliderImages.map((item, i) => (
               <div key={i} className="slider-item relative h-[360px] sm:h-[850px]">
-                <Image src={item.src} alt={item.caption} fill className="object-cover" />
+                <Image
+                  src={item.src}
+                  alt={item.caption}
+                  fill
+                  sizes="100vw"            // 修正点③: 解像度選択を安定
+                  priority={i === 0}       // 先頭のみ優先読み込み
+                  className="object-cover"
+                />
                 <div className="slider-caption">{item.caption}</div>
               </div>
             ))}
@@ -192,6 +218,29 @@ export default function Home() {
           <GalleryItem src="/mikan/hand.png" title="手作業収穫" text="一つずつ丁寧に。" />
         </div>
       </section>
+
+      {/* ーーー 修正点④: スライダーのグローバルCSS（レイアウト・トランジション） ーーー */}
+      <style jsx global>{`
+        .slider-container { position: relative; overflow: hidden; }
+        .slider-track {
+          display: flex;
+          width: 100%;
+          will-change: transform;
+          transition: transform 700ms cubic-bezier(.22,.61,.36,1);
+          backface-visibility: hidden;
+          transform: translate3d(0,0,0);
+        }
+        .slider-item { flex: 0 0 100%; position: relative; }
+        .slider-caption {
+          position: absolute; left: 0; right: 0; bottom: 0.75rem;
+          text-align: center; color: #fff;
+          text-shadow: 0 2px 6px rgba(0,0,0,.35);
+          font-weight: 600;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .slider-track { transition: none !important; }
+        }
+      `}</style>
     </main>
   );
 }

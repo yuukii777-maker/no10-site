@@ -1,41 +1,30 @@
 // components/AppleFloat.tsx
 "use client";
-
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-/* 神々しい放射光（縫い目なし）+ もや + 粒子 + 大きめみかん */
 export default function AppleFloat() {
   const ref = useRef<HTMLDivElement>(null);
-  const cur = useRef(0);
-  const tgt = useRef(0);
-  const s   = useRef(0);
+  const cur = useRef(0), tgt = useRef(0), s = useRef(0);
 
-  // 浮遊：スクロールでわずかに追従 + 自律揺れ
   useEffect(() => {
-    let id = 0;
-    let t = 0;
+    let id = 0, t = 0;
     const ease = (x: number) => 1 - Math.pow(1 - x, 3);
-
     const onScroll = () => {
-      const heroRange = Math.max(300, window.innerHeight * 0.9);
-      const raw = Math.min(window.scrollY / heroRange, 1);
+      const raw = Math.min(window.scrollY / Math.max(300, window.innerHeight * 0.9), 1);
       s.current += (raw - s.current) * 0.06;
       tgt.current = ease(s.current) * 28;
     };
-
     const loop = () => {
       t += 0.016;
       const float = Math.sin(t * 0.7) * 4;
       cur.current += (tgt.current - cur.current) * 0.1;
-
       if (ref.current) {
         ref.current.style.transform =
           `translate(-50%, -50%) translateY(${cur.current + float}px) rotateZ(-8deg) rotateX(6deg)`;
       }
       id = requestAnimationFrame(loop);
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll(); loop();
     return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(id); };
@@ -43,43 +32,50 @@ export default function AppleFloat() {
 
   return (
     <div className="pointer-events-none absolute inset-0 h-[80svh] sm:h-[85svh] z-[20] isolate">
-
-      {/* === 放射ビーム（右上 => 左下） : 線が出ない版 === */}
+      {/* ===== Volumetric beam（自然な放射、縫い目なし） ===== */}
       <div
-        className="
-          absolute -top-[10%] -right-[8%] z-[12]
-          h-[160%] w-[60%] will-change-transform
-          animate-[beamDrift_24s_linear_infinite]
-          origin-top-right
-          rotate-[-18deg]
-          mix-blend-screen
-        "
+        className="absolute -top-[18%] -right-[10%] h-[180%] w-[80%] z-[12]
+                   origin-top-right rotate-[-22deg]
+                   will-change-transform animate-[beamDrift_26s_linear_infinite]
+                   mix-blend-screen"
         style={{
-          // 中芯（細く明るい）
-          background:
-            `
+          // 中芯＋外側ぼかしを2層で
+          background: `
             linear-gradient(210deg,
-              rgba(255,255,220,0.00) 18%,
-              rgba(255,240,170,0.90) 22%,
-              rgba(255,230,140,0.85) 26%,
-              rgba(255,200,120,0.00) 35%
+              rgba(255,248,220,0.00) 20%,
+              rgba(255,242,180,0.92) 23%,
+              rgba(255,230,140,0.88) 28%,
+              rgba(255,200,120,0.00) 38%
             ),
-            /* 外側の柔らかい裾 */
             linear-gradient(210deg,
-              rgba(255,200,120,0.00) 12%,
-              rgba(255,200,120,0.20) 28%,
-              rgba(255,200,120,0.00) 48%
+              rgba(255,200,120,0.00) 16%,
+              rgba(255,200,120,0.22) 30%,
+              rgba(255,200,120,0.00) 50%
             )
-            `,
-          filter: "blur(10px)",
+          `,
+          // “三角の切れ目”を作らないよう幅広ウェッジをクリップして大きめにブラー
+          clipPath: "polygon(100% 0%, 70% 0%, 0% 100%, 35% 100%)",
+          filter: "blur(18px)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
           maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
         }}
       />
 
-      {/* もや（全体になじませる） */}
+      {/* ゴボ（ムラ） */}
+      <div
+        className="absolute inset-0 z-[12] opacity-35
+                   will-change-transform animate-[gobo_40s_linear_infinite]
+                   mix-blend-screen"
+        style={{
+          background:
+            "repeating-radial-gradient(circle at 70% 20%, rgba(255,255,255,0.18) 0 1px, transparent 1px 8px), repeating-linear-gradient(125deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 14px)",
+          filter: "blur(6px)",
+        }}
+      />
+
+      {/* もや（全体を馴染ませる） */}
       <div
         className="absolute inset-0 z-[11] will-change-transform animate-[haze_40s_linear_infinite]"
         style={{
@@ -90,75 +86,75 @@ export default function AppleFloat() {
         }}
       />
 
-      {/* 微粒子（控えめ） */}
+      {/* みかん後ろの円グロー */}
       <div
-        className="absolute inset-0 z-[11] opacity-55 will-change-transform animate-[stars_32s_linear_infinite]"
+        className="absolute top-[60%] left-[70%] -translate-x-1/2 -translate-y-1/2 z-[13] opacity-70"
         style={{
-          backgroundImage:
-            "radial-gradient(2px 2px at 12% 28%, rgba(255,255,255,0.9) 40%, transparent 41%), radial-gradient(2px 2px at 36% 62%, rgba(255,255,255,0.75) 40%, transparent 41%), radial-gradient(2px 2px at 72% 24%, rgba(255,255,255,0.8) 40%, transparent 41%), radial-gradient(2px 2px at 86% 72%, rgba(255,255,255,0.8) 40%, transparent 41%)",
-          backgroundRepeat: "repeat",
-          backgroundSize: "420px 320px",
-          mixBlendMode: "screen",
-        }}
-      />
-
-      {/* 背後の円グロー（みかんの後ろ） */}
-      <div
-        className="
-          absolute top-[60%] left-[70%] -translate-x-1/2 -translate-y-1/2 z-[13] opacity-75
-        "
-        style={{
-          width: "clamp(300px, 40vw, 980px)",
-          height: "clamp(300px, 40vw, 980px)",
+          width: "clamp(320px, 42vw, 980px)",
+          height: "clamp(320px, 42vw, 980px)",
           background:
-            "radial-gradient(circle at center, rgba(255,200,120,0.60) 0%, rgba(255,200,120,0.28) 38%, rgba(255,200,120,0.10) 58%, rgba(255,200,120,0.0) 75%)",
+            "radial-gradient(circle at center, rgba(255,205,130,0.62) 0%, rgba(255,200,120,0.30) 36%, rgba(255,200,120,0.12) 56%, rgba(255,200,120,0.0) 76%)",
           filter: "blur(12px)",
           mixBlendMode: "screen",
         }}
       />
 
-      {/* みかん本体（さらに大きく） */}
+      {/* オクルージョン（みかん近辺でビームを少し落とす） */}
+      <div
+        className="absolute top-[62%] left-[66%] -translate-x-1/2 -translate-y-1/2 z-[13]"
+        style={{
+          width: "clamp(240px, 32vw, 760px)",
+          height: "clamp(160px, 22vw, 520px)",
+          background:
+            "radial-gradient(80% 60% at 60% 40%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.0) 70%)",
+          filter: "blur(10px)",
+          mixBlendMode: "multiply",
+          opacity: 0.45,
+        }}
+      />
+
+      {/* みかん（大きめ） */}
       <div
         ref={ref}
         className="absolute top-[60%] left-[70%] z-[14] transform-gpu will-change-transform"
         style={{
-          width: "clamp(300px, 36vw, 860px)",   // ← ここでサイズ調整（以前より拡大）
+          width: "clamp(340px, 40vw, 900px)",
           filter:
             "drop-shadow(0 40px 70px rgba(120,70,20,0.28)) drop-shadow(0 120px 180px rgba(0,0,0,0.22))",
         }}
       >
         <Image
-          src="/mikan/hero/hero_orange_float.png?v=20260116b"
+          src="/mikan/hero/hero_orange_float.png?v=20260116c"
           alt="浮遊するみかん"
-          width={1400}
-          height={1400}
+          width={1600}
+          height={1600}
           priority
-          className="w-full h-auto brightness-[0.98] saturate-[0.96] select-none"
-          sizes="(max-width: 640px) 90vw, 36vw"
+          className="w-full h-auto brightness-[0.985] saturate-[0.95] select-none"
+          sizes="(max-width: 640px) 90vw, 40vw"
         />
       </div>
 
       {/* keyframes */}
       <style jsx global>{`
         @keyframes beamDrift {
-          0%   { transform: translate3d(0,0,0) rotate(-18deg) scale(1);   opacity:.95; }
-          50%  { transform: translate3d(-1.5%,1.2%,0) rotate(-16deg) scale(1.05); opacity:1; }
-          100% { transform: translate3d(0,0,0) rotate(-18deg) scale(1);   opacity:.95; }
+          0%   { transform: translate3d(0,0,0) rotate(-22deg) scale(1); opacity:.95; }
+          50%  { transform: translate3d(-1.4%,1.2%,0) rotate(-20deg) scale(1.04); opacity:1; }
+          100% { transform: translate3d(0,0,0) rotate(-22deg) scale(1); opacity:.95; }
         }
         @keyframes haze {
           0%   { transform: translate3d(0,0,0) scale(1); }
           50%  { transform: translate3d(-2%,1%,0) scale(1.03); }
           100% { transform: translate3d(0,0,0) scale(1); }
         }
-        @keyframes stars {
-          0%   { transform: translate3d(0,0,0); }
-          50%  { transform: translate3d(-1%,0.5%,0); }
-          100% { transform: translate3d(0,0,0); }
+        @keyframes gobo {
+          0%   { transform: translate3d(0,0,0) }
+          50%  { transform: translate3d(-1.2%,0.8%,0) }
+          100% { transform: translate3d(0,0,0) }
         }
         @media (prefers-reduced-motion: reduce) {
-          .animate-[beamDrift_24s_linear_infinite],
+          .animate-[beamDrift_26s_linear_infinite],
           .animate-[haze_40s_linear_infinite],
-          .animate-[stars_32s_linear_infinite] { animation: none !important; }
+          .animate-[gobo_40s_linear_infinite] { animation: none !important; }
         }
       `}</style>
     </div>

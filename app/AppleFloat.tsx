@@ -1,121 +1,112 @@
 // components/AppleFloat.tsx
 "use client";
-import Image from "next/image";
-import { useEffect, useRef } from "react";
 
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+
+/* 浮遊みかん + パルス発光（GOGO風） */
 export default function AppleFloat() {
-  const ref = useRef<HTMLDivElement>(null);
-  const cur = useRef(0), tgt = useRef(0), s = useRef(0);
+  const orangeRef = useRef<HTMLDivElement>(null);
+  const [isSP, setIsSP] = useState(false);
+
+  // SP判定
+  useEffect(() => {
+    const on = () => setIsSP(window.innerWidth < 640);
+    on();
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+
+  // スクロール追従 + 自律揺れ（控えめ）
+  const curY = useRef(0);
+  const tgtY = useRef(0);
+  const smooth = useRef(0);
 
   useEffect(() => {
-    let id = 0, t = 0;
+    let raf = 0;
+    let t = 0;
     const ease = (x: number) => 1 - Math.pow(1 - x, 3);
+
     const onScroll = () => {
-      const raw = Math.min(window.scrollY / Math.max(300, window.innerHeight * 0.9), 1);
-      s.current += (raw - s.current) * 0.06;
-      tgt.current = ease(s.current) * 28;
+      const range = Math.max(300, window.innerHeight * 0.9);
+      const raw = Math.min(window.scrollY / range, 1);
+      smooth.current += (raw - smooth.current) * 0.06;
+      tgtY.current = ease(smooth.current) * 28;
     };
+
     const loop = () => {
       t += 0.016;
-      const float = Math.sin(t * 0.7) * 4;
-      cur.current += (tgt.current - cur.current) * 0.1;
-      if (ref.current) {
-        ref.current.style.transform =
-          `translate(-50%, -50%) translateY(${cur.current + float}px) rotateZ(-8deg) rotateX(6deg)`;
+      const float = Math.sin(t * 0.7) * (isSP ? 3 : 4);
+      curY.current += (tgtY.current - curY.current) * 0.1;
+
+      if (orangeRef.current) {
+        orangeRef.current.style.transform =
+          `translate(-50%, -50%) translateY(${curY.current + float}px) rotateZ(-8deg) rotateX(6deg)`;
       }
-      id = requestAnimationFrame(loop);
+      raf = requestAnimationFrame(loop);
     };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); loop();
-    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(id); };
-  }, []);
+    onScroll();
+    loop();
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, [isSP]);
 
   return (
     <div className="pointer-events-none absolute inset-0 h-[80svh] sm:h-[85svh] z-[20] isolate">
-      {/* ===== Volumetric beam（自然な放射、縫い目なし） ===== */}
+      {/* 1) パルス発光（GOGO風） */}
       <div
-        className="absolute -top-[18%] -right-[10%] h-[180%] w-[80%] z-[12]
-                   origin-top-right rotate-[-22deg]
-                   will-change-transform animate-[beamDrift_26s_linear_infinite]
-                   mix-blend-screen"
+        className="
+          absolute top-[60%] left-[70%] -translate-x-1/2 -translate-y-1/2
+          z-[13] mix-blend-screen will-change-transform
+        "
+        // 発光のベース（暖色の丸グロー）
         style={{
-          // 中芯＋外側ぼかしを2層で
-          background: `
-            linear-gradient(210deg,
-              rgba(255,248,220,0.00) 20%,
-              rgba(255,242,180,0.92) 23%,
-              rgba(255,230,140,0.88) 28%,
-              rgba(255,200,120,0.00) 38%
-            ),
-            linear-gradient(210deg,
-              rgba(255,200,120,0.00) 16%,
-              rgba(255,200,120,0.22) 30%,
-              rgba(255,200,120,0.00) 50%
-            )
-          `,
-          // “三角の切れ目”を作らないよう幅広ウェッジをクリップして大きめにブラー
-          clipPath: "polygon(100% 0%, 70% 0%, 0% 100%, 35% 100%)",
-          filter: "blur(18px)",
+          width: "clamp(360px, 44vw, 1080px)",
+          height: "clamp(360px, 44vw, 1080px)",
+          background:
+            "radial-gradient(circle at 50% 48%, rgba(255,230,160,0.65) 0%, rgba(255,200,120,0.28) 38%, rgba(255,170,80,0.14) 58%, rgba(255,170,80,0.0) 78%)",
+          filter: "blur(14px)",
+          animation: "pulseGlow 1.85s ease-in-out infinite",
+        }}
+      />
+      {/* 細いリングがふわっと膨張して消える（2本を時間差で） */}
+      <div
+        className="absolute top-[60%] left-[70%] -translate-x-1/2 -translate-y-1/2 z-[13] mix-blend-screen"
+        style={{
+          width: "clamp(220px, 26vw, 620px)",
+          height: "clamp(220px, 26vw, 620px)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+            "radial-gradient(circle, transparent 52%, black 55%, black 65%, transparent 70%)",
           maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-        }}
-      />
-
-      {/* ゴボ（ムラ） */}
-      <div
-        className="absolute inset-0 z-[12] opacity-35
-                   will-change-transform animate-[gobo_40s_linear_infinite]
-                   mix-blend-screen"
-        style={{
+            "radial-gradient(circle, transparent 52%, black 55%, black 65%, transparent 70%)",
           background:
-            "repeating-radial-gradient(circle at 70% 20%, rgba(255,255,255,0.18) 0 1px, transparent 1px 8px), repeating-linear-gradient(125deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 14px)",
+            "radial-gradient(circle, rgba(255,240,200,0.9), rgba(255,200,120,0.2))",
           filter: "blur(6px)",
+          animation: "ringPulse 1.85s ease-in-out infinite",
         }}
       />
-
-      {/* もや（全体を馴染ませる） */}
       <div
-        className="absolute inset-0 z-[11] will-change-transform animate-[haze_40s_linear_infinite]"
+        className="absolute top-[60%] left-[70%] -translate-x-1/2 -translate-y-1/2 z-[13] mix-blend-screen"
         style={{
+          width: "clamp(220px, 26vw, 620px)",
+          height: "clamp(220px, 26vw, 620px)",
+          WebkitMaskImage:
+            "radial-gradient(circle, transparent 52%, black 55%, black 65%, transparent 70%)",
+          maskImage:
+            "radial-gradient(circle, transparent 52%, black 55%, black 65%, transparent 70%)",
           background:
-            "radial-gradient(60% 40% at 18% 88%, rgba(255,170,60,0.12) 0%, rgba(255,170,60,0) 60%), radial-gradient(45% 30% at 70% 18%, rgba(255,240,170,0.10) 0%, rgba(255,240,170,0) 60%)",
-          filter: "blur(10px)",
-          mixBlendMode: "screen",
+            "radial-gradient(circle, rgba(255,240,200,0.9), rgba(255,200,120,0.2))",
+          filter: "blur(6px)",
+          animation: "ringPulse 1.85s ease-in-out infinite",
+          animationDelay: "0.92s",
+          opacity: 0.8,
         }}
       />
 
-      {/* みかん後ろの円グロー */}
+      {/* 2) みかん本体（サイズ大きめを維持） */}
       <div
-        className="absolute top-[60%] left-[70%] -translate-x-1/2 -translate-y-1/2 z-[13] opacity-70"
-        style={{
-          width: "clamp(320px, 42vw, 980px)",
-          height: "clamp(320px, 42vw, 980px)",
-          background:
-            "radial-gradient(circle at center, rgba(255,205,130,0.62) 0%, rgba(255,200,120,0.30) 36%, rgba(255,200,120,0.12) 56%, rgba(255,200,120,0.0) 76%)",
-          filter: "blur(12px)",
-          mixBlendMode: "screen",
-        }}
-      />
-
-      {/* オクルージョン（みかん近辺でビームを少し落とす） */}
-      <div
-        className="absolute top-[62%] left-[66%] -translate-x-1/2 -translate-y-1/2 z-[13]"
-        style={{
-          width: "clamp(240px, 32vw, 760px)",
-          height: "clamp(160px, 22vw, 520px)",
-          background:
-            "radial-gradient(80% 60% at 60% 40%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.0) 70%)",
-          filter: "blur(10px)",
-          mixBlendMode: "multiply",
-          opacity: 0.45,
-        }}
-      />
-
-      {/* みかん（大きめ） */}
-      <div
-        ref={ref}
+        ref={orangeRef}
         className="absolute top-[60%] left-[70%] z-[14] transform-gpu will-change-transform"
         style={{
           width: "clamp(340px, 40vw, 900px)",
@@ -124,7 +115,7 @@ export default function AppleFloat() {
         }}
       >
         <Image
-          src="/mikan/hero/hero_orange_float.png?v=20260116c"
+          src="/mikan/hero/hero_orange_float.png?v=20260116g"
           alt="浮遊するみかん"
           width={1600}
           height={1600}
@@ -134,27 +125,21 @@ export default function AppleFloat() {
         />
       </div>
 
-      {/* keyframes */}
+      {/* キーフレーム */}
       <style jsx global>{`
-        @keyframes beamDrift {
-          0%   { transform: translate3d(0,0,0) rotate(-22deg) scale(1); opacity:.95; }
-          50%  { transform: translate3d(-1.4%,1.2%,0) rotate(-20deg) scale(1.04); opacity:1; }
-          100% { transform: translate3d(0,0,0) rotate(-22deg) scale(1); opacity:.95; }
+        @keyframes pulseGlow {
+          0%   { transform: scale(0.92); opacity: .55; }
+          50%  { transform: scale(1.06); opacity: .78; }
+          100% { transform: scale(0.92); opacity: .55; }
         }
-        @keyframes haze {
-          0%   { transform: translate3d(0,0,0) scale(1); }
-          50%  { transform: translate3d(-2%,1%,0) scale(1.03); }
-          100% { transform: translate3d(0,0,0) scale(1); }
+        @keyframes ringPulse {
+          0%   { transform: scale(0.86); opacity: .45; }
+          60%  { transform: scale(1.18); opacity: .15; }
+          100% { transform: scale(1.24); opacity: 0; }
         }
-        @keyframes gobo {
-          0%   { transform: translate3d(0,0,0) }
-          50%  { transform: translate3d(-1.2%,0.8%,0) }
-          100% { transform: translate3d(0,0,0) }
-        }
+
         @media (prefers-reduced-motion: reduce) {
-          .animate-[beamDrift_26s_linear_infinite],
-          .animate-[haze_40s_linear_infinite],
-          .animate-[gobo_40s_linear_infinite] { animation: none !important; }
+          .mix-blend-screen { animation: none !important; }
         }
       `}</style>
     </div>

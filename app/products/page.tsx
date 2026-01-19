@@ -278,26 +278,31 @@ export default function ProductsPage() {
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            {/* ★ みかんと同形式：サイズ切替ボタン */}
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-600 mr-2">内容量：</span>
-              <button
-                onClick={() => { setBuntanTab("5kg"); setBuntanSize("5kg"); }}
-                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
-                  ${buntanTab==="5kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
-                aria-pressed={buntanTab==="5kg"}
-              >
-                5kg（6個） / {PRICE_TABLE["5kg"].toLocaleString()}円
-              </button>
-              <button
-                onClick={() => { setBuntanTab("10kg"); setBuntanSize("10kg"); }}
-                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
-                  ${buntanTab==="10kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
-                aria-pressed={buntanTab==="10kg"}
-              >
-                10kg（12個） / {PRICE_TABLE["10kg"].toLocaleString()}円
-              </button>
-            </div>
+            {/* ★ みかんと同形式：サイズ切替ボタン（ずれ解消版） */}
+<div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
+  <span className="text-sm text-gray-600">内容量：</span>
+
+  {/* 2ボタンを1つの“セグメント”にまとめる */}
+  <div className="inline-flex h-10 rounded-xl border border-gray-200 overflow-hidden">
+    <button
+      onClick={() => { setBuntanTab("5kg"); setBuntanSize("5kg"); }}
+      className={`px-4 text-sm font-semibold leading-none
+        ${buntanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+      aria-pressed={buntanTab==="5kg"}
+    >
+      5kg（6個） / {PRICE_TABLE["5kg"].toLocaleString()}円
+    </button>
+
+    <button
+      onClick={() => { setBuntanTab("10kg"); setBuntanSize("10kg"); }}
+      className={`px-4 text-sm font-semibold leading-none border-l border-gray-200
+        ${buntanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+      aria-pressed={buntanTab==="10kg"}
+    >
+      10kg（12個） / {PRICE_TABLE["10kg"].toLocaleString()}円
+    </button>
+  </div>
+</div>
 
             {/* 規格選択（既存互換） */}
             <div className="mt-4">

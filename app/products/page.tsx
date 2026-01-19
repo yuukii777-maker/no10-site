@@ -38,6 +38,9 @@ export default function ProductsPage() {
     <main className="max-w-5xl mx-auto px-6 pt-28 pb-24 text-[#333]">
       <h1 className="text-4xl font-bold text-center">商品一覧</h1>
 
+      {/* ★ 追加：右上カート（Amazon風） */}
+      <CartTopButton />
+
       <div className="max-w-2xl mx-auto mt-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 text-center text-gray-700">
         見た目に傷はありますが、味には自信のある青島みかんです。
       </div>
@@ -68,25 +71,31 @@ export default function ProductsPage() {
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
             <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
 
-            {/* ★★ 追加：Amazon風のサイズ切替ボタン（視認性重視） */}
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-600 mr-2">内容量：</span>
-              <button
-                onClick={() => { setMikanTab("5kg"); setSize("5kg"); }}
-                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
-                  ${mikanTab==="5kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
-                aria-pressed={mikanTab==="5kg"}
-              >
-                5kg（2,500円）
-              </button>
-              <button
-                onClick={() => { setMikanTab("10kg"); setSize("10kg"); }}
-                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
-                  ${mikanTab==="10kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
-                aria-pressed={mikanTab==="10kg"}
-              >
-                10kg（4,000円）
-              </button>
+            {/* ★★ 統一：セグメント型（SP=2行 / MD+=1行） */}
+            <div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
+              <span className="text-sm text-gray-600">内容量：</span>
+              <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
+                <button
+                  onClick={() => { setMikanTab("5kg"); setSize("5kg"); }}
+                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+                    text-[15px] sm:text-sm leading-snug
+                    ${mikanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                  aria-pressed={mikanTab==="5kg"}
+                >
+                  <span className="block sm:inline font-semibold">5kg（6個）</span>
+                  <span className="block sm:inline sm:ml-1">/ 2,500円</span>
+                </button>
+                <button
+                  onClick={() => { setMikanTab("10kg"); setSize("10kg"); }}
+                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+                    text-[15px] sm:text-sm leading-snug border-l border-gray-200
+                    ${mikanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                  aria-pressed={mikanTab==="10kg"}
+                >
+                  <span className="block sm:inline font-semibold">10kg（12個）</span>
+                  <span className="block sm:inline sm:ml-1">/ 4,000円</span>
+                </button>
+              </div>
             </div>
 
             {/* 規格選択 */}
@@ -159,20 +168,8 @@ export default function ProductsPage() {
               </div>
             </label>
 
-            {/* 購入 */}
-            <button
-              onClick={() => {
-                router.push(
-                  `/order?product=${encodeURIComponent("傷あり青島みかん（箱詰め）")}&size=${size}&price=${price}&buntan=${withBuntan}`
-                );
-              }}
-              className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
-            >
-              購入手続きへ
-            </button>
-
-            {/* ★ 2択：カート or 今すぐ購入 */}
-            <div className="mt-3 grid sm:grid-cols-2 gap-3">
+            {/* ★ 2択：カート or 今すぐ購入（※ 購入手続きへ は削除） */}
+            <div className="mt-6 grid sm:grid-cols-2 gap-3">
               <button
                 onClick={() => {
                   addToCart({
@@ -186,7 +183,7 @@ export default function ProductsPage() {
                   if (typeof window !== "undefined") {
                     window.dispatchEvent(new Event("yk-cart-updated"));
                   }
-                  alert("カートに追加しました。右下のカートから確認できます。");
+                  alert("カートに追加しました。右上のカートからまとめて注文できます。");
                 }}
                 className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
               >
@@ -283,23 +280,27 @@ export default function ProductsPage() {
   <span className="text-sm text-gray-600">内容量：</span>
 
   {/* 2ボタンを1つの“セグメント”にまとめる */}
-  <div className="inline-flex h-10 rounded-xl border border-gray-200 overflow-hidden">
+  <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
     <button
       onClick={() => { setBuntanTab("5kg"); setBuntanSize("5kg"); }}
-      className={`px-4 text-sm font-semibold leading-none
+      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+        text-[15px] sm:text-sm leading-snug
         ${buntanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
       aria-pressed={buntanTab==="5kg"}
     >
-      5kg（6個） / {PRICE_TABLE["5kg"].toLocaleString()}円
+      <span className="block sm:inline font-semibold">5kg（6個）</span>
+      <span className="block sm:inline sm:ml-1">/ {PRICE_TABLE["5kg"].toLocaleString()}円</span>
     </button>
 
     <button
       onClick={() => { setBuntanTab("10kg"); setBuntanSize("10kg"); }}
-      className={`px-4 text-sm font-semibold leading-none border-l border-gray-200
+      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+        text-[15px] sm:text-sm leading-snug border-l border-gray-200
         ${buntanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
       aria-pressed={buntanTab==="10kg"}
     >
-      10kg（12個） / {PRICE_TABLE["10kg"].toLocaleString()}円
+      <span className="block sm:inline font-semibold">10kg（12個）</span>
+      <span className="block sm:inline sm:ml-1">/ {PRICE_TABLE["10kg"].toLocaleString()}円</span>
     </button>
   </div>
 </div>
@@ -356,7 +357,7 @@ export default function ProductsPage() {
                     qty: buntanQty,
                     extra: { buntan: withBuntan },
                   });
-                  alert("カートに追加しました。右下のカートから確認できます。");
+                  alert("カートに追加しました。右上のカートからまとめて注文できます。");
                   window.dispatchEvent(new Event("yk-cart-updated"));
                 }}
                 className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
@@ -459,6 +460,40 @@ function CartWidget() {
       title="カートを見る"
     >
       🛒 カート <span className="ml-1 font-bold">{count}</span>
+    </button>
+  );
+}
+
+/* ===========================
+   ★ 追加：右上カート（Amazon風）
+=========================== */
+function CartTopButton() {
+  const router = useRouter();
+  const [count, setCount] = useState<number>(0);
+
+  useEffect(() => {
+    const update = () => setCount(cartCount());
+    update();
+    window.addEventListener("storage", update);
+    window.addEventListener("yk-cart-updated", update as any);
+    return () => {
+      window.removeEventListener("storage", update);
+      window.removeEventListener("yk-cart-updated", update as any);
+    };
+  }, []);
+
+  return (
+    <button
+      onClick={() => router.push("/order?cart=1")}
+      className="fixed z-50 right-5 top-20 sm:top-24 flex items-center gap-2 rounded-full px-4 py-2
+                 bg-white/90 backdrop-blur border border-gray-200 shadow hover:bg-white"
+      aria-label="カートへ（まとめて注文）"
+      title="カートへ（まとめて注文）"
+    >
+      🛒<span className="text-sm font-semibold">カート</span>
+      <span className="ml-1 inline-flex items-center justify-center min-w-[1.5rem] h-6 text-xs font-bold rounded-full bg-green-600 text-white px-2">
+        {count}
+      </span>
     </button>
   );
 }

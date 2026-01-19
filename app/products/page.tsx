@@ -77,23 +77,33 @@ export default function ProductsPage() {
               <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
                 <button
                   onClick={() => { setMikanTab("5kg"); setSize("5kg"); }}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
                     text-[15px] sm:text-sm leading-snug
                     ${mikanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
                   aria-pressed={mikanTab==="5kg"}
                 >
-                  <span className="block sm:inline font-semibold">5kg（6個）</span>
-                  <span className="block sm:inline sm:ml-1">/ 2,500円</span>
+                  {/* ▼ 2行（SP）/ 1行（MD+） */}
+                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+                    <span className="font-semibold whitespace-nowrap">
+                      5kg<span className="hidden sm:inline">（6個）</span>
+                    </span>
+                    <span className="text-[13px] sm:text-sm whitespace-nowrap">2,500円</span>
+                  </span>
                 </button>
                 <button
                   onClick={() => { setMikanTab("10kg"); setSize("10kg"); }}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
                     text-[15px] sm:text-sm leading-snug border-l border-gray-200
                     ${mikanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
                   aria-pressed={mikanTab==="10kg"}
                 >
-                  <span className="block sm:inline font-semibold">10kg（12個）</span>
-                  <span className="block sm:inline sm:ml-1">/ 4,000円</span>
+                  {/* ▼ 2行（SP）/ 1行（MD+） */}
+                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+                    <span className="font-semibold whitespace-nowrap">
+                      10kg<span className="hidden sm:inline">（12個）</span>
+                    </span>
+                    <span className="text-[13px] sm:text-sm whitespace-nowrap">4,000円</span>
+                  </span>
                 </button>
               </div>
             </div>
@@ -283,24 +293,34 @@ export default function ProductsPage() {
   <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
     <button
       onClick={() => { setBuntanTab("5kg"); setBuntanSize("5kg"); }}
-      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
         text-[15px] sm:text-sm leading-snug
         ${buntanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
       aria-pressed={buntanTab==="5kg"}
     >
-      <span className="block sm:inline font-semibold">5kg（6個）</span>
-      <span className="block sm:inline sm:ml-1">/ {PRICE_TABLE["5kg"].toLocaleString()}円</span>
+      {/* ▼ 2行（SP）/ 1行（MD+） */}
+      <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+        <span className="font-semibold whitespace-nowrap">
+          5kg<span className="hidden sm:inline">（6個）</span>
+        </span>
+        <span className="text-[13px] sm:text-sm whitespace-nowrap">{PRICE_TABLE["5kg"].toLocaleString()}円</span>
+      </span>
     </button>
 
     <button
       onClick={() => { setBuntanTab("10kg"); setBuntanSize("10kg"); }}
-      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
+      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
         text-[15px] sm:text-sm leading-snug border-l border-gray-200
         ${buntanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
       aria-pressed={buntanTab==="10kg"}
     >
-      <span className="block sm:inline font-semibold">10kg（12個）</span>
-      <span className="block sm:inline sm:ml-1">/ {PRICE_TABLE["10kg"].toLocaleString()}円</span>
+      {/* ▼ 2行（SP）/ 1行（MD+） */}
+      <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+        <span className="font-semibold whitespace-nowrap">
+          10kg<span className="hidden sm:inline">（12個）</span>
+        </span>
+        <span className="text-[13px] sm:text-sm whitespace-nowrap">{PRICE_TABLE["10kg"].toLocaleString()}円</span>
+      </span>
     </button>
   </div>
 </div>

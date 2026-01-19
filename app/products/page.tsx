@@ -217,7 +217,7 @@ export default function ProductsPage() {
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >
-              5kg（6個）を購入
+              5kg箱詰め（6個入り）を購入
             </button>
 
             <button
@@ -230,11 +230,11 @@ export default function ProductsPage() {
               }}
               className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >
-              10kg（12個）を購入
+              10kg箱詰め（12個入り）を購入
             </button>
 
             <p className="text-xs text-gray-500 mt-3 text-center">
-              ※ 生鮮品のため、お早めにお召し上がりください
+             「“5kg／10kg”は箱サイズの目安で、実際は個数基準（5kg箱＝6個・10kg箱＝12個）で詰めるため、総重量は前後し“6個＝5kgぴったり”ではありません。」
             </p>
           </div>
         </div>

@@ -171,7 +171,7 @@ export default function ProductsPage() {
               購入手続きへ
             </button>
 
-            {/* ★ 追加：みかんをカートへ（数量対応版・Amazon風） */}
+            {/* ★ 2択：カート or 今すぐ購入 */}
             <div className="mt-3 grid sm:grid-cols-2 gap-3">
               <button
                 onClick={() => {
@@ -190,7 +190,7 @@ export default function ProductsPage() {
                 }}
                 className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
               >
-                カートに入れる（数量反映）
+                カートに入れる
               </button>
 
               <button
@@ -204,31 +204,9 @@ export default function ProductsPage() {
                 }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
               >
-                今すぐ注文（数量反映）
+                今すぐ注文する
               </button>
             </div>
-
-            {/* 既存（単品）カートボタンは残す */}
-            <button
-              onClick={() => {
-                addToCart({
-                  id: `mikan-${size}-${withBuntan ? "plus500" : "noextra"}`,
-                  name: "傷あり青島みかん（箱詰め）",
-                  variant: size,
-                  unitPrice: price,
-                  qty: 1,
-                  extra: { withBonus500g: withBuntan },
-                });
-                // 即時に右下カウントが上がるよう通知
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new Event("yk-cart-updated"));
-                }
-                alert("カートに追加しました。右下のカートから確認できます。");
-              }}
-              className="mt-3 w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
-            >
-              カートに入れる
-            </button>
 
             <p className="text-xs text-gray-500 mt-3 text-center">
               ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
@@ -279,7 +257,7 @@ export default function ProductsPage() {
       </section>
 
       {/* ====================== */}
-      {/* 文旦（タブ切替 + 注文確認 + カート） */}
+      {/* 文旦（みかん形式 + 2択） */}
       {/* ====================== */}
       <section className="mt-24">
         <h2 className="text-3xl font-semibold">文旦（箱）</h2>
@@ -287,41 +265,6 @@ export default function ProductsPage() {
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
           さっぱりとした甘さと爽やかな香りの文旦。<br />
           <strong>大きさ不揃いで、5kg箱は6個入り／10kg箱は12個入り</strong>です（目安）。
-        </div>
-
-        {/* タブ */}
-        <div className="mt-6 flex gap-2">
-          <button
-            onClick={() => setBuntanTab("5kg")}
-            className={`px-4 py-2 rounded-xl border text-sm font-semibold transition ${
-              buntanTab === "5kg"
-                ? "bg-green-600 text-white border-green-600"
-                : "bg-white/80 border-gray-200 hover:bg-green-50"
-            }`}
-          >
-            5kg（6個）
-          </button>
-          <button
-            onClick={() => setBuntanTab("10kg")}
-            className={`px-4 py-2 rounded-xl border text-sm font-semibold transition ${
-              buntanTab === "10kg"
-                ? "bg-green-600 text-white border-green-600"
-                : "bg-white/80 border-gray-200 hover:bg-green-50"
-            }`}
-          >
-            10kg（12個）
-          </button>
-          <button
-            onClick={() => setBuntanTab("review")}
-            disabled={!buntanSize}
-            className={`ml-auto px-4 py-2 rounded-xl border text-sm font-semibold transition ${
-              buntanTab === "review"
-                ? "bg-orange-500 text-white border-orange-500"
-                : "bg-white/80 border-gray-200 hover:bg-orange-50"
-            } ${!buntanSize ? "opacity-60 cursor-not-allowed" : ""}`}
-          >
-            注文内容確認
-          </button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-6 items-center">
@@ -335,138 +278,101 @@ export default function ProductsPage() {
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            {/* 規格タブ内容 */}
-            {buntanTab !== "review" && (
-              <>
-                <h3 className="text-2xl font-bold mb-2">
-                  {buntanTab === "5kg" ? "5kg箱（6個入り）" : "10kg箱（12個入り）"}
-                </h3>
+            {/* ★ みかんと同形式：サイズ切替ボタン */}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-gray-600 mr-2">内容量：</span>
+              <button
+                onClick={() => { setBuntanTab("5kg"); setBuntanSize("5kg"); }}
+                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
+                  ${buntanTab==="5kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
+                aria-pressed={buntanTab==="5kg"}
+              >
+                5kg（6個） / {PRICE_TABLE["5kg"].toLocaleString()}円
+              </button>
+              <button
+                onClick={() => { setBuntanTab("10kg"); setBuntanSize("10kg"); }}
+                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
+                  ${buntanTab==="10kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
+                aria-pressed={buntanTab==="10kg"}
+              >
+                10kg（12個） / {PRICE_TABLE["10kg"].toLocaleString()}円
+              </button>
+            </div>
 
-                <p className="text-sm text-gray-700">
-                  価格（送料込み）：{" "}
-                  <strong>{PRICE_TABLE[buntanTab].toLocaleString()}円 / 箱</strong>
-                </p>
+            {/* 規格選択（既存互換） */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">内容量を選択</label>
+              <select
+                value={buntanTab}
+                onChange={(e)=>{ const v = e.target.value as "5kg"|"10kg"; setBuntanTab(v); setBuntanSize(v); }}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                <option value="5kg">5kg（6個） / {PRICE_TABLE["5kg"].toLocaleString()}円</option>
+                <option value="10kg">10kg（12個） / {PRICE_TABLE["10kg"].toLocaleString()}円</option>
+              </select>
+            </div>
 
-                {/* 箱数 */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-1">箱数</label>
-                  <select
-                    value={buntanQty}
-                    onChange={(e) => setBuntanQty(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                  >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n} 箱
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {/* 箱数 */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">数量（箱）</label>
+              <select
+                value={buntanQty}
+                onChange={(e) => setBuntanQty(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                {[1,2,3,4,5].map(n=>(
+                  <option key={n} value={n}>{n} 箱</option>
+                ))}
+              </select>
+            </div>
 
-                {/* 注意：一文 */}
-                <p className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mt-4">
-                  「5kg／10kg」は箱サイズの目安で、実際は個数基準（5kg箱=6個・10kg箱=12個）で詰めるため、総重量は前後し“6個=5kgぴったり”ではありません。
-                </p>
+            {/* 価格 + 小計 */}
+            <p className="text-2xl font-bold text-green-700 mt-6">
+              価格：{PRICE_TABLE[buntanTab].toLocaleString()}円 / 箱
+            </p>
+            <p className="text-lg font-semibold text-green-700 mt-1">
+              小計：{(PRICE_TABLE[buntanTab] * buntanQty).toLocaleString()}円
+            </p>
 
-                {/* 次へ */}
-                <button
-                  onClick={() => {
-                    setBuntanSize(buntanTab);
-                    setBuntanTab("review");
-                  }}
-                  className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
-                >
-                  注文内容を確認する
-                </button>
-              </>
-            )}
+            {/* 注意 */}
+            <p className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mt-4">
+              「5kg／10kg」は箱サイズの目安で、実際は個数基準（5kg箱=6個・10kg箱=12個）で詰めるため、総重量は前後し“6個=5kgぴったり”ではありません。
+            </p>
 
-            {/* 注文確認タブ */}
-            {buntanTab === "review" && buntanSize && (
-              <>
-                <h3 className="text-2xl font-bold mb-2">注文内容の確認</h3>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>商品：文旦（不揃い）</li>
-                  <li>規格：{buntanSize === "5kg" ? "5kg（6個）" : "10kg（12個）"}</li>
-                  <li>箱数：{buntanQty} 箱</li>
-                  <li>
-                    小計：
-                    <strong className="text-green-700">
-                      {(PRICE_TABLE[buntanSize] * buntanQty).toLocaleString()}円
-                    </strong>
-                    （送料込み）
-                  </li>
-                </ul>
+            {/* 2択：カート or 今すぐ注文 */}
+            <div className="mt-6 grid sm:grid-cols-2 gap-3">
+              <button
+                onClick={()=>{
+                  addToCart({
+                    id: `buntan-${buntanTab}`,
+                    name: "文旦（不揃い）",
+                    variant: buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）",
+                    unitPrice: PRICE_TABLE[buntanTab],
+                    qty: buntanQty,
+                    extra: { buntan: withBuntan },
+                  });
+                  alert("カートに追加しました。右下のカートから確認できます。");
+                  window.dispatchEvent(new Event("yk-cart-updated"));
+                }}
+                className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+              >
+                カートに入れる
+              </button>
 
-                {/* イベント（互換：withBuntanを流用） */}
-                <label
-                  className="
-                    mt-4 flex items-center gap-3
-                    bg-orange-50/70 backdrop-blur-sm
-                    border border-orange-200
-                    rounded-xl px-4 py-3
-                    cursor-pointer
-                  "
-                >
-                  <input
-                    type="checkbox"
-                    checked={withBuntan}
-                    onChange={(e) => setWithBuntan(e.target.checked)}
-                    className="w-5 h-5 accent-orange-500"
-                  />
-                  <div className="text-sm leading-tight">
-                    <p className="font-semibold text-orange-700">
-                      【期間限定】みかん＋500gおまけ
-                    </p>
-                    <p className="text-gray-600 text-xs mt-1">※ 数量限定・無くなり次第終了</p>
-                  </div>
-                </label>
-
-                {/* アクション */}
-                <div className="mt-6 grid sm:grid-cols-2 gap-3">
-                  <button
-                    onClick={() => {
-                      addToCart({
-                        id: `buntan-${buntanSize}`,
-                        name: "文旦（不揃い）",
-                        variant: buntanSize === "5kg" ? "5kg（6個）" : "10kg（12個）",
-                        unitPrice: PRICE_TABLE[buntanSize],
-                        qty: buntanQty,
-                        extra: { buntan: withBuntan },
-                      });
-                      alert("カートに追加しました。右下のカートから確認できます。");
-                      window.dispatchEvent(new Event("yk-cart-updated"));
-                    }}
-                    className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
-                  >
-                    カートに入れる
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      const p = PRICE_TABLE[buntanSize] * buntanQty;
-                      router.push(
-                        `/order?product=${encodeURIComponent("文旦（不揃い）")}` +
-                          `&size=${encodeURIComponent(
-                            buntanSize === "5kg" ? "5kg（6個）" : "10kg（12個）"
-                          )}` +
-                          `&qty=${buntanQty}&price=${p}&buntan=${withBuntan}`
-                      );
-                    }}
-                    className="w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
-                  >
-                    今すぐ注文
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setBuntanTab(buntanSize)}
-                  className="mt-3 text-sm text-gray-600 underline"
-                >
-                  ← 規格選択に戻る
-                </button>
-              </>
-            )}
+              <button
+                onClick={()=>{
+                  const p = PRICE_TABLE[buntanTab] * buntanQty;
+                  router.push(
+                    `/order?product=${encodeURIComponent("文旦（不揃い）")}` +
+                    `&size=${encodeURIComponent(buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）")}` +
+                    `&qty=${buntanQty}&price=${p}&buntan=${withBuntan}`
+                  );
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+              >
+                今すぐ注文する
+              </button>
+            </div>
           </div>
         </div>
       </section>

@@ -186,7 +186,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
         <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
-          傷があっても味は抜群。気軽に楽しんでほしい想いから生まれました。
+          傷があっても味は抜群。安くて気軽に楽しんでほしい想いをそのまま箱に詰めました。
         </div>
 
         {/* ▼▼▼ ここから追加 ▼▼▼ */}

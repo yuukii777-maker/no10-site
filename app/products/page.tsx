@@ -10,11 +10,11 @@ export default function ProductsPage() {
   // 規格と価格（送料込み）
   const PRICE_TABLE: Record<"5kg" | "10kg", number> = {
     "5kg": 2500,
-    "10kg": 3500,
+    "10kg": 4000, // ★ 変更：10kg を 4000 円に
   };
 
   const [size, setSize] = useState<"5kg" | "10kg">("5kg");
-  const [withBuntan, setWithBuntan] = useState(true); // ★ 追加
+  const [withBuntan, setWithBuntan] = useState(true); // ★ 名称は既存のまま（互換維持）。true=「みかん＋500gおまけ」
   const price = PRICE_TABLE[size];
 
   return (
@@ -48,7 +48,7 @@ export default function ProductsPage() {
             />
           </div>
 
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
             <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
 
             {/* 規格選択 */}
@@ -62,7 +62,7 @@ export default function ProductsPage() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
                 <option value="5kg">5kg（2,500円）</option>
-                <option value="10kg">10kg（3,500円）</option>
+                <option value="10kg">10kg（4,000円）</option>
               </select>
             </div>
 
@@ -75,7 +75,7 @@ export default function ProductsPage() {
               ※ 送料込みです。
             </p>
 
-            {/* ★ 期間限定 文旦無料 */}
+            {/* ★ イベント：みかん＋500gおまけ */}
             <label
               className="
                 mt-4 flex items-center gap-3
@@ -94,7 +94,7 @@ export default function ProductsPage() {
 
               <div className="text-sm leading-tight">
                 <p className="font-semibold text-orange-700">
-                  【期間限定】文旦1個 無料で付ける
+                  【期間限定】みかん＋500gおまけ
                 </p>
                 <p className="text-gray-600 text-xs mt-1">
                   ※ 数量限定・無くなり次第終了
@@ -166,59 +166,71 @@ export default function ProductsPage() {
       {/* 文旦 */}
       {/* ====================== */}
       <section className="mt-24">
-        <h2 className="text-3xl font-semibold">文旦（単品）</h2>
+        <h2 className="text-3xl font-semibold">文旦（箱）</h2>
 
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          さっぱりとした甘さと爽やかな香りが特徴の文旦です。
-          1個からご注文いただけます。
+          さっぱりとした甘さと爽やかな香りの文旦。<br />
+          <strong>大きさ不揃いで、5kg箱は6個入り／10kg箱は12個入り</strong>です（目安）。
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
             <Image
               src="/mikan/buntan.jpg"
-              alt="文旦"
+              alt="文旦（箱）"
               fill
               className="object-cover"
             />
           </div>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-2">文旦</h3>
+            <h3 className="text-2xl font-bold mb-2">文旦（不揃い）</h3>
 
-            <p className="text-sm text-gray-700 mb-4">
-              価格：<strong>1個 1,000円（送料込み）</strong>
-            </p>
-
-            <div className="mt-4">
+            {/* ★ 箱の選択（5kg/10kg） */}
+            <div className="mt-2">
               <label className="block text-sm font-medium mb-1">
-                個数を選択
+                規格を選択
               </label>
               <select
-                defaultValue="1"
+                defaultValue="5kg"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
                 onChange={(e) => {
-                  const count = Number(e.target.value);
+                  const val = e.target.value as "5kg" | "10kg";
+                  const p = val === "5kg" ? 2500 : 4000;
                   router.push(
-                    `/order?product=${encodeURIComponent("文旦")}&size=${count}個&price=${count * 1000}&buntan=false`
+                    `/order?product=${encodeURIComponent("文旦（不揃い）")}&size=${encodeURIComponent(val === "5kg" ? "5kg（6個）" : "10kg（12個）")}&price=${p}&buntan=false`
                   );
                 }}
               >
-                <option value={1}>1個（1,000円）</option>
-                <option value={2}>2個（2,000円）</option>
-                <option value={3}>3個（3,000円）</option>
+                <option value="5kg">5kg（6個） 2,500円</option>
+                <option value="10kg">10kg（12個） 4,000円</option>
               </select>
             </div>
 
             <button
               onClick={() => {
+                const val: "5kg" | "10kg" = "5kg";
+                const p = 2500;
                 router.push(
-                  `/order?product=${encodeURIComponent("文旦")}&size=1個&price=1000&buntan=false`
+                  `/order?product=${encodeURIComponent("文旦（不揃い）")}&size=${encodeURIComponent("5kg（6個）")}&price=${p}&buntan=false`
                 );
               }}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
             >
-              購入手続きへ
+              5kg（6個）を購入
+            </button>
+
+            <button
+              onClick={() => {
+                const val: "10kg" | "5kg" = "10kg";
+                const p = 4000;
+                router.push(
+                  `/order?product=${encodeURIComponent("文旦（不揃い）")}&size=${encodeURIComponent("10kg（12個）")}&price=${p}&buntan=false`
+                );
+              }}
+              className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+            >
+              10kg（12個）を購入
             </button>
 
             <p className="text-xs text-gray-500 mt-3 text-center">

@@ -17,7 +17,7 @@ const PREFECTURES = [
 ];
 
 const GAS_URL =
-  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
+  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec";
 
 export default function OrderClient() {
   const searchParams = useSearchParams();
@@ -37,7 +37,6 @@ export default function OrderClient() {
   const [loading, setLoading] = useState(false);
   const sentOnceRef = useRef(false);
 
-  // ★ 追加：送信完了フラグ
   const [submitted, setSubmitted] = useState(false);
 
   const fetchAddress = async (zip: string) => {
@@ -76,27 +75,31 @@ export default function OrderClient() {
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
       };
 
-      await fetch(GAS_URL, {
+      const res = await fetch(GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: new URLSearchParams({ payload: JSON.stringify(payload) }).toString(),
-        keepalive: true,
-        mode: "no-cors",
+        body: new URLSearchParams({
+          action: "order",
+          payload: JSON.stringify(payload),
+        }).toString(),
       });
 
-      // ★ 追加：画面表示用に完了状態へ
+      const json = await res.json();
+      if (!json.ok) {
+        throw new Error(json.error || "GAS error");
+      }
+
       setSubmitted(true);
 
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
+      alert("送信に失敗しました：" + e.message);
       sentOnceRef.current = false;
     } finally {
       setLoading(false);
     }
   };
 
-  // ★ 追加：完了画面
   if (submitted) {
     return (
       <main className="max-w-2xl mx-auto px-6 pt-40 pb-24 text-center text-[#333]">
@@ -120,7 +123,6 @@ export default function OrderClient() {
     <main className="max-w-3xl mx-auto px-6 pt-28 pb-24 text-[#333]">
       <h1 className="text-3xl font-bold text-center mb-8">ご購入手続き</h1>
 
-      {/* 注文内容 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mb-10">
         <h2 className="text-xl font-bold mb-4">注文内容</h2>
         <p>商品：<strong>{product}</strong></p>
@@ -131,7 +133,6 @@ export default function OrderClient() {
         <p className="text-sm text-gray-600 mt-2">※ 送料は別途ご案内します</p>
       </section>
 
-      {/* お届け先 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
         <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
         <div className="space-y-4">

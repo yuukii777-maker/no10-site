@@ -22,6 +22,18 @@ export default function ProductsPage() {
   const [buntanSize, setBuntanSize] = useState<"5kg" | "10kg" | null>(null);
   const [buntanQty, setBuntanQty] = useState<number>(1);
 
+  /* =========================
+     ★ 追加：みかん用の切替ボタン & 数量
+  ========================= */
+  const [mikanTab, setMikanTab] = useState<"5kg" | "10kg">("5kg");
+  const [mikanQty, setMikanQty] = useState<number>(1);
+
+  // ★ 追加：size と みかんタブの同期
+  useEffect(() => {
+    setMikanTab(size);
+  }, [size]);
+  /* ========================= */
+
   return (
     <main className="max-w-5xl mx-auto px-6 pt-28 pb-24 text-[#333]">
       <h1 className="text-4xl font-bold text-center">商品一覧</h1>
@@ -56,6 +68,27 @@ export default function ProductsPage() {
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
             <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
 
+            {/* ★★ 追加：Amazon風のサイズ切替ボタン（視認性重視） */}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-gray-600 mr-2">内容量：</span>
+              <button
+                onClick={() => { setMikanTab("5kg"); setSize("5kg"); }}
+                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
+                  ${mikanTab==="5kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
+                aria-pressed={mikanTab==="5kg"}
+              >
+                5kg（2,500円）
+              </button>
+              <button
+                onClick={() => { setMikanTab("10kg"); setSize("10kg"); }}
+                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition
+                  ${mikanTab==="10kg" ? "bg-green-600 text-white border-green-600" : "bg-white/80 border-gray-200 hover:bg-green-50"}`}
+                aria-pressed={mikanTab==="10kg"}
+              >
+                10kg（4,000円）
+              </button>
+            </div>
+
             {/* 規格選択 */}
             <div className="mt-4">
               <label className="block text-sm font-medium mb-1">
@@ -71,9 +104,28 @@ export default function ProductsPage() {
               </select>
             </div>
 
+            {/* ★★ 追加：数量（箱数）指定 */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">数量（箱）</label>
+              <select
+                value={mikanQty}
+                onChange={(e)=>setMikanQty(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                {[1,2,3,4,5].map(n=>(
+                  <option key={n} value={n}>{n} 箱</option>
+                ))}
+              </select>
+            </div>
+
             {/* 価格 */}
             <p className="text-2xl font-bold text-green-700 mt-6">
               価格：{price.toLocaleString()}円
+            </p>
+
+            {/* ★★ 追加：小計（数量反映） */}
+            <p className="text-lg font-semibold text-green-700 mt-1">
+              小計：{(price * mikanQty).toLocaleString()}円
             </p>
 
             <p className="text-sm text-gray-600 mt-2">
@@ -119,7 +171,44 @@ export default function ProductsPage() {
               購入手続きへ
             </button>
 
-            {/* ★ 追加：みかんをカートへ */}
+            {/* ★ 追加：みかんをカートへ（数量対応版・Amazon風） */}
+            <div className="mt-3 grid sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  addToCart({
+                    id: `mikan-${size}-${withBuntan ? "plus500" : "noextra"}`,
+                    name: "傷あり青島みかん（箱詰め）",
+                    variant: size,
+                    unitPrice: price,
+                    qty: mikanQty,
+                    extra: { withBonus500g: withBuntan },
+                  });
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new Event("yk-cart-updated"));
+                  }
+                  alert("カートに追加しました。右下のカートから確認できます。");
+                }}
+                className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+              >
+                カートに入れる（数量反映）
+              </button>
+
+              <button
+                onClick={() => {
+                  const p = price * mikanQty;
+                  router.push(
+                    `/order?product=${encodeURIComponent("傷あり青島みかん（箱詰め）")}` +
+                    `&size=${encodeURIComponent(size)}` +
+                    `&qty=${mikanQty}&price=${p}&buntan=${withBuntan}`
+                  );
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+              >
+                今すぐ注文（数量反映）
+              </button>
+            </div>
+
+            {/* 既存（単品）カートボタンは残す */}
             <button
               onClick={() => {
                 addToCart({
@@ -181,7 +270,7 @@ export default function ProductsPage() {
 
             <button
               disabled
-              className="w-full bg-red-500 text-white text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
+              className="w-full bg-red-500 text白 text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
             >
               現在売り切れ
             </button>
@@ -364,7 +453,7 @@ export default function ProductsPage() {
                           `&qty=${buntanQty}&price=${p}&buntan=${withBuntan}`
                       );
                     }}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+                    className="w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
                   >
                     今すぐ注文
                   </button>

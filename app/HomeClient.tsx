@@ -188,6 +188,44 @@ export default function Home() {
         <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
           傷があっても味は抜群。気軽に楽しんでほしい想いから生まれました。
         </div>
+
+        {/* ▼▼▼ ここから追加 ▼▼▼ */}
+        <div className="max-w-5xl mx-auto mt-6 space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="relative w-full h-60 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-md">
+              <Image
+                src="/mikan/reason_shop_1.jpg"
+                alt="山川みかん 無人販売所の様子（全景）"
+                fill
+                className="object-cover"
+                sizes="(min-width: 640px) 50vw, 100vw"
+                priority
+              />
+            </div>
+            <div className="relative w-full h-60 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-md">
+              <Image
+                src="/mikan/reason_shop_2.jpg"
+                alt="山川みかん 無人販売所の様子（看板と棚）"
+                fill
+                className="object-cover"
+                sizes="(min-width: 640px) 50vw, 100vw"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white/70 p-4 shadow-sm ring-1 ring-black/5 text-center">
+            <p className="mb-3 text-[15px] leading-relaxed sm:text-base">
+              直売所の住所はこちらにお問合せください。
+            </p>
+            <a
+              href="mailto:kakuda.040611@gmail.com?subject=%E7%9B%B4%E5%A3%B2%E6%89%80%E3%81%AE%E4%BD%8F%E6%89%80%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0A%E3%81%94%E7%94%A8%E4%BB%B6%EF%BC%9A%0A"
+              className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+            >
+              お問い合わせ（メールを開く）
+            </a>
+          </div>
+        </div>
+        {/* ▲▲▲ 追加ここまで ▲▲▲ */}
       </section>
 
       {/* ★ みかんのメリット（内容変更なし） */}

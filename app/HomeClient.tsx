@@ -5,6 +5,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AppleFloat from "./AppleFloat"; // 既存そのまま
 
+/* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
+export const dynamic = "force-dynamic";
+// export const revalidate = 0; // ←こちらでも同等（どちらか片方のみでOK）
+
 /* ===========================
    フェードインアニメ（既存）
 =========================== */
@@ -39,9 +43,9 @@ export default function Home() {
      スライダー制御（内容変更なし）
   ============================ */
   const sliderImages = [
-    { src: "/mikan/bnr_shipping_campaign.png", caption: "山川の100円みかんを箱に詰めました。" },
-    { src: "/mikan/bnr_open_special.png", caption: "みかん購入で豪華なおまけ付き!!" },
-    { src: "/mikan/bnr_oseibo.png", caption: "二種の支払い方法" },
+    { src: "/mikan/bnr_shipping_campaign.png?v=20260120a", caption: "山川の100円みかんを箱に詰めました。" },
+    { src: "/mikan/bnr_open_special.png?v=20260120a", caption: "みかん購入で豪華なおまけ付き!!" },
+    { src: "/mikan/bnr_oseibo.png?v=20260120a", caption: "二種の支払い方法" },
   ];
   const [index, setIndex] = useState(0);
 

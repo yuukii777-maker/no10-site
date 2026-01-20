@@ -20,6 +20,77 @@ const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
 /* =========================
+   ★ 追加：到着希望ピッカー
+========================= */
+function DeliveryPicker({
+  valueDate,
+  valueSlot,
+  onChange,
+}: {
+  valueDate: string | null;
+  valueSlot: string | null;
+  onChange: (d: string | null, s: string | null) => void;
+}) {
+  const days = Array.from({ length: 10 }).map((_, i) => {
+    const dt = new Date();
+    dt.setDate(dt.getDate() + i);
+    const iso = dt.toISOString().slice(0, 10);
+    const jp = `${dt.getMonth() + 1}/${dt.getDate()}(${["日","月","火","水","木","金","土"][dt.getDay()]})`;
+    return { iso, jp };
+  });
+  const slots = ["午前中","14-16","16-18","18-20","19-21"];
+
+  return (
+    <section className="mt-6">
+      <h3 className="text-lg font-semibold">到着希望（任意）</h3>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(null, valueSlot)}
+          className={`px-3 py-2 rounded-xl border text-sm ${
+            valueDate === null ? "bg-green-600 text-white border-green-600" : "bg-white border-gray-300"
+          }`}
+        >
+          指定なし（最短）
+        </button>
+        {days.map((d) => (
+          <button
+            type="button"
+            key={d.iso}
+            onClick={() => onChange(d.iso, valueSlot)}
+            className={`px-3 py-2 rounded-xl border text-sm ${
+              valueDate === d.iso ? "bg-green-600 text-white border-green-600" : "bg-white border-gray-300"
+            }`}
+          >
+            {d.jp}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3">
+        <label className="block text-sm mb-1">時間帯（任意）</label>
+        <select
+          className="w-full border border-gray-300 rounded-lg px-3 py-2"
+          value={valueSlot ?? ""}
+          onChange={(e) => onChange(valueDate, e.target.value || null)}
+        >
+          <option value="">指定なし</option>
+          {slots.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+
+      <p className="text-xs text-gray-500 mt-2">
+        ※ 交通・天候・地域事情によりご希望に沿えない場合があります。
+      </p>
+    </section>
+  );
+}
+/* ========================= */
+
+ /* =========================
    ★ 追加：カート会計サポート
 ========================= */
 type CartItem = {
@@ -64,6 +135,13 @@ export default function OrderClient() {
   const [submitted, setSubmitted] = useState(false);
 
   /* =========================
+     ★ 追加：到着希望 state
+  ========================= */
+  const [reqDate, setReqDate] = useState<string | null>(null);
+  const [reqTime, setReqTime] = useState<string | null>(null);
+  /* ========================= */
+
+  /* =========================
      ★ 追加：カート会計の状態
   ========================= */
   const cartMode = searchParams.get("cart") === "1";
@@ -103,6 +181,9 @@ export default function OrderClient() {
         subtotal,
         buyer: { name, postal, prefecture, address, phone, email },
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
+        // ★ 追加：到着希望
+        request_date: reqDate,
+        request_time: reqTime,
       };
 
       await fetch(GAS_URL, {
@@ -159,6 +240,9 @@ export default function OrderClient() {
         phone,
         email,
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
+        // ★ 追加：到着希望
+        request_date: reqDate,
+        request_time: reqTime,
       };
 
       await fetch(GAS_URL, {
@@ -248,6 +332,13 @@ export default function OrderClient() {
               <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
 
+            {/* ★ 追加：到着希望 */}
+            <DeliveryPicker
+              valueDate={reqDate}
+              valueSlot={reqTime}
+              onChange={(d, s) => { setReqDate(d); setReqTime(s); }}
+            />
+
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
               <button
                 onClick={submitCartOrder}
@@ -324,6 +415,13 @@ export default function OrderClient() {
           <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（任意）" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
+
+        {/* ★ 追加：到着希望 */}
+        <DeliveryPicker
+          valueDate={reqDate}
+          valueSlot={reqTime}
+          onChange={(d, s) => { setReqDate(d); setReqTime(s); }}
+        />
 
         <button
           onClick={submitOrder}

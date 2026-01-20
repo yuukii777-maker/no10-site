@@ -20,60 +20,27 @@ const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
 /* =========================
-   ★ 追加：到着希望ピッカー
+   ★ 到着希望（時間帯のみ）
 ========================= */
 function DeliveryPicker({
-  valueDate,
   valueSlot,
   onChange,
 }: {
-  valueDate: string | null;
   valueSlot: string | null;
-  onChange: (d: string | null, s: string | null) => void;
+  onChange: (s: string | null) => void;
 }) {
-  const days = Array.from({ length: 10 }).map((_, i) => {
-    const dt = new Date();
-    dt.setDate(dt.getDate() + i);
-    const iso = dt.toISOString().slice(0, 10);
-    const jp = `${dt.getMonth() + 1}/${dt.getDate()}(${["日","月","火","水","木","金","土"][dt.getDay()]})`;
-    return { iso, jp };
-  });
-  const slots = ["午前中","14-16","16-18","18-20","19-21"];
+  const slots = ["午前中","12-14","14-16","16-18","18-20","19-21"];
 
   return (
     <section className="mt-6">
       <h3 className="text-lg font-semibold">到着希望（任意）</h3>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onChange(null, valueSlot)}
-          className={`px-3 py-2 rounded-xl border text-sm ${
-            valueDate === null ? "bg-green-600 text-white border-green-600" : "bg-white border-gray-300"
-          }`}
-        >
-          指定なし（最短）
-        </button>
-        {days.map((d) => (
-          <button
-            type="button"
-            key={d.iso}
-            onClick={() => onChange(d.iso, valueSlot)}
-            className={`px-3 py-2 rounded-xl border text-sm ${
-              valueDate === d.iso ? "bg-green-600 text-white border-green-600" : "bg-white border-gray-300"
-            }`}
-          >
-            {d.jp}
-          </button>
-        ))}
-      </div>
 
       <div className="mt-3">
         <label className="block text-sm mb-1">時間帯（任意）</label>
         <select
           className="w-full border border-gray-300 rounded-lg px-3 py-2"
           value={valueSlot ?? ""}
-          onChange={(e) => onChange(valueDate, e.target.value || null)}
+          onChange={(e) => onChange(e.target.value || null)}
         >
           <option value="">指定なし</option>
           {slots.map((s) => (
@@ -91,7 +58,7 @@ function DeliveryPicker({
 /* ========================= */
 
  /* =========================
-   ★ 追加：カート会計サポート
+   ★ カート会計サポート
 ========================= */
 type CartItem = {
   id: string;
@@ -131,18 +98,17 @@ export default function OrderClient() {
   const [loading, setLoading] = useState(false);
   const sentOnceRef = useRef(false);
 
-  // ★ 追加：送信完了フラグ
+  // ★ 送信完了フラグ
   const [submitted, setSubmitted] = useState(false);
 
   /* =========================
-     ★ 追加：到着希望 state
+     ★ 到着希望（時間帯のみ）
   ========================= */
-  const [reqDate, setReqDate] = useState<string | null>(null);
   const [reqTime, setReqTime] = useState<string | null>(null);
   /* ========================= */
 
   /* =========================
-     ★ 追加：カート会計の状態
+     ★ カート会計の状態
   ========================= */
   const cartMode = searchParams.get("cart") === "1";
   const [cartItems, setCartItems] = useState<CartItem[]>(() => readCart());
@@ -181,8 +147,7 @@ export default function OrderClient() {
         subtotal,
         buyer: { name, postal, prefecture, address, phone, email },
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
-        // ★ 追加：到着希望
-        request_date: reqDate,
+        // ★ 到着希望（時間帯のみ）
         request_time: reqTime,
       };
 
@@ -240,8 +205,7 @@ export default function OrderClient() {
         phone,
         email,
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
-        // ★ 追加：到着希望
-        request_date: reqDate,
+        // ★ 到着希望（時間帯のみ）
         request_time: reqTime,
       };
 
@@ -253,7 +217,7 @@ export default function OrderClient() {
         mode: "no-cors",
       });
 
-      // ★ 追加：画面表示用に完了状態へ
+      // ★ 画面表示用に完了状態へ
       setSubmitted(true);
 
     } catch (e) {
@@ -265,7 +229,7 @@ export default function OrderClient() {
     }
   };
 
-  // ★ 追加：カート会計UI（?cart=1 かつ 未送信時）
+  // ★ カート会計UI（?cart=1 かつ 未送信時）
   if (cartMode && !submitted) {
     return (
       <main className="max-w-5xl mx-auto px-6 pt-28 pb-24 text-[#333]">
@@ -332,11 +296,10 @@ export default function OrderClient() {
               <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
 
-            {/* ★ 追加：到着希望 */}
+            {/* ★ 到着希望（時間帯のみ） */}
             <DeliveryPicker
-              valueDate={reqDate}
               valueSlot={reqTime}
-              onChange={(d, s) => { setReqDate(d); setReqTime(s); }}
+              onChange={(s) => setReqTime(s)}
             />
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
@@ -360,7 +323,7 @@ export default function OrderClient() {
     );
   }
 
-  // ★ 追加：完了画面
+  // ★ 完了画面
   if (submitted) {
     return (
       <main className="max-w-2xl mx-auto px-6 pt-40 pb-24 text-center text-[#333]">
@@ -416,11 +379,10 @@ export default function OrderClient() {
           <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
 
-        {/* ★ 追加：到着希望 */}
+        {/* ★ 到着希望（時間帯のみ） */}
         <DeliveryPicker
-          valueDate={reqDate}
           valueSlot={reqTime}
-          onChange={(d, s) => { setReqDate(d); setReqTime(s); }}
+          onChange={(s) => setReqTime(s)}
         />
 
         <button

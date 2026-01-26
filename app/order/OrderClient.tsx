@@ -80,6 +80,77 @@ const writeCart = (items: CartItem[]) => {
 };
 /* ========================= */
 
+/* =========================================================
+   ★ 送信を絶対に通すフォールバック付きPOST関数（このファイル内だけで完結）
+   1) fetch + x-www-form-urlencoded（従来）
+   2) navigator.sendBeacon（CORSに強い）
+   3) 見えない <iframe> + <form> POST（最終手段）
+========================================================= */
+async function postToGASWithFallback(params: URLSearchParams): Promise<void> {
+  // 1) fetch（従来どおり）
+  try {
+    await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: params.toString(),
+      keepalive: true,
+      mode: "no-cors",
+    });
+    return;
+  } catch (_) {
+    // 次へ
+  }
+
+  // 2) sendBeacon（ヘッダ指定不可だが多くの環境で到達する）
+  try {
+    if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
+      const ok = (navigator as any).sendBeacon(GAS_URL, params);
+      if (ok) return;
+    }
+  } catch (_) {
+    // 次へ
+  }
+
+  // 3) 隠しiframe + form POST（レスポンスは読まず送るだけ）
+  await new Promise<void>((resolve) => {
+    const iframe = document.createElement("iframe");
+    iframe.name = "yk_hidden_iframe_" + Math.random().toString(36).slice(2);
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    const form = document.createElement("form");
+    form.action = GAS_URL;
+    form.method = "POST";
+    form.target = iframe.name;
+    form.style.display = "none";
+
+    // URLSearchParams → hidden inputs
+    params.forEach((v, k) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = k;
+      input.value = v;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+
+    const cleanup = () => {
+      try { document.body.removeChild(form); } catch {}
+      try { document.body.removeChild(iframe); } catch {}
+      resolve();
+    };
+
+    // ロード/エラー/タイムアウトのいずれでも後片付けして完了扱い
+    const timer = window.setTimeout(cleanup, 3000);
+    iframe.addEventListener("load", () => { clearTimeout(timer); cleanup(); });
+    iframe.addEventListener("error", () => { clearTimeout(timer); cleanup(); });
+
+    form.submit();
+  });
+}
+/* ========================================================= */
+
 export default function OrderClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -151,13 +222,11 @@ export default function OrderClient() {
         request_time: reqTime,
       };
 
-      await fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: new URLSearchParams({ payload: JSON.stringify(payload) }).toString(),
-        keepalive: true,
-        mode: "no-cors",
-      });
+      const params = new URLSearchParams({ payload: JSON.stringify(payload) });
+      // doPost側で action が必要なので付与（既存どおり）
+      params.set("action", "order");
+
+      await postToGASWithFallback(params);
 
       clearCart();
       setSubmitted(true);
@@ -209,13 +278,10 @@ export default function OrderClient() {
         request_time: reqTime,
       };
 
-      await fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: new URLSearchParams({ payload: JSON.stringify(payload) }).toString(),
-        keepalive: true,
-        mode: "no-cors",
-      });
+      const params = new URLSearchParams({ payload: JSON.stringify(payload) });
+      params.set("action", "order");
+
+      await postToGASWithFallback(params);
 
       // ★ 画面表示用に完了状態へ
       setSubmitted(true);
@@ -302,7 +368,7 @@ export default function OrderClient() {
               onChange={(s) => setReqTime(s)}
             />
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
+            <div className="mt-6 flex結-col sm:flex-row gap-3 justify-end">
               <button
                 onClick={submitCartOrder}
                 disabled={loading}

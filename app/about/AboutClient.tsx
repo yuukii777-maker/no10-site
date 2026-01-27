@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import SubFlash from "../components/SubFlash"; // ★追加：中央モーダル
 
 export default function AboutClient() {
   return (
@@ -186,6 +187,8 @@ export default function AboutClient() {
           />
         </div>
       </section>
+
+      <SubFlash /> {/* ★追加：?sub=ok/err/unsub に反応して中央表示 */}
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AppleFloat from "./AppleFloat"; // 既存そのまま
 import AboutTeaser from "../components/AboutTeaser"; // ★修正：相対パスを app/ からの一段上に
+import SubFlash from "../components/SubFlash"; // ★追加：中央モーダル
 
 /* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
 export const dynamic = "force-dynamic";
@@ -164,6 +165,7 @@ export default function Home() {
 
       {/* ▼▼▼ ここに購入ボタン直下の自己紹介＋メルマガを差し込む ▼▼▼ */}
       <AboutTeaser />
+      <SubFlash /> {/* ★追加：?sub=ok/err/unsub に反応して中央にモーダル表示 */}
       {/* ▲▲▲ 差し込みここまで ▲▲▲ */}
 
       {/* ② スライダー（内容変更なし） */}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AppleFloat from "./AppleFloat"; // 既存そのまま
+import AboutTeaser from "./components/AboutTeaser"; // ★追加：自己紹介＋メルマガ
 
 /* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
 export const dynamic = "force-dynamic";
@@ -160,6 +161,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ▼▼▼ ここに購入ボタン直下の自己紹介＋メルマガを差し込む ▼▼▼ */}
+      <AboutTeaser />
+      {/* ▲▲▲ 差し込みここまで ▲▲▲ */}
 
       {/* ② スライダー（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">

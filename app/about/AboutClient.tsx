@@ -29,10 +29,57 @@ export default function AboutClient() {
       </section>
 
       {/* ============================= */}
+      {/* ごあいさつ（追加） */}
+      {/* ============================= */}
+      <section className="max-w-3xl mx-auto px-6 py-16">
+        <h2 className="text-3xl font-bold text-center">ごあいさつ</h2>
+        <div className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed mt-6">
+          <p>お問い合わせありがとうございます。</p>
+          <p>
+            私たち夫婦は2023年3月で脱サラし、同年4月よりみかん農家として新規就農しました。
+            現在の第1次産業において最大の課題は<strong>地球温暖化</strong>です。わがみかん農園でも、
+            樹の仕立て・樹勢強化・土づくりを中心に、気候の振れ幅に負けない畑づくりに取り組んでいます。
+          </p>
+          <p>
+            「毎年あたりまえに“おいしい”と言っていただけるみかんを届ける」——そのあたりまえを守るために、
+            夫婦で力を合わせて小さな改善を積み重ねています。当サイトでは、
+            <strong>贈答品（正規品）</strong>と<strong>訳あり品（小玉・キズあり）</strong>を中心に販売しています。
+            詳細は販売ページにてご確認ください。
+          </p>
+          <p>
+            畑の様子や収穫期のお知らせは、下のフォームからご登録いただける
+            <strong>メルマガ</strong>でもお届けします。ぜひ季節の便りをお受け取りください。
+          </p>
+        </div>
+
+        {/* メルマガ登録フォーム（追加） */}
+        <form
+          action="/api/subscribe"
+          method="POST"
+          className="mt-8 flex flex-col gap-3 sm:flex-row"
+        >
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="メールアドレス"
+            className="w-full rounded-xl border px-3 py-2"
+          />
+          <input type="hidden" name="source" value="about_page" />
+          <button className="rounded-xl border px-4 py-2 font-semibold hover:opacity-90">
+            メルマガ登録
+          </button>
+        </form>
+        <p className="mt-2 text-xs text-gray-600">
+          登録は無料・いつでも解除できます（配信メール末尾のリンクから1クリック停止）。
+        </p>
+      </section>
+
+      {/* ============================= */}
       {/* 山川の環境 */}
       {/* ============================= */}
       <section className="max-w-5xl mx-auto px-6 py-20">
-        <h2 className="text-3xl font-bold text-center">
+        <h2 className="text-3次 font-bold text-center">
           山川がみかんに向く理由
         </h2>
 

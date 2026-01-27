@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import SubFlash from "../components/SubFlash"; // ★追加：中央モーダル
+import SubFlash from "../../components/SubFlash"; // ★修正：正しい相対パス（二階層上）
 
 export default function AboutClient() {
   return (

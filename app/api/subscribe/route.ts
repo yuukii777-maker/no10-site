@@ -1,15 +1,21 @@
 // app/api/subscribe/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// ★追加：環境変数が無いとき用の“固定URL”フォールバック
+const GAS_FALLBACK =
+  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec";
+
 export async function POST(req: NextRequest) {
   try {
-    // JSON と form-urlencoded の両方に対応
     const contentType = req.headers.get("content-type") || "";
     let email = "";
     let source = "";
 
     if (contentType.includes("application/json")) {
-      const body = await req.json().catch(() => ({}));
+      const body = await req.json().catch(() => ({} as any));
       email = (body?.email || "").trim();
       source = (body?.source || "").trim();
     } else {
@@ -19,36 +25,55 @@ export async function POST(req: NextRequest) {
     }
 
     if (!email) {
-      // fetch からのエラー応答
       if (!wantsHtml(req)) {
         return NextResponse.json({ ok: false, error: "no_email" }, { status: 400 });
       }
-      // フォーム送信なら同じページへエラークエリで戻す
       return NextResponse.redirect(new URL("/about?sub=err", req.url));
     }
 
-    const endpoint = process.env.GAS_SUBSCRIBE_ENDPOINT;
-    if (!endpoint) {
-      const msg = "Missing GAS_SUBSCRIBE_ENDPOINT";
-      if (!wantsHtml(req)) return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-      return NextResponse.redirect(new URL("/about?sub=err", req.url));
-    }
+    // ★修正：環境変数→無ければハードコードURLへフォールバック
+    const endpoint =
+      process.env.GAS_SUBSCRIBE_ENDPOINT ||
+      process.env.GAS_SUBSCRIBE_URL ||
+      GAS_FALLBACK;
 
-    // GAS 側は JSON で受ける想定
-    const r = await fetch(endpoint, {
+    // ---- POST→GET フォールバック ----
+    let ok = false;
+    let detail: any = null;
+
+    const r1 = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, source }),
       cache: "no-store",
-    });
+    }).catch(() => null as any);
 
-    if (!r.ok) {
+    if (r1 && r1.ok) {
+      ok = true;
+      detail = await r1.json().catch(() => null);
+    }
+
+    if (!ok) {
+      const qs = new URLSearchParams({ email, source, ts: String(Date.now()) });
+      const r2 = await fetch(`${endpoint}?${qs.toString()}`, {
+        method: "GET",
+        cache: "no-store",
+      }).catch(() => null as any);
+
+      if (r2 && r2.ok) {
+        ok = true;
+        detail = await r2
+          .json()
+          .catch(async () => ({ text: await r2.text().catch(() => "") }));
+      }
+    }
+
+    if (!ok) {
       if (!wantsHtml(req)) return NextResponse.json({ ok: false }, { status: 502 });
       return NextResponse.redirect(new URL("/about?sub=err", req.url));
     }
 
-    // fetch からは JSON、フォーム送信からは /about に戻す
-    if (!wantsHtml(req)) return NextResponse.json({ ok: true });
+    if (!wantsHtml(req)) return NextResponse.json({ ok: true, detail });
     return NextResponse.redirect(new URL("/about?sub=ok", req.url));
   } catch (err) {
     if (!wantsHtml(req)) {
@@ -60,6 +85,5 @@ export async function POST(req: NextRequest) {
 
 function wantsHtml(req: NextRequest) {
   const accept = req.headers.get("accept") || "";
-  // ブラウザのフォーム送信は text/html を含むことが多い
   return accept.includes("text/html");
 }

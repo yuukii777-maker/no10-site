@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AppleFloat from "./AppleFloat"; // 既存そのまま
-import AboutTeaser from "./components/AboutTeaser"; // ★追加：自己紹介＋メルマガ
+import AboutTeaser from "./components/AboutTeaser"; // ★差し替え：相対パスで確実に解決
 
 /* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
 export const dynamic = "force-dynamic";

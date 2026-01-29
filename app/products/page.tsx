@@ -126,12 +126,12 @@ export default function ProductsPage() {
         見た目に傷はありますが、味には自信のある青島みかんです。
       </div>
 
-      {/* ★ 追加：連動エラー表示（表示だけ。UIは崩さない） */}
-      {sheetError && (
-        <div className="max-w-2xl mx-auto mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          ※ 商品データの読み込みに失敗しています（/api/products）: {sheetError}
-        </div>
-      )}
+      {/* エラーバナーは非表示にする */}
+{false && sheetError && (
+  <div className="max-w-2xl mx-auto mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+    ※ 商品データの読み込みに失敗しています（/api/products）: {sheetError}
+  </div>
+)}
 
       {/* ====================== */}
       {/* 文旦（みかん形式 + 2択） */}

@@ -4,6 +4,28 @@ import Image from "next/image";
 import { useState, useEffect } from "react"; // ← useEffectを追加（カート用）
 import { useRouter } from "next/navigation";
 
+/* =========================
+   ★ 追加：シート連動用の型 & 取得
+========================= */
+type ProductItem = {
+  id?: string;
+  product: string;
+  price: number;
+  status: "active" | "soldout" | "comingsoon";
+  feature: string;
+};
+
+type ApiProductsRes =
+  | { ok: true; items: ProductItem[] }
+  | { ok: false; error: string; raw?: any };
+
+const FIXED_KEYS = {
+  MIKAN_DEFECT: "傷あり青島みかん（箱詰め）",
+  MIKAN_PREMIUM: "青果みかん",
+  BUNTAN: "文旦（箱）",
+} as const;
+/* ========================= */
+
 export default function ProductsPage() {
   const router = useRouter();
 
@@ -34,6 +56,65 @@ export default function ProductsPage() {
   }, [size]);
   /* ========================= */
 
+  /* =========================
+     ★ 追加：シート連動（/api/products から取得）
+     - product名完全一致で紐付け
+     - 反映するのは「status / feature / price（5kg側に反映）」だけ
+  ========================= */
+  const [sheetMap, setSheetMap] = useState<Record<string, ProductItem>>({});
+  const [sheetError, setSheetError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setSheetError(null);
+        const r = await fetch("/api/products", { cache: "no-store" });
+        const data = (await r.json()) as ApiProductsRes;
+
+        if (!data || data.ok !== true) {
+          setSheetMap({});
+          setSheetError((data as any)?.error || "unknown");
+          return;
+        }
+
+        const map: Record<string, ProductItem> = {};
+        for (const it of data.items || []) {
+          if (it?.product) map[String(it.product)] = it;
+        }
+        setSheetMap(map);
+      } catch (e: any) {
+        setSheetMap({});
+        setSheetError(e?.message || String(e));
+      }
+    };
+    run();
+  }, []);
+
+  const mikanDefect = sheetMap[FIXED_KEYS.MIKAN_DEFECT];
+  const mikanPremium = sheetMap[FIXED_KEYS.MIKAN_PREMIUM];
+  const buntan = sheetMap[FIXED_KEYS.BUNTAN];
+
+  const mikanDefectStatus = (mikanDefect?.status || "active") as ProductItem["status"];
+  const mikanPremiumStatus = (mikanPremium?.status || "soldout") as ProductItem["status"];
+  const buntanStatus = (buntan?.status || "active") as ProductItem["status"];
+
+  const mikanDefectFeature =
+    (mikanDefect?.feature && String(mikanDefect.feature)) ||
+    "見た目に多少の傷がありますが、糖度12.5〜13度になることもある、家庭用に人気のみかんです。";
+
+  const mikanPremiumFeature =
+    (mikanPremium?.feature && String(mikanPremium.feature)) ||
+    "贈答用・青果基準で選別した高品質みかんです。現在は収穫終了のため販売を停止しています。";
+
+  const buntanFeature =
+    (buntan?.feature && String(buntan.feature)) ||
+    "さっぱりとした甘さと爽やかな香りの文旦。大きさ不揃いで、5kg箱は6個入り／10kg箱は12個入りです（目安）。";
+
+  // ★ 追加：シートの price を「5kg側の価格」として上書き（10kgは既存のまま）
+  const mikanDefectPrice5 = Number(mikanDefect?.price ?? PRICE_TABLE["5kg"]);
+  const buntanPrice5 = Number(buntan?.price ?? PRICE_TABLE["5kg"]);
+  /* ========================= */
+
   return (
     <main className="max-w-5xl mx-auto px-6 pt-28 pb-24 text-[#333]">
       <h1 className="text-4xl font-bold text-center">商品一覧</h1>
@@ -45,6 +126,13 @@ export default function ProductsPage() {
         見た目に傷はありますが、味には自信のある青島みかんです。
       </div>
 
+      {/* ★ 追加：連動エラー表示（表示だけ。UIは崩さない） */}
+      {sheetError && (
+        <div className="max-w-2xl mx-auto mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          ※ 商品データの読み込みに失敗しています（/api/products）: {sheetError}
+        </div>
+      )}
+
       {/* ====================== */}
       {/* 傷あり青島みかん */}
       {/* ====================== */}
@@ -54,8 +142,7 @@ export default function ProductsPage() {
         </h2>
 
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          見た目に多少の傷がありますが,  
-          <strong>糖度12.5〜13度になることもある</strong>、家庭用に人気のみかんです。
+          {mikanDefectFeature}
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
@@ -87,7 +174,9 @@ export default function ProductsPage() {
                     <span className="font-semibold whitespace-nowrap">
                       5kg<span className="hidden sm:inline">（6個）</span>
                     </span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">2,500円</span>
+                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
+                      {Number(mikanDefectPrice5).toLocaleString()}円
+                    </span>
                   </span>
                 </button>
                 <button
@@ -118,7 +207,7 @@ export default function ProductsPage() {
                 onChange={(e) => setSize(e.target.value as "5kg" | "10kg")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
-                <option value="5kg">5kg（2,500円）</option>
+                <option value="5kg">5kg（{Number(mikanDefectPrice5).toLocaleString()}円）</option>
                 <option value="10kg">10kg（4,000円）</option>
               </select>
             </div>
@@ -139,17 +228,24 @@ export default function ProductsPage() {
 
             {/* 価格 */}
             <p className="text-2xl font-bold text-green-700 mt-6">
-              価格：{price.toLocaleString()}円
+              価格：{(size === "5kg" ? mikanDefectPrice5 : price).toLocaleString()}円
             </p>
 
             {/* ★★ 追加：小計（数量反映） */}
             <p className="text-lg font-semibold text-green-700 mt-1">
-              小計：{(price * mikanQty).toLocaleString()}円
+              小計：{((size === "5kg" ? mikanDefectPrice5 : price) * mikanQty).toLocaleString()}円
             </p>
 
             <p className="text-sm text-gray-600 mt-2">
               ※ 送料込みです。
             </p>
+
+            {/* ★ 追加：soldout/comingsoon 表示（見た目を崩さずに） */}
+            {mikanDefectStatus !== "active" && (
+              <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {mikanDefectStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
+              </div>
+            )}
 
             {/* ★ イベント：みかん＋500gおまけ */}
             <label
@@ -186,7 +282,7 @@ export default function ProductsPage() {
                     id: `mikan-${size}-${withBuntan ? "plus500" : "noextra"}`,
                     name: "傷あり青島みかん（箱詰め）",
                     variant: size,
-                    unitPrice: price,
+                    unitPrice: size === "5kg" ? mikanDefectPrice5 : price,
                     qty: mikanQty,
                     extra: { withBonus500g: withBuntan },
                   });
@@ -195,21 +291,28 @@ export default function ProductsPage() {
                   }
                   alert("カートに追加しました。右上のカートからまとめて注文できます。");
                 }}
-                className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+                disabled={mikanDefectStatus !== "active"}
+                className={`w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               >
                 カートに入れる
               </button>
 
               <button
                 onClick={() => {
-                  const p = price * mikanQty;
+                  const unit = size === "5kg" ? mikanDefectPrice5 : price;
+                  const p = unit * mikanQty;
                   router.push(
                     `/order?product=${encodeURIComponent("傷あり青島みかん（箱詰め）")}` +
                     `&size=${encodeURIComponent(size)}` +
                     `&qty=${mikanQty}&price=${p}&buntan=${withBuntan}`
                   );
                 }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+                disabled={mikanDefectStatus !== "active"}
+                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               >
                 今すぐ注文する
               </button>
@@ -231,8 +334,7 @@ export default function ProductsPage() {
         </h2>
 
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          贈答用・青果基準で選別した高品質みかんです。
-          現在は収穫終了のため販売を停止しています。
+          {mikanPremiumFeature}
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
@@ -257,7 +359,7 @@ export default function ProductsPage() {
               disabled
               className="w-full bg-red-500 text白 text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
             >
-              現在売り切れ
+              {mikanPremiumStatus === "comingsoon" ? "近日、事前予約可能" : "現在売り切れ"}
             </button>
           </div>
         </div>
@@ -270,8 +372,7 @@ export default function ProductsPage() {
         <h2 className="text-3xl font-semibold">文旦（箱）</h2>
 
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          さっぱりとした甘さと爽やかな香りの文旦。<br />
-          <strong>大きさ不揃いで、5kg箱は6個入り／10kg箱は12個入り</strong>です（目安）。
+          {buntanFeature}
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-6 items-center">
@@ -303,7 +404,9 @@ export default function ProductsPage() {
         <span className="font-semibold whitespace-nowrap">
           5kg<span className="hidden sm:inline">（6個）</span>
         </span>
-        <span className="text-[13px] sm:text-sm whitespace-nowrap">{PRICE_TABLE["5kg"].toLocaleString()}円</span>
+        <span className="text-[13px] sm:text-sm whitespace-nowrap">
+          {Number(buntanPrice5).toLocaleString()}円
+        </span>
       </span>
     </button>
 
@@ -333,7 +436,7 @@ export default function ProductsPage() {
                 onChange={(e)=>{ const v = e.target.value as "5kg"|"10kg"; setBuntanTab(v); setBuntanSize(v); }}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
-                <option value="5kg">5kg（6個） / {PRICE_TABLE["5kg"].toLocaleString()}円</option>
+                <option value="5kg">5kg（6個） / {Number(buntanPrice5).toLocaleString()}円</option>
                 <option value="10kg">10kg（12個） / {PRICE_TABLE["10kg"].toLocaleString()}円</option>
               </select>
             </div>
@@ -354,11 +457,18 @@ export default function ProductsPage() {
 
             {/* 価格 + 小計 */}
             <p className="text-2xl font-bold text-green-700 mt-6">
-              価格：{PRICE_TABLE[buntanTab].toLocaleString()}円 / 箱
+              価格：{(buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"]).toLocaleString()}円 / 箱
             </p>
             <p className="text-lg font-semibold text-green-700 mt-1">
-              小計：{(PRICE_TABLE[buntanTab] * buntanQty).toLocaleString()}円
+              小計：{((buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"]) * buntanQty).toLocaleString()}円
             </p>
+
+            {/* ★ 追加：soldout/comingsoon 表示 */}
+            {buntanStatus !== "active" && (
+              <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {buntanStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
+              </div>
+            )}
 
             {/* 注意 */}
             <p className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mt-4">
@@ -371,30 +481,37 @@ export default function ProductsPage() {
                 onClick={()=>{
                   addToCart({
                     id: `buntan-${buntanTab}`,
-                    name: "文旦（不揃い）",
+                    name: "文旦（箱）",
                     variant: buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）",
-                    unitPrice: PRICE_TABLE[buntanTab],
+                    unitPrice: buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"],
                     qty: buntanQty,
                     extra: { buntan: withBuntan },
                   });
                   alert("カートに追加しました。右上のカートからまとめて注文できます。");
                   window.dispatchEvent(new Event("yk-cart-updated"));
                 }}
-                className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+                disabled={buntanStatus !== "active"}
+                className={`w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  buntanStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               >
                 カートに入れる
               </button>
 
               <button
                 onClick={()=>{
-                  const p = PRICE_TABLE[buntanTab] * buntanQty;
+                  const unit = buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"];
+                  const p = unit * buntanQty;
                   router.push(
-                    `/order?product=${encodeURIComponent("文旦（不揃い）")}` +
+                    `/order?product=${encodeURIComponent("文旦（箱）")}` +
                     `&size=${encodeURIComponent(buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）")}` +
                     `&qty=${buntanQty}&price=${p}&buntan=${withBuntan}`
                   );
                 }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition"
+                disabled={buntanStatus !== "active"}
+                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  buntanStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               >
                 今すぐ注文する
               </button>

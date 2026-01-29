@@ -19,6 +19,8 @@ type GasRes =
 export async function GET() {
   try {
     const GAS_URL = process.env.GAS_URL || process.env.NEXT_PUBLIC_GAS_URL;
+    const ADMIN_PW = process.env.ADMIN_PW;
+
     if (!GAS_URL) {
       return NextResponse.json(
         { ok: false, error: "GAS_URL is not set" },
@@ -26,11 +28,24 @@ export async function GET() {
       );
     }
 
-    // GASへ readProducts を依頼（PW不要の読み取り設計を想定）
+    // ★ GAS側が readProducts を password 必須にしているので、サーバー側で付与して叩く
+    if (!ADMIN_PW) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "ADMIN_PW is not set",
+          hint:
+            "Set ADMIN_PW in .env.local (local) and Vercel Environment Variables (production).",
+        },
+        { status: 500 }
+      );
+    }
+
     const r = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "readProducts" }),
+      // GAS: handlePost_ は JSON body の action / password / payload を拾える実装になってる前提
+      body: JSON.stringify({ action: "readProducts", password: ADMIN_PW }),
       cache: "no-store",
     });
 

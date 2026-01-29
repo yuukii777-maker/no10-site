@@ -94,8 +94,8 @@ export default function ProductsPage() {
   const mikanPremium = sheetMap[FIXED_KEYS.MIKAN_PREMIUM];
   const buntan = sheetMap[FIXED_KEYS.BUNTAN];
 
-  const mikanDefectStatus = (mikanDefect?.status || "active") as ProductItem["status"];
-  const mikanPremiumStatus = (mikanPremium?.status || "soldout") as ProductItem["status"];
+  const mikanDefectStatus = "soldout" as ProductItem["status"];
+  const mikanPremiumStatus = "soldout" as ProductItem["status"];
   const buntanStatus = (buntan?.status || "active") as ProductItem["status"];
 
   const mikanDefectFeature =
@@ -134,244 +134,12 @@ export default function ProductsPage() {
       )}
 
       {/* ====================== */}
-      {/* 傷あり青島みかん */}
-      {/* ====================== */}
-      <section className="mt-16">
-        <h2 className="text-3xl font-semibold">
-          傷あり青島みかん（箱詰め）
-        </h2>
-
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          {mikanDefectFeature}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
-          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image
-              src="/mikan/defect.png"
-              alt="傷あり青島みかん"
-              fill
-              className="object-cover"
-            />
-          </div>
-
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
-
-            {/* ★★ 統一：セグメント型（SP=2行 / MD+=1行） */}
-            <div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
-              <span className="text-sm text-gray-600">内容量：</span>
-              <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
-                <button
-                  onClick={() => { setMikanTab("5kg"); setSize("5kg"); }}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-                    text-[15px] sm:text-sm leading-snug
-                    ${mikanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
-                  aria-pressed={mikanTab==="5kg"}
-                >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
-                    <span className="font-semibold whitespace-nowrap">
-                      5kg<span className="hidden sm:inline">（6個）</span>
-                    </span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {Number(mikanDefectPrice5).toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-                <button
-                  onClick={() => { setMikanTab("10kg"); setSize("10kg"); }}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-                    text-[15px] sm:text-sm leading-snug border-l border-gray-200
-                    ${mikanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
-                  aria-pressed={mikanTab==="10kg"}
-                >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
-                    <span className="font-semibold whitespace-nowrap">
-                      10kg<span className="hidden sm:inline">（12個）</span>
-                    </span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">4,000円</span>
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* 規格選択 */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">
-                内容量を選択
-              </label>
-              <select
-                value={size}
-                onChange={(e) => setSize(e.target.value as "5kg" | "10kg")}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              >
-                <option value="5kg">5kg（{Number(mikanDefectPrice5).toLocaleString()}円）</option>
-                <option value="10kg">10kg（4,000円）</option>
-              </select>
-            </div>
-
-            {/* ★★ 追加：数量（箱数）指定 */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">数量（箱）</label>
-              <select
-                value={mikanQty}
-                onChange={(e)=>setMikanQty(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              >
-                {[1,2,3,4,5].map(n=>(
-                  <option key={n} value={n}>{n} 箱</option>
-                ))}
-              </select>
-            </div>
-
-            {/* 価格 */}
-            <p className="text-2xl font-bold text-green-700 mt-6">
-              価格：{(size === "5kg" ? mikanDefectPrice5 : price).toLocaleString()}円
-            </p>
-
-            {/* ★★ 追加：小計（数量反映） */}
-            <p className="text-lg font-semibold text-green-700 mt-1">
-              小計：{((size === "5kg" ? mikanDefectPrice5 : price) * mikanQty).toLocaleString()}円
-            </p>
-
-            <p className="text-sm text-gray-600 mt-2">
-              ※ 送料込みです。
-            </p>
-
-            {/* ★ 追加：soldout/comingsoon 表示（見た目を崩さずに） */}
-            {mikanDefectStatus !== "active" && (
-              <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                {mikanDefectStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
-              </div>
-            )}
-
-            {/* ★ イベント：みかん＋500gおまけ */}
-            <label
-              className="
-                mt-4 flex items-center gap-3
-                bg-orange-50/70 backdrop-blur-sm
-                border border-orange-200
-                rounded-xl px-4 py-3
-                cursor-pointer
-              "
-            >
-              <input
-                type="checkbox"
-                checked={withBuntan}
-                onChange={(e) => setWithBuntan(e.target.checked)}
-                className="w-5 h-5 accent-orange-500"
-              />
-
-              <div className="text-sm leading-tight">
-                <p className="font-semibold text-orange-700">
-                  【期間限定】みかん＋500gおまけ
-                </p>
-                <p className="text-gray-600 text-xs mt-1">
-                  ※ 数量限定・無くなり次第終了
-                </p>
-              </div>
-            </label>
-
-            {/* ★ 2択：カート or 今すぐ購入（※ 購入手続きへ は削除） */}
-            <div className="mt-6 grid sm:grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  addToCart({
-                    id: `mikan-${size}-${withBuntan ? "plus500" : "noextra"}`,
-                    name: "傷あり青島みかん（箱詰め）",
-                    variant: size,
-                    unitPrice: size === "5kg" ? mikanDefectPrice5 : price,
-                    qty: mikanQty,
-                    extra: { withBonus500g: withBuntan },
-                  });
-                  if (typeof window !== "undefined") {
-                    window.dispatchEvent(new Event("yk-cart-updated"));
-                  }
-                  alert("カートに追加しました。右上のカートからまとめて注文できます。");
-                }}
-                disabled={mikanDefectStatus !== "active"}
-                className={`w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
-                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-              >
-                カートに入れる
-              </button>
-
-              <button
-                onClick={() => {
-                  const unit = size === "5kg" ? mikanDefectPrice5 : price;
-                  const p = unit * mikanQty;
-                  router.push(
-                    `/order?product=${encodeURIComponent("傷あり青島みかん（箱詰め）")}` +
-                    `&size=${encodeURIComponent(size)}` +
-                    `&qty=${mikanQty}&price=${p}&buntan=${withBuntan}`
-                  );
-                }}
-                disabled={mikanDefectStatus !== "active"}
-                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
-                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-              >
-                今すぐ注文する
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-500 mt-3 text-center">
-              ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================== */}
-      {/* 青果みかん（状態良） */}
-      {/* ====================== */}
-      <section className="mt-24">
-        <h2 className="text-3xl font-semibold text-red-700">
-          青果みかん
-        </h2>
-
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          {mikanPremiumFeature}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
-          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image
-              src="/mikan/premium.png"
-              alt="青果みかん(状態良)"
-              fill
-              className="object-cover"
-            />
-          </div>
-
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-4">青果</h3>
-
-            <ul className="text-sm text-gray-700 space-y-1 mb-4">
-              <li>・5kg：4,500円（送料込み）</li>
-              <li>・10kg：8,000円（送料込み）</li>
-            </ul>
-
-            <button
-              disabled
-              className="w-full bg-red-500 text白 text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
-            >
-              {mikanPremiumStatus === "comingsoon" ? "近日、事前予約可能" : "現在売り切れ"}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================== */}
       {/* 文旦（みかん形式 + 2択） */}
       {/* ====================== */}
       <section className="mt-24">
         <h2 className="text-3xl font-semibold">文旦（箱）</h2>
 
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
           {buntanFeature}
         </div>
 
@@ -509,13 +277,245 @@ export default function ProductsPage() {
                   );
                 }}
                 disabled={buntanStatus !== "active"}
-                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                className={`w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
                   buntanStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
                 今すぐ注文する
               </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================== */}
+      {/* 傷あり青島みかん */}
+      {/* ====================== */}
+      <section className="mt-16">
+        <h2 className="text-3xl font-semibold">
+          傷あり青島みかん（箱詰め）
+        </h2>
+
+        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+          {mikanDefectFeature}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
+          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
+            <Image
+              src="/mikan/defect.png"
+              alt="傷あり青島みかん"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+            <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
+
+            {/* ★★ 統一：セグメント型（SP=2行 / MD+=1行） */}
+            <div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
+              <span className="text-sm text-gray-600">内容量：</span>
+              <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
+                <button
+                  onClick={() => { setMikanTab("5kg"); setSize("5kg"); }}
+                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
+                    text-[15px] sm:text-sm leading-snug
+                    ${mikanTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                  aria-pressed={mikanTab==="5kg"}
+                >
+                  {/* ▼ 2行（SP）/ 1行（MD+） */}
+                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+                    <span className="font-semibold whitespace-nowrap">
+                      5kg<span className="hidden sm:inline">（6個）</span>
+                    </span>
+                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
+                      {Number(mikanDefectPrice5).toLocaleString()}円
+                    </span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => { setMikanTab("10kg"); setSize("10kg"); }}
+                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
+                    text-[15px] sm:text-sm leading-snug border-l border-gray-200
+                    ${mikanTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                  aria-pressed={mikanTab==="10kg"}
+                >
+                  {/* ▼ 2行（SP）/ 1行（MD+） */}
+                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+                    <span className="font-semibold whitespace-nowrap">
+                      10kg<span className="hidden sm:inline">（12個）</span>
+                    </span>
+                    <span className="text-[13px] sm:text-sm whitespace-nowrap">4,000円</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* 規格選択 */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">
+                内容量を選択
+              </label>
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value as "5kg" | "10kg")}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                <option value="5kg">5kg（{Number(mikanDefectPrice5).toLocaleString()}円）</option>
+                <option value="10kg">10kg（4,000円）</option>
+              </select>
+            </div>
+
+            {/* ★★ 追加：数量（箱数）指定 */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">数量（箱）</label>
+              <select
+                value={mikanQty}
+                onChange={(e)=>setMikanQty(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                {[1,2,3,4,5].map(n=>(
+                  <option key={n} value={n}>{n} 箱</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 価格 */}
+            <p className="text-2xl font-bold text-green-700 mt-6">
+              価格：{(size === "5kg" ? mikanDefectPrice5 : price).toLocaleString()}円
+            </p>
+
+            {/* ★★ 追加：小計（数量反映） */}
+            <p className="text-lg font-semibold text-green-700 mt-1">
+              小計：{((size === "5kg" ? mikanDefectPrice5 : price) * mikanQty).toLocaleString()}円
+            </p>
+
+            <p className="text-sm text-gray-600 mt-2">
+              ※ 送料込みです。
+            </p>
+
+            {/* ★ 追加：soldout/comingsoon 表示（見た目を崩さずに） */}
+            {mikanDefectStatus !== "active" && (
+              <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {mikanDefectStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
+              </div>
+            )}
+
+            {/* ★ イベント：みかん＋500gおまけ */}
+            <label
+              className="
+                mt-4 flex items-center gap-3
+                bg-orange-50/70 backdrop-blur-sm
+                border border-orange-200
+                rounded-xl px-4 py-3
+                cursor-pointer
+              "
+            >
+              <input
+                type="checkbox"
+                checked={withBuntan}
+                onChange={(e) => setWithBuntan(e.target.checked)}
+                className="w-5 h-5 accent-orange-500"
+              />
+
+              <div className="text-sm leading-tight">
+                <p className="font-semibold text-orange-700">
+                  【期間限定】みかん＋500gおまけ
+                </p>
+                <p className="text-gray-600 text-xs mt-1">
+                  ※ 数量限定・無くなり次第終了
+                </p>
+              </div>
+            </label>
+
+            {/* ★ 2択：カート or 今すぐ購入（※ 購入手続きへ は削除） */}
+            <div className="mt-6 grid sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  addToCart({
+                    id: `mikan-${size}-${withBuntan ? "plus500" : "noextra"}`,
+                    name: "傷あり青島みかん（箱詰め）",
+                    variant: size,
+                    unitPrice: size === "5kg" ? mikanDefectPrice5 : price,
+                    qty: mikanQty,
+                    extra: { withBonus500g: withBuntan },
+                  });
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new Event("yk-cart-updated"));
+                  }
+                  alert("カートに追加しました。右上のカートからまとめて注文できます。");
+                }}
+                disabled={mikanDefectStatus !== "active"}
+                className={`w-full bg白 border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                カートに入れる
+              </button>
+
+              <button
+                onClick={() => {
+                  const unit = size === "5kg" ? mikanDefectPrice5 : price;
+                  const p = unit * mikanQty;
+                  router.push(
+                    `/order?product=${encodeURIComponent("傷あり青島みかん（箱詰め）")}` +
+                    `&size=${encodeURIComponent(size)}` +
+                    `&qty=${mikanQty}&price=${p}&buntan=${withBuntan}`
+                  );
+                }}
+                disabled={mikanDefectStatus !== "active"}
+                className={`w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                今すぐ注文する
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================== */}
+      {/* 青果みかん（状態良） */}
+      {/* ====================== */}
+      <section className="mt-24">
+        <h2 className="text-3xl font-semibold text-red-700">
+          青果みかん
+        </h2>
+
+        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+          {mikanPremiumFeature}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
+          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
+            <Image
+              src="/mikan/premium.png"
+              alt="青果みかん(状態良)"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+            <h3 className="text-2xl font-bold mb-4">青果</h3>
+
+            <ul className="text-sm text-gray-700 space-y-1 mb-4">
+              <li>・5kg：4,500円（送料込み）</li>
+              <li>・10kg：8,000円（送料込み）</li>
+            </ul>
+
+            <button
+              disabled
+              className="w-full bg-red-500 text白 text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
+            >
+              {mikanPremiumStatus === "comingsoon" ? "近日、事前予約可能" : "現在売り切れ"}
+            </button>
           </div>
         </div>
       </section>
@@ -592,7 +592,7 @@ function CartWidget() {
     <button
       onClick={() => router.push("/order?cart=1")}
       className="fixed z-50 right-5 bottom-5 flex items-center gap-2 rounded-full px-5 py-3
-                 bg-orange-500 text-white shadow-lg hover:bg-orange-600 transition"
+                 bg-orange-500 text白 shadow-lg hover:bg-orange-600 transition"
       aria-label="カートを見る"
       title="カートを見る"
     >
@@ -623,12 +623,12 @@ function CartTopButton() {
     <button
       onClick={() => router.push("/order?cart=1")}
       className="fixed z-50 right-5 top-20 sm:top-24 flex items-center gap-2 rounded-full px-4 py-2
-                 bg-white/90 backdrop-blur border border-gray-200 shadow hover:bg-white"
+                 bg白/90 backdrop-blur border border-gray-200 shadow hover:bg白"
       aria-label="カートへ（まとめて注文）"
       title="カートへ（まとめて注文）"
     >
       🛒<span className="text-sm font-semibold">カート</span>
-      <span className="ml-1 inline-flex items-center justify-center min-w-[1.5rem] h-6 text-xs font-bold rounded-full bg-green-600 text-white px-2">
+      <span className="ml-1 inline-flex items-center justify-center min-w-[1.5rem] h-6 text-xs font-bold rounded-full bg-green-600 text白 px-2">
         {count}
       </span>
     </button>

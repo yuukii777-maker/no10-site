@@ -70,7 +70,7 @@ export default function ProductsPage() {
   const natsumiStatus = "active" as ProductItem["status"];
 
   const natsumiFeature =
-    "【青果のみ／送料込みサイト特価】寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。2月は酸味のあとに甘さが追いかけ、3月中旬から甘みがさらに増します。酸味×糖度のバランスが良く、※種がある場合があります。";
+    "【青果／送料込みサイト特価】寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。2月は酸味のあとに甘さが追いかけ、3月中旬から甘みがさらに増します。酸味×糖度のバランスが良く、※種がある場合があります。";
   /* ========================= */
 
   /* =========================
@@ -140,7 +140,7 @@ export default function ProductsPage() {
       <CartTopButton />
 
       <div className="max-w-2xl mx-auto mt-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 text-center text-gray-700">
-        見た目に傷はありますが、味には自信のある青島みかんです。
+        歴史ある農園から採れた、おいしいみかんをサイトで特価にて販売しております。
       </div>
 
       {/* エラーバナーは非表示にする */}
@@ -151,11 +151,11 @@ export default function ProductsPage() {
 )}
 
       {/* ====================== */}
-      {/* 新商品：南津海（購入可能） */}
+      {/* 南津海（購入可能） */}
       {/* ====================== */}
       <section className="mt-24">
         <h2 className="text-3xl font-semibold text-green-700">
-          新商品：南津海（青果）
+          南津海（青果）
         </h2>
 
         <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">

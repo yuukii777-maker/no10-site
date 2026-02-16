@@ -104,7 +104,7 @@ export default function AdminProductsPage() {
 
     setSavingId(it.id);
     try {
-      const data = await postJson<ApiWriteRes>("/api/admin-products", {
+      const data = await postJson<ApiWriteRes>("/api/admin/products", {
         action: "updateProduct",
         password: adminPw,
         payload: {

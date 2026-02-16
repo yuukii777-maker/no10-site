@@ -57,6 +57,23 @@ export default function ProductsPage() {
   /* ========================= */
 
   /* =========================
+     ★ 追加：南津海（新商品）用：価格/タブ/数量
+  ========================= */
+  const NATSUMI_PRICE_TABLE: Record<"5kg" | "10kg", number> = {
+    "5kg": 3000,
+    "10kg": 5000,
+  };
+  const [natsumiTab, setNatsumiTab] = useState<"5kg" | "10kg" | "review">("5kg");
+  const [natsumiSize, setNatsumiSize] = useState<"5kg" | "10kg" | null>(null);
+  const [natsumiQty, setNatsumiQty] = useState<number>(1);
+
+  const natsumiStatus = "active" as ProductItem["status"];
+
+  const natsumiFeature =
+    "【青果のみ／送料込みサイト特価】寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。2月は酸味のあとに甘さが追いかけ、3月中旬から甘みがさらに増します。酸味×糖度のバランスが良く、※種がある場合があります。";
+  /* ========================= */
+
+  /* =========================
      ★ 追加：シート連動（/api/products から取得）
      - product名完全一致で紐付け
      - 反映するのは「status / feature / price（5kg側に反映）」だけ
@@ -132,6 +149,160 @@ export default function ProductsPage() {
     ※ 商品データの読み込みに失敗しています（/api/products）: {sheetError}
   </div>
 )}
+
+      {/* ====================== */}
+      {/* 新商品：南津海（購入可能） */}
+      {/* ====================== */}
+      <section className="mt-24">
+        <h2 className="text-3xl font-semibold text-green-700">
+          新商品：南津海（青果）
+        </h2>
+
+        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+          {natsumiFeature}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
+          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
+            <Image
+              src="/mikan/premium.png"
+              alt="南津海（青果）"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+            <h3 className="text-2xl font-bold mb-4">南津海</h3>
+
+            {/* ★ みかんと同形式：サイズ切替ボタン（ずれ解消版） */}
+<div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
+  <span className="text-sm text-gray-600">内容量：</span>
+
+  {/* 2ボタンを1つの“セグメント”にまとめる */}
+  <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
+    <button
+      onClick={() => { setNatsumiTab("5kg"); setNatsumiSize("5kg"); }}
+      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
+        text-[15px] sm:text-sm leading-snug
+        ${natsumiTab==="5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+      aria-pressed={natsumiTab==="5kg"}
+    >
+      {/* ▼ 2行（SP）/ 1行（MD+） */}
+      <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+        <span className="font-semibold whitespace-nowrap">
+          5kg
+        </span>
+        <span className="text-[13px] sm:text-sm whitespace-nowrap">
+          {Number(NATSUMI_PRICE_TABLE["5kg"]).toLocaleString()}円
+        </span>
+      </span>
+    </button>
+
+    <button
+      onClick={() => { setNatsumiTab("10kg"); setNatsumiSize("10kg"); }}
+      className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
+        text-[15px] sm:text-sm leading-snug border-l border-gray-200
+        ${natsumiTab==="10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+      aria-pressed={natsumiTab==="10kg"}
+    >
+      {/* ▼ 2行（SP）/ 1行（MD+） */}
+      <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
+        <span className="font-semibold whitespace-nowrap">
+          10kg
+        </span>
+        <span className="text-[13px] sm:text-sm whitespace-nowrap">{Number(NATSUMI_PRICE_TABLE["10kg"]).toLocaleString()}円</span>
+      </span>
+    </button>
+  </div>
+</div>
+
+            {/* 規格選択（既存互換） */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">内容量を選択</label>
+              <select
+                value={natsumiTab}
+                onChange={(e)=>{ const v = e.target.value as "5kg"|"10kg"; setNatsumiTab(v); setNatsumiSize(v); }}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                <option value="5kg">5kg / {Number(NATSUMI_PRICE_TABLE["5kg"]).toLocaleString()}円</option>
+                <option value="10kg">10kg / {Number(NATSUMI_PRICE_TABLE["10kg"]).toLocaleString()}円</option>
+              </select>
+            </div>
+
+            {/* 箱数 */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">数量（箱）</label>
+              <select
+                value={natsumiQty}
+                onChange={(e) => setNatsumiQty(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                {[1,2,3,4,5].map(n=>(
+                  <option key={n} value={n}>{n} 箱</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 価格 + 小計 */}
+            <p className="text-2xl font-bold text-green-700 mt-6">
+              価格：{(natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"]).toLocaleString()}円 / 箱
+            </p>
+            <p className="text-lg font-semibold text-green-700 mt-1">
+              小計：{((natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"]) * natsumiQty).toLocaleString()}円
+            </p>
+
+            {/* ★ 追加：soldout/comingsoon 表示 */}
+            {natsumiStatus !== "active" && (
+              <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {natsumiStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
+              </div>
+            )}
+
+            {/* 2択：カート or 今すぐ注文 */}
+            <div className="mt-6 grid sm:grid-cols-2 gap-3">
+              <button
+                onClick={()=>{
+                  addToCart({
+                    id: `natsumi-${natsumiTab}`,
+                    name: "南津海（青果）",
+                    variant: natsumiTab,
+                    unitPrice: natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"],
+                    qty: natsumiQty,
+                    extra: { natsumi: true },
+                  });
+                  alert("カートに追加しました。右上のカートからまとめて注文できます。");
+                  window.dispatchEvent(new Event("yk-cart-updated"));
+                }}
+                disabled={natsumiStatus !== "active"}
+                className={`w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  natsumiStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                カートに入れる
+              </button>
+
+              <button
+                onClick={()=>{
+                  const unit = natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"];
+                  const p = unit * natsumiQty;
+                  router.push(
+                    `/order?product=${encodeURIComponent("南津海（青果）")}` +
+                    `&size=${encodeURIComponent(natsumiTab)}` +
+                    `&qty=${natsumiQty}&price=${p}&buntan=${withBuntan}`
+                  );
+                }}
+                disabled={natsumiStatus !== "active"}
+                className={`w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  natsumiStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                今すぐ注文する
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ====================== */}
       {/* 文旦（みかん形式 + 2択） */}
@@ -476,46 +647,6 @@ export default function ProductsPage() {
             <p className="text-xs text-gray-500 mt-3 text-center">
               ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================== */}
-      {/* 青果みかん（状態良） */}
-      {/* ====================== */}
-      <section className="mt-24">
-        <h2 className="text-3xl font-semibold text-red-700">
-          青果みかん
-        </h2>
-
-        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
-          {mikanPremiumFeature}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
-          <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
-            <Image
-              src="/mikan/premium.png"
-              alt="青果みかん(状態良)"
-              fill
-              className="object-cover"
-            />
-          </div>
-
-          <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-4">青果</h3>
-
-            <ul className="text-sm text-gray-700 space-y-1 mb-4">
-              <li>・5kg：4,500円（送料込み）</li>
-              <li>・10kg：8,000円（送料込み）</li>
-            </ul>
-
-            <button
-              disabled
-              className="w-full bg-red-500 text白 text-lg font-bold py-3 rounded-xl opacity-70 cursor-not-allowed"
-            >
-              {mikanPremiumStatus === "comingsoon" ? "近日、事前予約可能" : "現在売り切れ"}
-            </button>
           </div>
         </div>
       </section>

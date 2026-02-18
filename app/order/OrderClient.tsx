@@ -460,7 +460,7 @@ export default function OrderClient() {
         </button>
 
         <button onClick={() => router.back()} className="mt-4 w-full text-sm text-gray-500 underline">
-          商品ページに戻る
+          商品ページへ戻る
         </button>
       </section>
     </main>

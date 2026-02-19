@@ -20,6 +20,12 @@ const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec?action=order";
 
 /* =========================
+   ★ 代引き手数料
+========================= */
+const COD_FEE = 300;
+/* ========================= */
+
+/* =========================
    ★ 到着希望（時間帯のみ）
 ========================= */
 function DeliveryPicker({
@@ -173,6 +179,13 @@ export default function OrderClient() {
   const [submitted, setSubmitted] = useState(false);
 
   /* =========================
+     ★ 支払い方法（代引き追加）
+  ========================= */
+  const [paymentMethod, setPaymentMethod] = useState<"bank" | "cod">("bank");
+  const codFee = paymentMethod === "cod" ? COD_FEE : 0;
+  /* ========================= */
+
+  /* =========================
      ★ 到着希望（時間帯のみ）
   ========================= */
   const [reqTime, setReqTime] = useState<string | null>(null);
@@ -220,6 +233,9 @@ export default function OrderClient() {
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
         // ★ 到着希望（時間帯のみ）
         request_time: reqTime,
+        // ★ 支払い方法（代引き追加）
+        payment_method: paymentMethod,
+        cod_fee: codFee,
       };
 
       const params = new URLSearchParams({ payload: JSON.stringify(payload) });
@@ -276,6 +292,9 @@ export default function OrderClient() {
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
         // ★ 到着希望（時間帯のみ）
         request_time: reqTime,
+        // ★ 支払い方法（代引き追加）
+        payment_method: paymentMethod,
+        cod_fee: codFee,
       };
 
       const params = new URLSearchParams({ payload: JSON.stringify(payload) });
@@ -334,8 +353,29 @@ export default function OrderClient() {
                 <button onClick={clearCart} className="text-sm text-gray-500 underline">
                   カートを空にする
                 </button>
-                <div className="text-xl font-bold">合計：{subtotal.toLocaleString()}円（送料込み）</div>
+                <div className="text-xl font-bold">
+                  合計：{(subtotal + codFee).toLocaleString()}円（送料込み）
+                </div>
               </div>
+
+              {/* ★ 支払い方法（代引き追加） */}
+              <div className="pt-2">
+                <label className="block text-sm mb-1 font-semibold">お支払い方法</label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod((e.target.value as any) || "bank")}
+                >
+                  <option value="bank">銀行振込 / PayPay（事前払い）</option>
+                  <option value="cod">代金引換（＋300円）</option>
+                </select>
+                {paymentMethod === "cod" && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    ※ 代引き手数料として {COD_FEE}円 が加算されます。
+                  </p>
+                )}
+              </div>
+              {/* ========================= */}
             </div>
           )}
         </section>
@@ -396,7 +436,11 @@ export default function OrderClient() {
         <h1 className="text-3xl font-bold mb-6">ご購入ありがとうございます</h1>
         <p className="text-lg leading-relaxed">
           詳細は、ご登録いただいたメールアドレス宛へのメッセージをご確認の上、<br />
-          お支払いをお願いいたします。
+          {paymentMethod === "cod" ? (
+            <>商品到着時にお支払いをお願いいたします。</>
+          ) : (
+            <>お支払いをお願いいたします。</>
+          )}
         </p>
 
         <button
@@ -419,9 +463,27 @@ export default function OrderClient() {
         <p>商品：<strong>{product}</strong></p>
         <p className="mt-2">規格：<strong>{size}</strong></p>
         <p className="text-2xl font-bold text-green-700 mt-4">
-          商品代金：{price.toLocaleString()}円
+          商品代金：{(price + codFee).toLocaleString()}円
         </p>
         <p className="text-sm text-gray-600 mt-2">※ 送料込みです</p>
+        {/* ★ 支払い方法（代引き追加） */}
+        <div className="mt-4">
+          <label className="block text-sm mb-1 font-semibold">お支払い方法</label>
+          <select
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod((e.target.value as any) || "bank")}
+          >
+            <option value="bank">銀行振込 / PayPay（事前払い）</option>
+            <option value="cod">代金引換（＋300円）</option>
+          </select>
+          {paymentMethod === "cod" && (
+            <p className="text-xs text-gray-600 mt-2">
+              ※ 代引き手数料として {COD_FEE}円 が加算されます。
+            </p>
+          )}
+        </div>
+        {/* ========================= */}
       </section>
 
       {/* お届け先 */}

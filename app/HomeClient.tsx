@@ -89,7 +89,7 @@ export default function Home() {
   }, [sliderImages.length]);
 
   /* ===========================
-     遷移フェード（既存
+     遷移フェード（既存）
   ============================ */
   const FADE_DURATION = 250;
   const [leaving, setLeaving] = useState(false);
@@ -123,8 +123,8 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす）
-            ★修正：上下を確実に見せるため “上用/下用PNG” の2枚に分割して表示 */}
-        <div className="absolute -inset-10 hero-sway pointer-events-none">
+            ★修正：iPhoneで切れないよう「上/下PNG」を “object-contain” + “高さ固定” で表示 */}
+        <div className="absolute inset-0 hero-sway pointer-events-none hero-branch-layer">
           {/* 上：枝＋みかん（必ず見える） */}
           <div className="hero-branch-slice hero-branch-top">
             <Image
@@ -132,18 +132,18 @@ export default function Home() {
               alt="枝とみかん（上）"
               fill
               priority
-              className="object-cover object-top"
+              className="object-contain object-top"
             />
           </div>
 
           {/* 下：花（必ず見える） */}
           <div className="hero-branch-slice hero-branch-bottom">
             <Image
-              src="/mikan/hero_branch_bottom_only.png"
+              src="/mikan/hero_branch_bottom_only_transparent.png"
               alt="花（下）"
               fill
               priority
-              className="object-cover object-bottom"
+              className="object-contain object-bottom"
             />
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function Home() {
         </div>
 
         {/* 購入ボタン（既存の導線を維持） */}
-        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+        <div className="absolute inset-0 z-[40] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <div className="relative mt-10 group -translate-y-6 sm:-translate-y-5 md:-translate-y-4">
             <button
               onClick={goProducts}
@@ -227,37 +227,27 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★修正：上下2枚表示（iPhone縦長でも必ず上下が見える＆継ぎ目が出ない） */
+          /* ★追加：枝レイヤーは必ず下側（ボタンがPCで消える事故防止） */
+          .hero-branch-layer {
+            z-index: 5;
+          }
+
+          /* ★修正：上下2枚表示（iPhone縦長でも上下が必ず見える） */
           .hero-branch-slice {
             position: absolute;
             left: 0;
             right: 0;
-            overflow: hidden;
-          }
-          /* 少しはみ出させて揺れで切れても見えるようにする（継ぎ目も消える） */
-          .hero-branch-top {
-            top: -3%;
-            height: 66%;
-          }
-          .hero-branch-bottom {
-            bottom: -3%;
-            height: 66%;
+            pointer-events: none;
           }
 
-          /* ★修正：スマホで上下が切れないよう、少しだけ強めにズーム */
-          .hero-branch-slice :global(img) {
-            transform-origin: center;
-            transform: scale(1.18);
+          /* 上下の“見せたい範囲”を高さ固定（containなので切れない） */
+          .hero-branch-top {
+            top: 0;
+            height: clamp(140px, 24vh, 220px);
           }
-          @media (min-width: 640px) {
-            .hero-branch-slice :global(img) {
-              transform: scale(1.12);
-            }
-          }
-          @media (min-width: 768px) {
-            .hero-branch-slice :global(img) {
-              transform: scale(1.08);
-            }
+          .hero-branch-bottom {
+            bottom: 0;
+            height: clamp(140px, 26vh, 240px);
           }
 
           @keyframes kidsFloat {

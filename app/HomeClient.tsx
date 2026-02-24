@@ -117,7 +117,7 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす） ※少しアップにして下が切れないよう調整 */}
-<div className="absolute inset-0 hero-sway pointer-events-none">
+<div className="absolute -inset-10 hero-sway pointer-events-none">
   <div className="absolute inset-0 hero-branch-zoom">
     <Image
       src="/mikan/hero_branch_top.png"
@@ -143,13 +143,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* みかんメダル（回転＋少し浮遊） ※少し大きめ */}
+        {/* 太陽（静止＋周りだけ光が発行して消える） */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-1/2 -translate-x-1/2 top-[10%] sm:top-[9%] md:top-[8%] hero-medal-float">
-            <div className="hero-medal-spin">
+            <div className="hero-sun-wrap">
+              <div className="hero-sun-glow" />
               <Image
-                src="/mikan/hero_orange_medal_spin.png"
-                alt="みかんメダル"
+                src="/mikan/hero_sun.png"
+                alt="太陽"
                 width={520}
                 height={520}
                 priority
@@ -179,7 +180,7 @@ export default function Home() {
         </div>
 
         {/* アニメCSS（このヒーロー内だけに適用） */}
-       <style>{`
+       <style jsx>{`
           .hero-fixed-bg {
             position: absolute;
             inset: 0;
@@ -245,17 +246,44 @@ export default function Home() {
             will-change: transform;
           }
 
-          @keyframes medalSpin {
+          /* ★追加：太陽の周囲だけ“発光→消える”を繰り返す */
+          .hero-sun-wrap {
+            position: relative;
+            display: inline-block;
+          }
+          @keyframes sunGlowPulse {
             0% {
-              transform: rotate(0deg);
+              opacity: 0.18;
+              transform: translate(-50%, -50%) scale(0.92);
+              filter: blur(8px);
+            }
+            50% {
+              opacity: 0.55;
+              transform: translate(-50%, -50%) scale(1.03);
+              filter: blur(14px);
             }
             100% {
-              transform: rotate(360deg);
+              opacity: 0.18;
+              transform: translate(-50%, -50%) scale(0.92);
+              filter: blur(8px);
             }
           }
-          .hero-medal-spin {
-            animation: medalSpin 7.5s linear infinite;
-            will-change: transform;
+          .hero-sun-glow {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 150%;
+            height: 150%;
+            transform: translate(-50%, -50%);
+            border-radius: 9999px;
+            background: radial-gradient(
+              circle,
+              rgba(255, 214, 90, 0.55) 0%,
+              rgba(255, 214, 90, 0.22) 38%,
+              rgba(255, 214, 90, 0.0) 70%
+            );
+            animation: sunGlowPulse 2.8s ease-in-out infinite;
+            pointer-events: none;
           }
 
           /* ★追加：ブランド文字（白ベース＋ほんのり金縁＋太め＋丸み） */

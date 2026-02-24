@@ -118,7 +118,7 @@ export default function Home() {
             alt="背景"
             fill
             priority
-            className="object-cover"
+            className="object-contain"
           />
         </div>
 
@@ -373,7 +373,7 @@ export default function Home() {
                   fill
                   sizes="100vw"
                   priority={i === 0}
-                  className="object-cover"
+                  className="object-contain"
                 />
                 <div className="slider-caption">{item.caption}</div>
               </div>
@@ -397,7 +397,7 @@ export default function Home() {
                 src="/mikan/reason_shop_1.jpg"
                 alt="山川みかん 無人販売所の様子（全景）"
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(min-width: 640px) 50vw, 100vw"
                 priority
               />
@@ -407,7 +407,7 @@ export default function Home() {
                 src="/mikan/reason_shop_2.jpg"
                 alt="山川みかん 無人販売所の様子（看板と棚）"
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(min-width: 640px) 50vw, 100vw"
               />
             </div>
@@ -544,7 +544,7 @@ function GalleryItem({
           alt={title}
           fill
           sizes="(min-width: 768px) 33vw, 100vw" /* 明示して安定 */
-          className="object-cover"
+          className="object-contain"
         />
       </div>
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 mt-4">

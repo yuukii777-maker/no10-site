@@ -124,7 +124,7 @@ export default function Home() {
               alt="枝と花"
               fill
               priority
-              className="object-contain md:object-cover object-center"
+              className="object-cover object-center"
             />
           </div>
         </div>
@@ -208,10 +208,15 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★修正：重複して崩れていた定義を1つに整理（意味は同じ） */
+          /* ★修正：スマホでも“上下が見える”ように少しズーム（帯/余白を消す） */
           .hero-branch-zoom :global(img) {
-            transform: none;
             transform-origin: top center;
+            transform: scale(1.12) translateY(12px);
+          }
+          @media (min-width: 640px) {
+            .hero-branch-zoom :global(img) {
+              transform: scale(1.10) translateY(10px);
+            }
           }
           @media (min-width: 768px) {
             .hero-branch-zoom :global(img) {
@@ -285,7 +290,7 @@ export default function Home() {
               circle,
               rgba(255, 214, 90, 0.55) 0%,
               rgba(255, 214, 90, 0.22) 38%,
-              rgba(255, 214, 90, 0.0) 70%
+              rgba(255, 214, 90, 0) 70%
             );
             animation: sunGlowPulse 2.8s ease-in-out infinite;
             pointer-events: none;

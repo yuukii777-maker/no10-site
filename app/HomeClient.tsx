@@ -168,11 +168,11 @@ export default function Home() {
         </div>
 
         {/* 購入ボタン（既存の導線を維持） */}
-        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl -mt-7">
           <div className="relative mt-10 group">
             <button
               onClick={goProducts}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
+              className="bg-orange-500/80 hover:bg-orange-500/95 backdrop-blur-sm text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
             >
               🧺 みかんを購入する
             </button>

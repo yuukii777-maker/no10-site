@@ -8,7 +8,7 @@ import SubFlash from "../components/SubFlash"; // ★追加：中央モーダル
 
 /* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
 export const dynamic = "force-dynamic";
-// export const revalidate = 0; // ←こちらでも同等（どちらか片方のみでOK）
+// export const revalidate = 0; // ←こちらでも同等（どちらか1つでOK）
 
 /* ===========================
    フェードインアニメ（既存）
@@ -118,36 +118,15 @@ export default function Home() {
             alt="背景"
             fill
             priority
-            className="object-contain"
+            className="object-cover"
           />
         </div>
 
         {/* 枝＋花（同じ強さで揺らす）
-            ★修正：iPhoneで切れないよう「object-contain + 上下固定」& 透明PNGを使用 */}
+            ★修正：PNGを<Image fill>で置かず、CSS背景＋マスクで“貼ってる感”を消す */}
         <div className="absolute inset-0 hero-sway pointer-events-none">
-          {/* 上：枝＋みかん（透明PNG前提） */}
-          <div className="hero-branch-slice hero-branch-top">
-            <Image
-              src="/mikan/hero_branch_top_only.png?v=20260225a"
-              alt="枝とみかん（上）"
-              fill
-              priority
-              sizes="100vw"
-              className="object-contain object-top"
-            />
-          </div>
-
-          {/* 下:花（透明PNG） */}
-          <div className="hero-branch-slice hero-branch-bottom">
-            <Image
-              src="/mikan/hero_branch_bottom_only.png?v=20260225a"
-              alt="花（下）"
-              fill
-              priority
-              sizes="100vw"
-              className="object-contain object-bottom"
-            />
-          </div>
+          <div className="hero-branch-topLayer" />
+          <div className="hero-branch-bottomLayer" />
         </div>
 
         {/* 子供（浮遊） */}
@@ -189,7 +168,7 @@ export default function Home() {
         </div>
 
         {/* 購入ボタン（既存の導線を維持） */}
-        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+        <div className="absolute inset-0 z-[999] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
           <div className="relative mt-10 group -translate-y-8 sm:-translate-y-7 md:-translate-y-6">
             <button
               onClick={goProducts}
@@ -229,27 +208,67 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★修正：上下2枚表示（containで絶対に切れない） */
-          .hero-branch-slice {
+          /* ★修正：上下PNGを“背景画像”として配置（四角の境界をマスクで溶かす） */
+          .hero-branch-topLayer,
+          .hero-branch-bottomLayer {
             position: absolute;
-            left: 0;
-            right: 0;
-            overflow: hidden;
+            left: -6%;
+            right: -6%;
             pointer-events: none;
-          }
-          .hero-branch-top {
-            top: 0;
-            height: 44%;
-          }
-          .hero-branch-bottom {
-            bottom: 0;
-            height: 44%;
+            background-repeat: no-repeat;
+            background-size: cover;
+            will-change: transform;
           }
 
-          /* ★修正：1pxの隙間対策（iPhoneで稀に出る） */
-          .hero-branch-slice :global(img) {
-            transform: scale(1.02);
-            transform-origin: center;
+          /* 上：枝＋みかん */
+          .hero-branch-topLayer {
+            top: -6%;
+            height: 56%;
+            background-image: url("/mikan/hero_branch_top_only.png?v=20260225a");
+            background-position: center top;
+
+            -webkit-mask-image: linear-gradient(
+              to bottom,
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 72%,
+              rgba(0, 0, 0, 0) 100%
+            );
+            mask-image: linear-gradient(
+              to bottom,
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 72%,
+              rgba(0, 0, 0, 0) 100%
+            );
+          }
+
+          /* 下：花 */
+          .hero-branch-bottomLayer {
+            bottom: -6%;
+            height: 56%;
+            background-image: url("/mikan/hero_branch_bottom_only.png?v=20260225a");
+            background-position: center bottom;
+
+            -webkit-mask-image: linear-gradient(
+              to top,
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 72%,
+              rgba(0, 0, 0, 0) 100%
+            );
+            mask-image: linear-gradient(
+              to top,
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 72%,
+              rgba(0, 0, 0, 0) 100%
+            );
+          }
+
+          /* iPhone縦長で“足りない”時だけ少し強めに広げる */
+          @media (max-width: 430px) {
+            .hero-branch-topLayer,
+            .hero-branch-bottomLayer {
+              left: -10%;
+              right: -10%;
+            }
           }
 
           @keyframes kidsFloat {

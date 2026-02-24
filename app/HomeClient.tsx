@@ -179,7 +179,7 @@ export default function Home() {
         </div>
 
         {/* アニメCSS（このヒーロー内だけに適用） */}
-        <style jsx>{`
+       <style>{`
           .hero-fixed-bg {
             position: absolute;
             inset: 0;

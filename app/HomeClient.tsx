@@ -123,26 +123,28 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす）
-            ★修正：iPhoneで切れないよう「上/下PNG」を “object-contain” + “高さ固定” で表示 */}
-        <div className="absolute inset-0 hero-sway pointer-events-none hero-branch-layer">
-          {/* 上：枝＋みかん（必ず見える） */}
+            ★修正：iPhoneで切れないよう「object-contain + 上下固定」& 透明PNGを使用 */}
+        <div className="absolute inset-0 hero-sway pointer-events-none">
+          {/* 上：枝＋みかん（透明PNG前提） */}
           <div className="hero-branch-slice hero-branch-top">
             <Image
-              src="/mikan/hero_branch_top_only.png"
+              src="/mikan/hero_branch_top_only.png?v=20260225a"
               alt="枝とみかん（上）"
               fill
               priority
+              sizes="100vw"
               className="object-contain object-top"
             />
           </div>
 
-          {/* 下：花（必ず見える） */}
+          {/* 下：花（透明PNG） */}
           <div className="hero-branch-slice hero-branch-bottom">
             <Image
-              src="/mikan/hero_branch_bottom_only_transparent.png"
+              src="/mikan/hero_branch_bottom_only.png?v=20260225a"
               alt="花（下）"
               fill
               priority
+              sizes="100vw"
               className="object-contain object-bottom"
             />
           </div>
@@ -187,11 +189,11 @@ export default function Home() {
         </div>
 
         {/* 購入ボタン（既存の導線を維持） */}
-        <div className="absolute inset-0 z-[40] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
-          <div className="relative mt-10 group -translate-y-6 sm:-translate-y-5 md:-translate-y-4">
+        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+          <div className="relative mt-10 group -translate-y-8 sm:-translate-y-7 md:-translate-y-6">
             <button
               onClick={goProducts}
-              className="bg-orange-500/80 hover:bg-orange-500/95 backdrop-blur-sm text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
+              className="bg-orange-500/70 hover:bg-orange-500/90 backdrop-blur-sm text-white px-10 py-3 rounded-full text-base sm:text-lg shadow-lg transition-all duration-200 active:scale-95"
             >
               🧺 みかんを購入する
             </button>
@@ -227,27 +229,27 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★追加：枝レイヤーは必ず下側（ボタンがPCで消える事故防止） */
-          .hero-branch-layer {
-            z-index: 5;
-          }
-
-          /* ★修正：上下2枚表示（iPhone縦長でも上下が必ず見える） */
+          /* ★修正：上下2枚表示（containで絶対に切れない） */
           .hero-branch-slice {
             position: absolute;
             left: 0;
             right: 0;
+            overflow: hidden;
             pointer-events: none;
           }
-
-          /* 上下の“見せたい範囲”を高さ固定（containなので切れない） */
           .hero-branch-top {
             top: 0;
-            height: clamp(140px, 24vh, 220px);
+            height: 44%;
           }
           .hero-branch-bottom {
             bottom: 0;
-            height: clamp(140px, 26vh, 240px);
+            height: 44%;
+          }
+
+          /* ★修正：1pxの隙間対策（iPhoneで稀に出る） */
+          .hero-branch-slice :global(img) {
+            transform: scale(1.02);
+            transform-origin: center;
           }
 
           @keyframes kidsFloat {

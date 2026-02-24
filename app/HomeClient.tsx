@@ -116,15 +116,28 @@ export default function Home() {
           />
         </div>
 
-        {/* 枝＋花（同じ強さで揺らす） ※少しアップにして下が切れないよう調整 */}
+        {/* 枝＋花（同じ強さで揺らす）
+            ★修正：上下を確実に見せるため “同じ画像を上下2枚” に分けて表示 */}
         <div className="absolute -inset-10 hero-sway pointer-events-none">
-          <div className="absolute inset-0 hero-branch-zoom">
+          {/* 上だけ固定（上のみかんが必ず見える） */}
+          <div className="hero-branch-slice hero-branch-top">
             <Image
               src="/mikan/hero_branch_top.png"
-              alt="枝と花"
+              alt="枝とみかん（上）"
               fill
               priority
-              className="object-cover object-center"
+              className="object-cover object-top"
+            />
+          </div>
+
+          {/* 下だけ固定（下の花が必ず見える） */}
+          <div className="hero-branch-slice hero-branch-bottom">
+            <Image
+              src="/mikan/hero_branch_top.png"
+              alt="花（下）"
+              fill
+              priority
+              className="object-cover object-bottom"
             />
           </div>
         </div>
@@ -180,7 +193,7 @@ export default function Home() {
         </div>
 
         {/* アニメCSS（このヒーロー内だけに適用） */}
-        <style>{`
+        <style jsx>{`
           .hero-fixed-bg {
             position: absolute;
             inset: 0;
@@ -208,19 +221,35 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★修正：スマホでも“上下が見える”ように少しズーム（帯/余白を消す） */
-          .hero-branch-zoom :global(img) {
-            transform-origin: top center;
-            transform: scale(1.12) translateY(12px);
+          /* ★追加：上下2枚表示用（少し重ねて“継ぎ目”を消す） */
+          .hero-branch-slice {
+            position: absolute;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+          }
+          .hero-branch-top {
+            top: 0;
+            height: 62%;
+          }
+          .hero-branch-bottom {
+            bottom: 0;
+            height: 62%;
+          }
+
+          /* ★追加：スマホでも上下が切れないように少しズーム（両方に同じ補正） */
+          .hero-branch-slice :global(img) {
+            transform-origin: center;
+            transform: scale(1.12);
           }
           @media (min-width: 640px) {
-            .hero-branch-zoom :global(img) {
-              transform: scale(1.10) translateY(10px);
+            .hero-branch-slice :global(img) {
+              transform: scale(1.10);
             }
           }
           @media (min-width: 768px) {
-            .hero-branch-zoom :global(img) {
-              transform: scale(1.08) translateY(10px);
+            .hero-branch-slice :global(img) {
+              transform: scale(1.08);
             }
           }
 
@@ -436,7 +465,7 @@ export default function Home() {
       </section>
 
       {/* ーーー 修正③: スライダー CSS 最小限（img に transform 禁止） ーーー */}
-      <style>{`
+      <style jsx global>{`
         .slider-container { position: relative; overflow: hidden; }
         .slider-track {
           display: flex;

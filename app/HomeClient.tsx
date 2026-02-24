@@ -117,15 +117,17 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす） ※少しアップにして下が切れないよう調整 */}
-        <div className="absolute inset-0 hero-sway hero-branch-zoom pointer-events-none">
-          <Image
-            src="/mikan/hero_branch_top.png"
-            alt="枝と花"
-            fill
-            priority
-            className="object-cover"
-          />
-        </div>
+<div className="absolute inset-0 hero-sway pointer-events-none">
+  <div className="absolute inset-0 hero-branch-zoom">
+    <Image
+      src="/mikan/hero_branch_top.png"
+      alt="枝と花"
+      fill
+      priority
+      className="object-cover"
+    />
+  </div>
+</div>
 
         {/* 子供（浮遊） */}
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none">

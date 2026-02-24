@@ -137,7 +137,7 @@ export default function Home() {
             />
           </div>
 
-          {/* 下：花（透明PNG） */}
+          {/* 下:花（透明PNG） */}
           <div className="hero-branch-slice hero-branch-bottom">
             <Image
               src="/mikan/hero_branch_bottom_only.png?v=20260225a"

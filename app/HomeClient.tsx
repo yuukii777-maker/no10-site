@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import AppleFloat from "./AppleFloat"; // 既存そのまま
 import AboutTeaser from "../components/AboutTeaser"; // ★修正：相対パスを app/ からの一段上に
 import SubFlash from "../components/SubFlash"; // ★追加：中央モーダル
 
@@ -106,52 +105,67 @@ export default function Home() {
           背景はCSSのみ（グラデ＋微粒子）、主役は AppleFloat
       ============================ */}
       <section className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20">
-        {/* 背景：みかん色グラデ */}
-        <div
-          className="absolute inset-0 z-[0]"
-          style={{
-            background: `
-              radial-gradient(140% 90% at 10% 95%, rgba(255,160,60,0.22) 0%, rgba(255,160,60,0) 55%),
-              radial-gradient(160% 120% at 70% -10%, rgba(255,235,190,0.30) 0%, rgba(255,235,190,0) 60%),
-              linear-gradient(180deg, #9a4d1f 0%, #b75b24 24%, #d8742d 50%, #e78a3b 72%, #eea45a 100%)
-            `,
-          }}
-        />
-
-        {/* 微粒子 */}
-        <div
-          className="pointer-events-none absolute inset-0 z-[1] opacity-[.35] mix-blend-screen"
-          style={{
-            background:
-              "repeating-radial-gradient(circle at 30% 20%, rgba(255,255,255,0.14) 0 1px, transparent 1px 8px), repeating-radial-gradient(circle at 70% 65%, rgba(255,240,180,0.12) 0 1px, transparent 1px 10px)",
-            filter: "blur(0.6px)",
-          }}
-        />
-
-        {/* もや */}
-        <div
-          className="pointer-events-none absolute inset-0 z-[2] mix-blend-screen"
-          style={{
-            background:
-              "radial-gradient(60% 40% at 18% 88%, rgba(255,170,60,0.12) 0%, rgba(255,170,60,0) 60%), radial-gradient(45% 30% at 70% 18%, rgba(255,240,170,0.10) 0%, rgba(255,240,170,0) 60%)",
-            filter: "blur(10px)",
-          }}
-        />
-
-        {/* 和紙影（既存） */}
-        <div className="absolute inset-0 z-[5] hero-overlay" />
-
-        {/* みかん（AppleFloat：主役） */}
-        <div className="absolute inset-0 z-[20]">
-          <AppleFloat />
+        {/* 背景（固定） */}
+        <div className="absolute inset-0 hero-fixed-bg">
+          <Image
+            src="/mikan/hero_bg_base_lightgreen.png"
+            alt="背景"
+            fill
+            priority
+            className="object-cover"
+          />
         </div>
 
-        {/* テキスト */}
+        {/* 枝＋花（同じ強さで揺らす） ※少しアップにして下が切れないよう調整 */}
+        <div className="absolute inset-0 hero-sway hero-branch-zoom pointer-events-none">
+          <Image
+            src="/mikan/hero_branch_top.png"
+            alt="枝と花"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
+
+        {/* 子供（浮遊） */}
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
+          <div className="relative hero-kids-float w-[92%] sm:w-[78%] md:w-[62%] max-w-[900px] mb-[6vh] md:mb-[7vh]">
+            <Image
+              src="/mikan/hero_kids_float.png"
+              alt="子供たち"
+              width={1200}
+              height={800}
+              priority
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+
+        {/* みかんメダル（回転＋少し浮遊） ※少し大きめ */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[10%] sm:top-[9%] md:top-[8%] hero-medal-float">
+            <div className="hero-medal-spin">
+              <Image
+                src="/mikan/hero_orange_medal_spin.png"
+                alt="みかんメダル"
+                width={520}
+                height={520}
+                priority
+                className="w-[220px] sm:w-[270px] md:w-[340px] h-auto drop-shadow-[0_18px_35px_rgba(0,0,0,0.22)]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* メダル下：山口農園（太く・丸く） */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[36%] sm:top-[34%] md:top-[32%] text-center">
+            <div className="hero-brand-text">山口農園</div>
+          </div>
+        </div>
+
+        {/* 購入ボタン（既存の導線を維持） */}
         <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
-          <h1 className="text-4xl md:text-6xl font-bold">山口みかん農園</h1>
-          <h2 className="text-xl md:text-3xl mt-4 opacity-90">
-            — 自然の旬の甘さそのままに —
-          </h2>
           <div className="relative mt-10 group">
             <button
               onClick={goProducts}
@@ -161,6 +175,113 @@ export default function Home() {
             </button>
           </div>
         </div>
+
+        {/* アニメCSS（このヒーロー内だけに適用） */}
+        <style jsx>{`
+          .hero-fixed-bg {
+            position: absolute;
+            inset: 0;
+            transform: translateZ(0);
+          }
+
+          .hero-fixed-bg :global(img) {
+            transform: translateZ(0);
+          }
+
+          @keyframes heroSway {
+            0% {
+              transform: rotate(-1.4deg) translateY(0px);
+            }
+            50% {
+              transform: rotate(1.4deg) translateY(-2px);
+            }
+            100% {
+              transform: rotate(-1.4deg) translateY(0px);
+            }
+          }
+          .hero-sway {
+            transform-origin: top center;
+            animation: heroSway 6s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          /* ★追加：枝画像を少しアップ（下の花が揺れても切れないように） */
+          .hero-branch-zoom :global(img) {
+            transform: scale(1.08) translateY(10px);
+            transform-origin: top center;
+          }
+
+          @keyframes kidsFloat {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-10px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
+          }
+          .hero-kids-float {
+            animation: kidsFloat 4.2s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @keyframes medalFloat {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-8px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
+          }
+          .hero-medal-float {
+            animation: medalFloat 3.6s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @keyframes medalSpin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+          .hero-medal-spin {
+            animation: medalSpin 7.5s linear infinite;
+            will-change: transform;
+          }
+
+          /* ★追加：ブランド文字（白ベース＋ほんのり金縁＋太め＋丸み） */
+          @keyframes brandFloat {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-6px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
+          }
+          .hero-brand-text {
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            font-size: clamp(34px, 6vw, 68px);
+            color: #ffffff;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.22),
+              0 0 6px rgba(255, 255, 255, 0.65);
+            -webkit-text-stroke: 2px rgba(212, 175, 55, 0.55);
+            font-family: ui-rounded, "Hiragino Maru Gothic ProN",
+              "Hiragino Maru Gothic Pro", "Yu Gothic", system-ui, sans-serif;
+            animation: brandFloat 4s ease-in-out infinite;
+            will-change: transform;
+          }
+        `}</style>
       </section>
 
       {/* ▼▼▼ ここに購入ボタン直下の自己紹介＋メルマガを差し込む ▼▼▼ */}

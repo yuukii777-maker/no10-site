@@ -10,15 +10,66 @@ export default function AboutClient() {
       {/* ヒーロー */}
       {/* ============================= */}
       <section className="relative h-[60vh] md:h-[70vh] overflow-hidden">
-        <Image
-          src="/mikan/farm.png"
-          alt="農園の風景"
-          fill
-          priority
-          className="object-cover brightness-[0.85]"
-        />
-        <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+        {/* 背景（固定） */}
+        <div className="absolute inset-0 hero-fixed-bg">
+          <Image
+            src="/mikan/hero_bg_base_lightgreen.png"
+            alt="背景"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
 
+        {/* 枝＋花（同じ強さで揺らす） */}
+        <div className="absolute inset-0 hero-sway pointer-events-none">
+          <Image
+            src="/mikan/hero_branch_top.png"
+            alt="枝と花"
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
+
+        {/* 子供（浮遊） */}
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
+          <div className="relative hero-kids-float w-[92%] sm:w-[78%] md:w-[62%] max-w-[900px] mb-[6vh] md:mb-[7vh]">
+            <Image
+              src="/mikan/hero_kids_float.png"
+              alt="子供たち"
+              width={1200}
+              height={800}
+              priority
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+
+        {/* みかんメダル（回転＋少し浮遊） */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[10%] sm:top-[9%] md:top-[8%] hero-medal-float">
+            <div className="hero-medal-spin">
+              <Image
+                src="/mikan/hero_orange_medal_spin.png"
+                alt="みかんメダル"
+                width={520}
+                height={520}
+                priority
+                className="w-[180px] sm:w-[220px] md:w-[280px] h-auto drop-shadow-[0_18px_35px_rgba(0,0,0,0.22)]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ★追加：メダル下のブランド文字 */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[33%] sm:top-[31%] md:top-[29%] text-center">
+            <div className="hero-brand-text">山口農園</div>
+          </div>
+        </div>
+
+        {/* 文字（既存の内容は維持） */}
         <div className="absolute inset-0 flex flex-col justify-center items-center text-center text-white px-6">
           <h1 className="text-4xl md:text-6xl font-bold drop-shadow-xl">
             農園について
@@ -27,6 +78,106 @@ export default function AboutClient() {
             山川の自然が育てる、甘くて香り高いみかん
           </p>
         </div>
+
+        {/* アニメCSS（このヒーロー内だけに適用） */}
+        <style jsx>{`
+          .hero-fixed-bg {
+            position: absolute;
+            inset: 0;
+            transform: translateZ(0);
+          }
+
+          /* 背景固定っぽく見せる（スクロール時のズレを最小化） */
+          .hero-fixed-bg :global(img) {
+            transform: translateZ(0);
+          }
+
+          @keyframes heroSway {
+            0% {
+              transform: rotate(-1.4deg) translateY(0px);
+            }
+            50% {
+              transform: rotate(1.4deg) translateY(-2px);
+            }
+            100% {
+              transform: rotate(-1.4deg) translateY(0px);
+            }
+          }
+          .hero-sway {
+            transform-origin: top center;
+            animation: heroSway 6s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @keyframes kidsFloat {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-10px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
+          }
+          .hero-kids-float {
+            animation: kidsFloat 4.2s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @keyframes medalFloat {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-8px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
+          }
+          .hero-medal-float {
+            animation: medalFloat 3.6s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @keyframes medalSpin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+          .hero-medal-spin {
+            animation: medalSpin 7.5s linear infinite;
+            will-change: transform;
+          }
+
+          /* ★追加：ブランド文字（白ベース＋ほんのり金縁＋太め＋字間広め） */
+          @keyframes brandFloat {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-6px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
+          }
+          .hero-brand-text {
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            font-size: clamp(30px, 5.5vw, 60px);
+            color: #ffffff;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.25),
+              0 0 6px rgba(255, 255, 255, 0.7);
+            -webkit-text-stroke: 2px rgba(212, 175, 55, 0.55);
+            animation: brandFloat 4s ease-in-out infinite;
+            will-change: transform;
+          }
+        `}</style>
       </section>
 
       {/* ============================= */}

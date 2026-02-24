@@ -206,7 +206,8 @@ export default function Home() {
             transform-origin: top center;
             animation: heroSway 6s ease-in-out infinite;
             will-change: transform;
-          }
+  backface-visibility: hidden;
+}
 
           /* ★修正：上下PNGを“背景画像”として配置（四角の境界をマスクで溶かす） */
           .hero-branch-topLayer,
@@ -264,12 +265,22 @@ export default function Home() {
 
           /* iPhone縦長で“足りない”時だけ少し強めに広げる */
           @media (max-width: 430px) {
-            .hero-branch-topLayer,
-            .hero-branch-bottomLayer {
-              left: -10%;
-              right: -10%;
-            }
-          }
+  .hero-branch-topLayer,
+  .hero-branch-bottomLayer {
+    left: -18%;
+    right: -18%;
+  }
+
+  .hero-branch-topLayer {
+    top: -24%;
+    height: 86%;
+  }
+
+  .hero-branch-bottomLayer {
+    bottom: -24%;
+    height: 86%;
+  }
+}
 
           @keyframes kidsFloat {
             0% {

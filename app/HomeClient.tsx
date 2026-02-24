@@ -44,8 +44,14 @@ export default function Home() {
      スライダー制御（内容変更なし）
   ============================ */
   const sliderImages = [
-    { src: "/mikan/bnr_shipping_campaign.png?v=20260120a", caption: "山川の100円みかんを箱に詰めました。" },
-    { src: "/mikan/bnr_open_special.png?v=20260120a", caption: "みかん購入で豪華なおまけ付き!!" },
+    {
+      src: "/mikan/bnr_shipping_campaign.png?v=20260120a",
+      caption: "山川の100円みかんを箱に詰めました。",
+    },
+    {
+      src: "/mikan/bnr_open_special.png?v=20260120a",
+      caption: "みかん購入で豪華なおまけ付き!!",
+    },
     { src: "/mikan/bnr_oseibo.png?v=20260120a", caption: "二種の支払い方法" },
   ];
   const [index, setIndex] = useState(0);
@@ -117,12 +123,12 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす）
-            ★修正：上下を確実に見せるため “同じ画像を上下2枚” に分けて表示 */}
+            ★修正：上下を確実に見せるため “上用/下用PNG” の2枚に分割して表示 */}
         <div className="absolute -inset-10 hero-sway pointer-events-none">
-          {/* 上だけ固定（上のみかんが必ず見える） */}
+          {/* 上：枝＋みかん（必ず見える） */}
           <div className="hero-branch-slice hero-branch-top">
             <Image
-              src="/mikan/hero_branch_top.png"
+              src="/mikan/hero_branch_top_only.png"
               alt="枝とみかん（上）"
               fill
               priority
@@ -130,10 +136,10 @@ export default function Home() {
             />
           </div>
 
-          {/* 下だけ固定（下の花が必ず見える） */}
+          {/* 下：花（必ず見える） */}
           <div className="hero-branch-slice hero-branch-bottom">
             <Image
-              src="/mikan/hero_branch_top.png"
+              src="/mikan/hero_branch_bottom_only.png"
               alt="花（下）"
               fill
               priority
@@ -221,30 +227,31 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★追加：上下2枚表示用（少し重ねて“継ぎ目”を消す） */
+          /* ★修正：上下2枚表示（iPhone縦長でも必ず上下が見える＆継ぎ目が出ない） */
           .hero-branch-slice {
             position: absolute;
             left: 0;
             right: 0;
             overflow: hidden;
           }
+          /* 少しはみ出させて揺れで切れても見えるようにする（継ぎ目も消える） */
           .hero-branch-top {
-            top: 0;
-            height: 62%;
+            top: -3%;
+            height: 66%;
           }
           .hero-branch-bottom {
-            bottom: 0;
-            height: 62%;
+            bottom: -3%;
+            height: 66%;
           }
 
-          /* ★追加：スマホでも上下が切れないように少しズーム（両方に同じ補正） */
+          /* ★修正：スマホで上下が切れないよう、少しだけ強めにズーム */
           .hero-branch-slice :global(img) {
             transform-origin: center;
-            transform: scale(1.12);
+            transform: scale(1.18);
           }
           @media (min-width: 640px) {
             .hero-branch-slice :global(img) {
-              transform: scale(1.10);
+              transform: scale(1.12);
             }
           }
           @media (min-width: 768px) {
@@ -433,7 +440,9 @@ export default function Home() {
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
           <summary className="cursor-pointer list-none text-center">
-            <span className="text-lg font-semibold">🍊 みかんのメリット＆デメリット</span>
+            <span className="text-lg font-semibold">
+              🍊 みかんのメリット＆デメリット
+            </span>
             <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
               タップして読む →
             </span>
@@ -458,26 +467,44 @@ export default function Home() {
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10">
-          <GalleryItem src="/mikan/defect.png" title="訳ありみかん" text="甘さは本物。人気No.1。" />
-          <GalleryItem src="/mikan/premium.png" title="正規品" text="贈答にも選ばれる品質。" />
-          <GalleryItem src="/mikan/hand.png" title="手作業収穫" text="一つずつ丁寧に。" />
+          <GalleryItem
+            src="/mikan/defect.png"
+            title="訳ありみかん"
+            text="甘さは本物。人気No.1。"
+          />
+          <GalleryItem
+            src="/mikan/premium.png"
+            title="正規品"
+            text="贈答にも選ばれる品質。"
+          />
+          <GalleryItem
+            src="/mikan/hand.png"
+            title="手作業収穫"
+            text="一つずつ丁寧に。"
+          />
         </div>
       </section>
 
       {/* ーーー 修正③: スライダー CSS 最小限（img に transform 禁止） ーーー */}
       <style>{`
-        .slider-container { position: relative; overflow: hidden; }
+        .slider-container {
+          position: relative;
+          overflow: hidden;
+        }
         .slider-track {
           display: flex;
           width: 100%;
           will-change: transform;
-          transition: transform 700ms cubic-bezier(.22,.61,.36,1);
+          transition: transform 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
           backface-visibility: hidden;
-          transform: translate3d(0,0,0);
+          transform: translate3d(0, 0, 0);
         }
-        .slider-item { flex: 0 0 100%; position: relative; }
+        .slider-item {
+          flex: 0 0 100%;
+          position: relative;
+        }
         .slider-item img {
-          display: block;            /* Safari 安定 */
+          display: block; /* Safari 安定 */
           pointer-events: none;
           user-select: none;
           -webkit-user-drag: none;
@@ -485,13 +512,19 @@ export default function Home() {
           /* transform 付与しないこと！ */
         }
         .slider-caption {
-          position: absolute; left: 0; right: 0; bottom: 0.75rem;
-          text-align: center; color: #fff;
-          text-shadow: 0 2px 6px rgba(0,0,0,.35);
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0.75rem;
+          text-align: center;
+          color: #fff;
+          text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
           font-weight: 600;
         }
         @media (prefers-reduced-motion: reduce) {
-          .slider-track { transition: none !important; }
+          .slider-track {
+            transition: none !important;
+          }
         }
       `}</style>
     </main>
@@ -501,7 +534,15 @@ export default function Home() {
 /* ===========================
    ギャラリー（既存）
 =========================== */
-function GalleryItem({ src, title, text }: { src: string; title: string; text: string }) {
+function GalleryItem({
+  src,
+  title,
+  text,
+}: {
+  src: string;
+  title: string;
+  text: string;
+}) {
   const fade = useFadeIn();
   return (
     <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
@@ -510,7 +551,7 @@ function GalleryItem({ src, title, text }: { src: string; title: string; text: s
           src={src}
           alt={title}
           fill
-          sizes="(min-width: 768px) 33vw, 100vw"  /* 明示して安定 */
+          sizes="(min-width: 768px) 33vw, 100vw" /* 明示して安定 */
           className="object-cover"
         />
       </div>

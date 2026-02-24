@@ -89,7 +89,7 @@ export default function Home() {
   }, [sliderImages.length]);
 
   /* ===========================
-     遷移フェード（既存）
+     遷移フェード（既存
   ============================ */
   const FADE_DURATION = 250;
   const [leaving, setLeaving] = useState(false);

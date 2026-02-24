@@ -180,7 +180,7 @@ export default function Home() {
         </div>
 
         {/* アニメCSS（このヒーロー内だけに適用） */}
-       <style jsx>{`
+       <style>{`
           .hero-fixed-bg {
             position: absolute;
             inset: 0;
@@ -426,7 +426,7 @@ export default function Home() {
       </section>
 
       {/* ーーー 修正③: スライダー CSS 最小限（img に transform 禁止） ーーー */}
-      <style jsx global>{`
+      <style>{`
         .slider-container { position: relative; overflow: hidden; }
         .slider-track {
           display: flex;

@@ -117,17 +117,17 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす） ※少しアップにして下が切れないよう調整 */}
-<div className="absolute -inset-10 hero-sway pointer-events-none">
-  <div className="absolute inset-0 hero-branch-zoom">
-    <Image
-      src="/mikan/hero_branch_top.png"
-      alt="枝と花"
-      fill
-      priority
-      className="object-cover"
-    />
-  </div>
-</div>
+        <div className="absolute -inset-10 hero-sway pointer-events-none">
+          <div className="absolute inset-0 hero-branch-zoom">
+            <Image
+              src="/mikan/hero_branch_top.png"
+              alt="枝と花"
+              fill
+              priority
+              className="object-contain md:object-cover object-center"
+            />
+          </div>
+        </div>
 
         {/* 子供（浮遊） */}
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
@@ -168,8 +168,8 @@ export default function Home() {
         </div>
 
         {/* 購入ボタン（既存の導線を維持） */}
-        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl -mt-7">
-          <div className="relative mt-10 group">
+        <div className="absolute inset-0 z-[30] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
+          <div className="relative mt-10 group -translate-y-6 sm:-translate-y-5 md:-translate-y-4">
             <button
               onClick={goProducts}
               className="bg-orange-500/80 hover:bg-orange-500/95 backdrop-blur-sm text-white px-10 py-3 rounded-full text-lg shadow-lg transition-all duration-200 active:scale-95"
@@ -180,7 +180,7 @@ export default function Home() {
         </div>
 
         {/* アニメCSS（このヒーロー内だけに適用） */}
-       <style>{`
+        <style>{`
           .hero-fixed-bg {
             position: absolute;
             inset: 0;
@@ -208,10 +208,15 @@ export default function Home() {
             will-change: transform;
           }
 
-          /* ★追加：枝画像を少しアップ（下の花が揺れても切れないように） */
+          /* ★修正：重複して崩れていた定義を1つに整理（意味は同じ） */
           .hero-branch-zoom :global(img) {
-            transform: scale(1.08) translateY(10px);
+            transform: none;
             transform-origin: top center;
+          }
+          @media (min-width: 768px) {
+            .hero-branch-zoom :global(img) {
+              transform: scale(1.08) translateY(10px);
+            }
           }
 
           @keyframes kidsFloat {

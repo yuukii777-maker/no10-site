@@ -400,24 +400,31 @@ export default function Home() {
              2) 端まで届くように拡大＆高さを少し増やす
              3) iOS Safari mask不安定を避ける（透明PNG前提でmask無効） */
           @media (max-width: 430px) {
+  /* ★iPhone用：揺れを弱める（外に出て切れるのを防ぐ） */
+  @keyframes heroSwaySP {
+    0%   { transform: rotate(-0.8deg) translateY(2px); }
+    50%  { transform: rotate(0.8deg)  translateY(-1px); }
+    100% { transform: rotate(-0.8deg) translateY(2px); }
+  }
+
   .hero-branch-topLayer,
   .hero-branch-bottomLayer {
     left: -22%;
     right: -22%;
-    background-size: 145% auto;
+    background-size: 155% auto; /* 端まで確実に */
+    animation: heroSwaySP 6s ease-in-out infinite; /* ★ここ重要 */
   }
 
+  /* 上：枝＋みかん（★見える位置まで"下げる" + 高さ増） */
   .hero-branch-topLayer {
-    top: 2%;
-    height: 60%;
-
-    /* ★ここだけ変更：素材の表示位置を下へ */
-    background-position: center 26%;
-
+    top: 6%;          /* ★下に下げる（ここが肝） */
+    height: 68%;      /* ★高さ増やしても映るように */
+    background-position: center 30%; /* ★素材の見え方も下へ */
     -webkit-mask-image: none;
     mask-image: none;
   }
 
+  /* 下：花（下側も安定させる） */
   .hero-branch-bottomLayer {
     bottom: 0%;
     height: 60%;
@@ -579,7 +586,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="relative w-full h-60 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-md">
               <Image
-                src="/mikan/reason_shop_1.jpg"
+                src="/mikan/reason_shop_1.jpg?v=20260226a"
                 alt="山川みかん 無人販売所の様子（全景）"
                 fill
                 className="object-contain"
@@ -589,7 +596,7 @@ export default function Home() {
             </div>
             <div className="relative w-full h-60 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-md">
               <Image
-                src="/mikan/reason_shop_2.jpg"
+                src="/mikan/reason_shop_2.jpg?v=20260226a"
                 alt="山川みかん 無人販売所の様子（看板と棚）"
                 fill
                 className="object-contain"
@@ -655,7 +662,7 @@ export default function Home() {
             text="贈答にも選ばれる品質。"
           />
           <GalleryItem
-            src="/mikan/hand.png"
+            src="/mikan/hand.png?v=20260226a"
             title="手作業収穫"
             text="一つずつ丁寧に。"
           />

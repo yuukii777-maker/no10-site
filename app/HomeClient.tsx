@@ -262,26 +262,22 @@ export default function Home() {
             --py: 0;
           }
 
-          /* ★追加：① 超微細パララックス（全部"ほんの少し"動かす） */
+          /* ★追加：レイヤー順を固定（iPhone Safari合成バグ対策） */
+          .hero-fixed-bg { z-index: 1; }
+          .hero-atmosphere { z-index: 2; }
+          .hero-particles { z-index: 3; }
+          .hero-sway { z-index: 10; }
+          .hero-kids-float { z-index: 12; }
+          .hero-medal-float { z-index: 13; }
+          .hero-brand-text { z-index: 13; }
+
+          /* ★追加：① 超微細パララックス（背景だけ） */
           .hero-fixed-bg :global(img) {
             transform: translate3d(calc(var(--px) * -3px), calc(var(--py) * -2px), 0);
-          }
-          .hero-branch-topLayer {
-            transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) translateZ(0);
-          }
-          .hero-branch-bottomLayer {
-            transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) translateZ(0);
-          }
-          .hero-kids-float {
-            transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px), 0);
-          }
-          .hero-medal-float {
-            transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px), 0);
           }
 
           /* ★追加：② 光粒子（微粒・ゆっくり） */
           .hero-particles {
-            z-index: 3;
             opacity: 0.55;
             background:
               radial-gradient(circle at 18% 22%, rgba(255,255,255,0.55) 0 1px, rgba(255,255,255,0) 2px),
@@ -301,7 +297,6 @@ export default function Home() {
 
           /* ★追加：③ 空気感（薄い朝もや・光の筋） */
           .hero-atmosphere {
-            z-index: 2;
             mix-blend-mode: screen;
             opacity: 0.35;
             background:
@@ -314,18 +309,6 @@ export default function Home() {
             0%   { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
             50%  { transform: translate3d(calc(var(--px) * -3px), calc(var(--py) * -2px), 0); opacity: 0.42; }
             100% { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
-          }
-
-          @keyframes heroSway {
-            0% {
-              transform: rotate(-1.4deg) translateY(0px);
-            }
-            50% {
-              transform: rotate(1.4deg) translateY(-2px);
-            }
-            100% {
-              transform: rotate(-1.4deg) translateY(0px);
-            }
           }
 
           /* ★修正：iPhone Safariの「mask + 親transformで消える」対策
@@ -347,10 +330,19 @@ export default function Home() {
             will-change: transform;
             transform: translateZ(0);
             backface-visibility: hidden;
-
-            /* ★修正：揺れは各レイヤーに付与（親にtransformを掛けない） */
-            animation: heroSway 6s ease-in-out infinite;
             transform-origin: top center;
+          }
+
+          /* ★修正：揺れ＋パララックスを「同じtransform内」に統合（衝突回避） */
+          @keyframes heroSwayTop {
+            0%   { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(-1.4deg) translateY(0px); }
+            50%  { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(1.4deg) translateY(-2px); }
+            100% { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(-1.4deg) translateY(0px); }
+          }
+          @keyframes heroSwayBottom {
+            0%   { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-1.4deg) translateY(0px); }
+            50%  { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(1.4deg) translateY(-2px); }
+            100% { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-1.4deg) translateY(0px); }
           }
 
           /* 上：枝＋みかん */
@@ -359,6 +351,8 @@ export default function Home() {
             height: 56%;
             background-image: url("/mikan/hero_branch_top_only.png?v=20260225a");
             background-position: center top;
+
+            animation: heroSwayTop 6s ease-in-out infinite;
 
             -webkit-mask-image: linear-gradient(
               to bottom,
@@ -381,6 +375,8 @@ export default function Home() {
             background-image: url("/mikan/hero_branch_bottom_only.png?v=20260225a");
             background-position: center bottom;
 
+            animation: heroSwayBottom 6s ease-in-out infinite;
+
             -webkit-mask-image: linear-gradient(
               to top,
               rgba(0, 0, 0, 1) 0%,
@@ -395,64 +391,54 @@ export default function Home() {
             );
           }
 
-          /* ★修正：iPhoneでも上下のみかん＆花畑が“しっかり出る”ように
-             1) top/bottomのマイナスをやめる（overflow-hiddenで切れない）
-             2) 端まで届くように拡大＆高さを少し増やす
-             3) iOS Safari mask不安定を避ける（透明PNG前提でmask無効） */
+          /* ★修正：iPhoneでも上下のみかん＆花畑が“しっかり出る”ように（完全版）
+             - CSS崩れを解消（@media重複を削除）
+             - iPhone Safariの合成バグ回避：枝最優先で atmosphere/particles をOFF */
           @media (max-width: 430px) {
-  /* ★iPhone用：揺れを弱める（外に出て切れるのを防ぐ） */
-  @keyframes heroSwaySP {
-    0%   { transform: rotate(-0.8deg) translateY(2px); }
-    50%  { transform: rotate(0.8deg)  translateY(-1px); }
-    100% { transform: rotate(-0.8deg) translateY(2px); }
-  }
+            .hero-atmosphere,
+            .hero-particles {
+              display: none;
+            }
 
-  .hero-branch-topLayer,
-  .hero-branch-bottomLayer {
-    left: -22%;
-    right: -22%;
-    background-size: 155% auto; /* 端まで確実に */
-    animation: heroSwaySP 6s ease-in-out infinite; /* ★ここ重要 */
-  }
+            @keyframes heroSwayTopSP {
+              0%   { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-0.8deg) translateY(2px); }
+              50%  { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(0.8deg) translateY(-1px); }
+              100% { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-0.8deg) translateY(2px); }
+            }
+            @keyframes heroSwayBottomSP {
+              0%   { transform: translate3d(calc(var(--px) * 1.0px), calc(var(--py) * 0.7px), 0) rotate(-0.8deg) translateY(2px); }
+              50%  { transform: translate3d(calc(var(--px) * 1.0px), calc(var(--py) * 0.7px), 0) rotate(0.8deg) translateY(-1px); }
+              100% { transform: translate3d(calc(var(--px) * 1.0px), calc(var(--py) * 0.7px), 0) rotate(-0.8deg) translateY(2px); }
+            }
 
-  /* 上：枝＋みかん（★見える位置まで"下げる" + 高さ増） */
-  .hero-branch-topLayer {
-    top: 6%;          /* ★下に下げる（ここが肝） */
-    height: 68%;      /* ★高さ増やしても映るように */
-    background-position: center 30%; /* ★素材の見え方も下へ */
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
+            .hero-branch-topLayer,
+            .hero-branch-bottomLayer {
+              left: -22%;
+              right: -22%;
+              background-size: 155% auto;
+              -webkit-mask-image: none;
+              mask-image: none;
+            }
 
-  /* 下：花（下側も安定させる） */
-  .hero-branch-bottomLayer {
-    bottom: 0%;
-    height: 60%;
-    background-position: center bottom;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
+            .hero-branch-topLayer {
+              top: 6%;
+              height: 68%;
+              background-position: center 30%;
+              animation: heroSwayTopSP 6s ease-in-out infinite;
+            }
 
             .hero-branch-bottomLayer {
               bottom: 0%;
               height: 60%;
               background-position: center bottom;
-              -webkit-mask-image: none;
-              mask-image: none;
+              animation: heroSwayBottomSP 6s ease-in-out infinite;
             }
           }
 
           @keyframes kidsFloat {
-            0% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-10px);
-            }
-            100% {
-              transform: translateY(0px);
-            }
+            0%   { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px + 0px), 0); }
+            50%  { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px + -10px), 0); }
+            100% { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px + 0px), 0); }
           }
           .hero-kids-float {
             animation: kidsFloat 4.2s ease-in-out infinite;
@@ -460,15 +446,9 @@ export default function Home() {
           }
 
           @keyframes medalFloat {
-            0% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-8px);
-            }
-            100% {
-              transform: translateY(0px);
-            }
+            0%   { transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px + 0px), 0); }
+            50%  { transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px + -8px), 0); }
+            100% { transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px + 0px), 0); }
           }
           .hero-medal-float {
             animation: medalFloat 3.6s ease-in-out infinite;

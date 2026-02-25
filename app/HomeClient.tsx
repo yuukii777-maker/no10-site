@@ -400,20 +400,32 @@ export default function Home() {
              2) 端まで届くように拡大＆高さを少し増やす
              3) iOS Safari mask不安定を避ける（透明PNG前提でmask無効） */
           @media (max-width: 430px) {
-            .hero-branch-topLayer,
-            .hero-branch-bottomLayer {
-              left: -22%;
-              right: -22%;
-              background-size: 145% auto; /* 端まで確実に映す */
-            }
+  .hero-branch-topLayer,
+  .hero-branch-bottomLayer {
+    left: -22%;
+    right: -22%;
+    background-size: 145% auto;
+  }
 
-            .hero-branch-topLayer {
-              top: 0%;
-              height: 60%;
-              background-position: center top;
-              -webkit-mask-image: none;
-              mask-image: none;
-            }
+  .hero-branch-topLayer {
+    top: 0%;
+    height: 60%;
+
+    /* ★ここだけ変更：素材の表示位置を下へ */
+    background-position: center 18%;
+
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .hero-branch-bottomLayer {
+    bottom: 0%;
+    height: 60%;
+    background-position: center bottom;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
 
             .hero-branch-bottomLayer {
               bottom: 0%;

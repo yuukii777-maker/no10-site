@@ -408,11 +408,11 @@ export default function Home() {
   }
 
   .hero-branch-topLayer {
-    top: 0%;
+    top: 2%;
     height: 60%;
 
     /* ★ここだけ変更：素材の表示位置を下へ */
-    background-position: center 18%;
+    background-position: center 26%;
 
     -webkit-mask-image: none;
     mask-image: none;

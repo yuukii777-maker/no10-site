@@ -100,6 +100,61 @@ export default function Home() {
     }, FADE_DURATION);
   };
 
+  /* ===========================
+     ★追加：① 超微細パララックス（マウス＋スマホ傾き）
+     ※既存コードは変更せず、CSS変数を流し込むだけ
+  ============================ */
+  const heroRootRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = heroRootRef.current;
+    if (!el) return;
+
+    // 目に見えないくらいの微量に固定（強すぎ禁止）
+    const clamp = (v: number, min: number, max: number) =>
+      Math.min(max, Math.max(min, v));
+
+    let tx = 0;
+    let ty = 0;
+    let cx = 0;
+    let cy = 0;
+    let raf = 0;
+
+    const apply = () => {
+      // ゆっくり追従（ヌルっと）
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      el.style.setProperty("--px", String(cx));
+      el.style.setProperty("--py", String(cy));
+      raf = requestAnimationFrame(apply);
+    };
+    raf = requestAnimationFrame(apply);
+
+    const onMouse = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+      const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+      tx = clamp(nx, -1, 1);
+      ty = clamp(ny, -1, 1);
+    };
+
+    // iPhone：傾き（許可されていない環境では無視される）
+    const onOri = (e: DeviceOrientationEvent) => {
+      if (typeof e.gamma !== "number" || typeof e.beta !== "number") return;
+      // gamma: 左右(-90..90) / beta: 前後(-180..180)
+      tx = clamp(e.gamma / 25, -1, 1);
+      ty = clamp(e.beta / 35, -1, 1);
+    };
+
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    window.addEventListener("deviceorientation", onOri);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("deviceorientation", onOri);
+    };
+  }, []);
+
   return (
     <main
       className={`text-[#333] transition-opacity duration-300 ${
@@ -110,7 +165,16 @@ export default function Home() {
           ① ヒーロー（Z2〜Z4の画像レイヤー廃止版）
           背景はCSSのみ（グラデ＋微粒子）、主役は AppleFloat
       ============================ */}
-      <section className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20">
+      <section
+        ref={heroRootRef as any}
+        className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20"
+      >
+        {/* ★追加：② 光粒子（超控えめ） */}
+        <div className="absolute inset-0 hero-particles pointer-events-none" />
+
+        {/* ★追加：③ 朝もや・空気感（薄いハイライト） */}
+        <div className="absolute inset-0 hero-atmosphere pointer-events-none" />
+
         {/* 背景（固定） */}
         <div className="absolute inset-0 hero-fixed-bg">
           <Image
@@ -162,7 +226,7 @@ export default function Home() {
 
         {/* メダル下：山口農園（太く・丸く） */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute left-1/2 -translate-x-1/2 top-[36%] sm:top-[34%] md:top-[32%] text-center">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[33%] sm:top-[31%] md:top-[29%] text-center">
             <div className="hero-brand-text">山口農園</div>
           </div>
         </div>
@@ -191,6 +255,67 @@ export default function Home() {
             transform: translateZ(0);
           }
 
+          /* ★追加：iPhoneのsvh変動でも高さが足りなくならない保険 */
+          .hero-root {
+            min-height: 80vh;
+            --px: 0;
+            --py: 0;
+          }
+
+          /* ★追加：① 超微細パララックス（全部"ほんの少し"動かす） */
+          .hero-fixed-bg :global(img) {
+            transform: translate3d(calc(var(--px) * -3px), calc(var(--py) * -2px), 0);
+          }
+          .hero-branch-topLayer {
+            transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) translateZ(0);
+          }
+          .hero-branch-bottomLayer {
+            transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) translateZ(0);
+          }
+          .hero-kids-float {
+            transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px), 0);
+          }
+          .hero-medal-float {
+            transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px), 0);
+          }
+
+          /* ★追加：② 光粒子（微粒・ゆっくり） */
+          .hero-particles {
+            z-index: 3;
+            opacity: 0.55;
+            background:
+              radial-gradient(circle at 18% 22%, rgba(255,255,255,0.55) 0 1px, rgba(255,255,255,0) 2px),
+              radial-gradient(circle at 72% 28%, rgba(255,255,255,0.45) 0 1px, rgba(255,255,255,0) 2px),
+              radial-gradient(circle at 34% 64%, rgba(255,255,255,0.40) 0 1px, rgba(255,255,255,0) 2px),
+              radial-gradient(circle at 82% 62%, rgba(255,255,255,0.35) 0 1px, rgba(255,255,255,0) 2px),
+              radial-gradient(circle at 52% 44%, rgba(255,255,255,0.35) 0 1px, rgba(255,255,255,0) 2px);
+            filter: blur(0.15px);
+            animation: particlesDrift 10.5s ease-in-out infinite;
+            transform: translate3d(0,0,0);
+          }
+          @keyframes particlesDrift {
+            0%   { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 2px), 0); opacity: 0.45; }
+            50%  { transform: translate3d(calc(var(--px) * -2px), calc(var(--py) * -3px), 0); opacity: 0.65; }
+            100% { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 2px), 0); opacity: 0.45; }
+          }
+
+          /* ★追加：③ 空気感（薄い朝もや・光の筋） */
+          .hero-atmosphere {
+            z-index: 2;
+            mix-blend-mode: screen;
+            opacity: 0.35;
+            background:
+              radial-gradient(1200px 700px at 50% 18%, rgba(255,255,255,0.28), rgba(255,255,255,0) 60%),
+              linear-gradient(120deg, rgba(255,236,190,0.0) 0%, rgba(255,236,190,0.22) 35%, rgba(255,236,190,0.0) 70%);
+            animation: hazeMove 9.5s ease-in-out infinite;
+            transform: translate3d(0,0,0);
+          }
+          @keyframes hazeMove {
+            0%   { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
+            50%  { transform: translate3d(calc(var(--px) * -3px), calc(var(--py) * -2px), 0); opacity: 0.42; }
+            100% { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
+          }
+
           @keyframes heroSway {
             0% {
               transform: rotate(-1.4deg) translateY(0px);
@@ -202,12 +327,13 @@ export default function Home() {
               transform: rotate(-1.4deg) translateY(0px);
             }
           }
+
+          /* ★修正：iPhone Safariの「mask + 親transformで消える」対策
+             親(.hero-sway)にtransformアニメを載せない */
           .hero-sway {
-            transform-origin: top center;
-            animation: heroSway 6s ease-in-out infinite;
-            will-change: transform;
-  backface-visibility: hidden;
-}
+            will-change: auto;
+            backface-visibility: hidden;
+          }
 
           /* ★修正：上下PNGを“背景画像”として配置（四角の境界をマスクで溶かす） */
           .hero-branch-topLayer,
@@ -219,6 +345,12 @@ export default function Home() {
             background-repeat: no-repeat;
             background-size: cover;
             will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+
+            /* ★修正：揺れは各レイヤーに付与（親にtransformを掛けない） */
+            animation: heroSway 6s ease-in-out infinite;
+            transform-origin: top center;
           }
 
           /* 上：枝＋みかん */
@@ -263,24 +395,34 @@ export default function Home() {
             );
           }
 
-          /* iPhone縦長で“足りない”時だけ少し強めに広げる */
+          /* ★修正：iPhoneでも上下のみかん＆花畑が“しっかり出る”ように
+             1) top/bottomのマイナスをやめる（overflow-hiddenで切れない）
+             2) 端まで届くように拡大＆高さを少し増やす
+             3) iOS Safari mask不安定を避ける（透明PNG前提でmask無効） */
           @media (max-width: 430px) {
-  .hero-branch-topLayer,
-  .hero-branch-bottomLayer {
-    left: -18%;
-    right: -18%;
-  }
+            .hero-branch-topLayer,
+            .hero-branch-bottomLayer {
+              left: -22%;
+              right: -22%;
+              background-size: 145% auto; /* 端まで確実に映す */
+            }
 
-  .hero-branch-topLayer {
-    top: -24%;
-    height: 86%;
-  }
+            .hero-branch-topLayer {
+              top: 0%;
+              height: 60%;
+              background-position: center top;
+              -webkit-mask-image: none;
+              mask-image: none;
+            }
 
-  .hero-branch-bottomLayer {
-    bottom: -24%;
-    height: 86%;
-  }
-}
+            .hero-branch-bottomLayer {
+              bottom: 0%;
+              height: 60%;
+              background-position: center bottom;
+              -webkit-mask-image: none;
+              mask-image: none;
+            }
+          }
 
           @keyframes kidsFloat {
             0% {
@@ -354,7 +496,7 @@ export default function Home() {
             pointer-events: none;
           }
 
-          /* ★追加：ブランド文字（白ベース＋ほんのり金縁＋太め＋丸み） */
+          /* ★修正：ブランド文字（“じゃっかん丸い字体”＋少し上へ） */
           @keyframes brandFloat {
             0% {
               transform: translateY(0px);
@@ -368,7 +510,7 @@ export default function Home() {
           }
           .hero-brand-text {
             font-weight: 900;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.14em;
             font-size: clamp(34px, 6vw, 68px);
             color: #ffffff;
             text-shadow: 0 3px 10px rgba(0, 0, 0, 0.22),
@@ -376,6 +518,7 @@ export default function Home() {
             -webkit-text-stroke: 2px rgba(212, 175, 55, 0.55);
             font-family: ui-rounded, "Hiragino Maru Gothic ProN",
               "Hiragino Maru Gothic Pro", "Yu Gothic", system-ui, sans-serif;
+            border-radius: 9999px; /* ※字自体は丸くならないが、レンダリングの印象を丸める */
             animation: brandFloat 4s ease-in-out infinite;
             will-change: transform;
           }

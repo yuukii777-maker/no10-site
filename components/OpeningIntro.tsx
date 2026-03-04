@@ -108,81 +108,55 @@ export default function Home() {
      ※既存コードは変更せず、CSS変数を流し込むだけ
   ============================ */
   const heroRootRef = useRef<HTMLElement | null>(null);
-useEffect(() => {
-  const el = heroRootRef.current;
-  if (!el) return;
+  useEffect(() => {
+    const el = heroRootRef.current;
+    if (!el) return;
 
-  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+    // 目に見えないくらいの微量に固定（強すぎ禁止）
+    const clamp = (v: number, min: number, max: number) =>
+      Math.min(max, Math.max(min, v));
 
-  let tx = 0;
-  let ty = 0;
-  let cx = 0;
-  let cy = 0;
-  let raf: number | null = null;
-  let running = true;
+    let tx = 0;
+    let ty = 0;
+    let cx = 0;
+    let cy = 0;
+    let raf = 0;
 
-  const apply = () => {
-    if (!running) return;
-
-    // タブ非表示の時は止める（Firefoxの警告対策の要）
-    if (document.hidden) {
-      raf = null;
-      return;
-    }
-
-    cx += (tx - cx) * 0.08;
-    cy += (ty - cy) * 0.08;
-    el.style.setProperty("--px", String(cx));
-    el.style.setProperty("--py", String(cy));
-
+    const apply = () => {
+      // ゆっくり追従（ヌルっと）
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      el.style.setProperty("--px", String(cx));
+      el.style.setProperty("--py", String(cy));
+      raf = requestAnimationFrame(apply);
+    };
     raf = requestAnimationFrame(apply);
-  };
 
-  const start = () => {
-    if (raf != null) return;
-    running = true;
-    raf = requestAnimationFrame(apply);
-  };
+    const onMouse = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+      const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+      tx = clamp(nx, -1, 1);
+      ty = clamp(ny, -1, 1);
+    };
 
-  const stop = () => {
-    running = false;
-    if (raf != null) cancelAnimationFrame(raf);
-    raf = null;
-  };
+    // iPhone：傾き（許可されていない環境では無視される）
+    const onOri = (e: DeviceOrientationEvent) => {
+      if (typeof e.gamma !== "number" || typeof e.beta !== "number") return;
+      // gamma: 左右(-90..90) / beta: 前後(-180..180)
+      tx = clamp(e.gamma / 25, -1, 1);
+      ty = clamp(e.beta / 35, -1, 1);
+    };
 
-  const onVis = () => {
-    if (document.hidden) stop();
-    else start();
-  };
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    window.addEventListener("deviceorientation", onOri);
 
-  const onMouse = (e: MouseEvent) => {
-    const r = el.getBoundingClientRect();
-    const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
-    const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
-    tx = clamp(nx, -1, 1);
-    ty = clamp(ny, -1, 1);
-  };
-
-  const onOri = (e: DeviceOrientationEvent) => {
-    if (typeof e.gamma !== "number" || typeof e.beta !== "number") return;
-    tx = clamp(e.gamma / 25, -1, 1);
-    ty = clamp(e.beta / 35, -1, 1);
-  };
-
-  window.addEventListener("mousemove", onMouse, { passive: true });
-  window.addEventListener("deviceorientation", onOri);
-  document.addEventListener("visibilitychange", onVis);
-
-  // 初回起動
-  start();
-
-  return () => {
-    stop();
-    window.removeEventListener("mousemove", onMouse);
-    window.removeEventListener("deviceorientation", onOri);
-    document.removeEventListener("visibilitychange", onVis);
-  };
-}, []);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("deviceorientation", onOri);
+    };
+  }, []);
 
   return (
     <main

@@ -3,15 +3,19 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import AboutTeaser from "../components/AboutTeaser"; // ★修正：相対パスを app/ からの一段上に
-import SubFlash from "../components/SubFlash"; // ★追加：中央モーダル
+import AboutTeaser from "../components/AboutTeaser";
+import SubFlash from "../components/SubFlash";
 
-// ✅ [ADDED] オープニング（ファイル位置が app/components/OpeningIntro.tsx 想定）
-import OpeningIntro from "../components/OpeningIntro";
+// ✅ Hydration対策：OpeningIntro はSSRしない（クライアントのみ）
+import nextDynamic from "next/dynamic";
+const OpeningIntro = nextDynamic(() => import("../components/OpeningIntro"), {
+  ssr: false,
+  loading: () => null,
+});
 
 /* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
 export const dynamic = "force-dynamic";
-// export const revalidate = 0; // ←こちらでも同等（どちらか1つでOK）
+// export const revalidate = 0;
 
 /* ===========================
    フェードインアニメ（既存）
@@ -42,6 +46,10 @@ function useFadeIn() {
 =========================== */
 export default function Home() {
   const router = useRouter();
+
+  // ✅ Hydration完全対策：初回レンダーをSSRと一致させる
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   /* ===========================
      スライダー制御（内容変更なし）
@@ -108,81 +116,82 @@ export default function Home() {
      ※既存コードは変更せず、CSS変数を流し込むだけ
   ============================ */
   const heroRootRef = useRef<HTMLElement | null>(null);
-useEffect(() => {
-  const el = heroRootRef.current;
-  if (!el) return;
+  useEffect(() => {
+    const el = heroRootRef.current;
+    if (!el) return;
 
-  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+    const clamp = (v: number, min: number, max: number) =>
+      Math.min(max, Math.max(min, v));
 
-  let tx = 0;
-  let ty = 0;
-  let cx = 0;
-  let cy = 0;
-  let raf: number | null = null;
-  let running = true;
+    let tx = 0;
+    let ty = 0;
+    let cx = 0;
+    let cy = 0;
+    let raf: number | null = null;
+    let running = true;
 
-  const apply = () => {
-    if (!running) return;
+    const apply = () => {
+      if (!running) return;
 
-    // タブ非表示の時は止める（Firefoxの警告対策の要）
-    if (document.hidden) {
+      // タブ非表示の時は止める（Firefoxの警告対策の要）
+      if (document.hidden) {
+        raf = null;
+        return;
+      }
+
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      el.style.setProperty("--px", String(cx));
+      el.style.setProperty("--py", String(cy));
+
+      raf = requestAnimationFrame(apply);
+    };
+
+    const start = () => {
+      if (raf != null) return;
+      running = true;
+      raf = requestAnimationFrame(apply);
+    };
+
+    const stop = () => {
+      running = false;
+      if (raf != null) cancelAnimationFrame(raf);
       raf = null;
-      return;
-    }
+    };
 
-    cx += (tx - cx) * 0.08;
-    cy += (ty - cy) * 0.08;
-    el.style.setProperty("--px", String(cx));
-    el.style.setProperty("--py", String(cy));
+    const onVis = () => {
+      if (document.hidden) stop();
+      else start();
+    };
 
-    raf = requestAnimationFrame(apply);
-  };
+    const onMouse = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+      const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+      tx = clamp(nx, -1, 1);
+      ty = clamp(ny, -1, 1);
+    };
 
-  const start = () => {
-    if (raf != null) return;
-    running = true;
-    raf = requestAnimationFrame(apply);
-  };
+    const onOri = (e: DeviceOrientationEvent) => {
+      if (typeof e.gamma !== "number" || typeof e.beta !== "number") return;
+      tx = clamp(e.gamma / 25, -1, 1);
+      ty = clamp(e.beta / 35, -1, 1);
+    };
 
-  const stop = () => {
-    running = false;
-    if (raf != null) cancelAnimationFrame(raf);
-    raf = null;
-  };
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    window.addEventListener("deviceorientation", onOri);
+    document.addEventListener("visibilitychange", onVis);
 
-  const onVis = () => {
-    if (document.hidden) stop();
-    else start();
-  };
+    // 初回起動
+    start();
 
-  const onMouse = (e: MouseEvent) => {
-    const r = el.getBoundingClientRect();
-    const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
-    const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
-    tx = clamp(nx, -1, 1);
-    ty = clamp(ny, -1, 1);
-  };
-
-  const onOri = (e: DeviceOrientationEvent) => {
-    if (typeof e.gamma !== "number" || typeof e.beta !== "number") return;
-    tx = clamp(e.gamma / 25, -1, 1);
-    ty = clamp(e.beta / 35, -1, 1);
-  };
-
-  window.addEventListener("mousemove", onMouse, { passive: true });
-  window.addEventListener("deviceorientation", onOri);
-  document.addEventListener("visibilitychange", onVis);
-
-  // 初回起動
-  start();
-
-  return () => {
-    stop();
-    window.removeEventListener("mousemove", onMouse);
-    window.removeEventListener("deviceorientation", onOri);
-    document.removeEventListener("visibilitychange", onVis);
-  };
-}, []);
+    return () => {
+      stop();
+      window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("deviceorientation", onOri);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
 
   return (
     <main
@@ -191,7 +200,7 @@ useEffect(() => {
       }`}
     >
       {/* ✅ [ADDED] オープニング（1回だけ再生 / Skipあり） */}
-      <OpeningIntro />
+      {mounted ? <OpeningIntro /> : null}
 
       {/* ===========================
           ① ヒーロー（Z2〜Z4の画像レイヤー廃止版）
@@ -276,7 +285,7 @@ useEffect(() => {
         </div>
 
         {/* アニメCSS（このヒーロー内だけに適用） */}
-        <style>{`
+        <style suppressHydrationWarning>{`
           .hero-fixed-bg {
             position: absolute;
             inset: 0;
@@ -343,14 +352,11 @@ useEffect(() => {
             100% { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
           }
 
-          /* ★修正：iPhone Safariの「mask + 親transformで消える」対策
-             親(.hero-sway)にtransformアニメを載せない */
           .hero-sway {
             will-change: auto;
             backface-visibility: hidden;
           }
 
-          /* ★修正：上下PNGを“背景画像”として配置（四角の境界をマスクで溶かす） */
           .hero-branch-topLayer,
           .hero-branch-bottomLayer {
             position: absolute;
@@ -365,7 +371,6 @@ useEffect(() => {
             transform-origin: top center;
           }
 
-          /* ★修正：揺れ＋パララックスを「同じtransform内」に統合（衝突回避） */
           @keyframes heroSwayTop {
             0%   { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(-1.4deg) translateY(0px); }
             50%  { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(1.4deg) translateY(-2px); }
@@ -377,7 +382,6 @@ useEffect(() => {
             100% { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-1.4deg) translateY(0px); }
           }
 
-          /* 上：枝＋みかん */
           .hero-branch-topLayer {
             top: -6%;
             height: 56%;
@@ -400,7 +404,6 @@ useEffect(() => {
             );
           }
 
-          /* 下：花 */
           .hero-branch-bottomLayer {
             bottom: -6%;
             height: 56%;
@@ -419,13 +422,10 @@ useEffect(() => {
               to top,
               rgba(0, 0, 0, 1) 0%,
               rgba(0, 0, 0, 1) 72%,
-              rgba(0, 0, 0, 0) 100%
+              rgba(0,  0,  0,  0) 100%
             );
           }
 
-          /* ★修正：iPhoneでも上下のみかん＆花畑が“しっかり出る”ように（完全版）
-             - CSS崩れを解消（@media重複を削除）
-             - iPhone Safariの合成バグ回避：枝最優先で atmosphere/particles をOFF */
           @media (max-width: 430px) {
             .hero-atmosphere,
             .hero-particles {
@@ -487,7 +487,6 @@ useEffect(() => {
             will-change: transform;
           }
 
-          /* ★追加：太陽の周囲だけ“発光→消える”を繰り返す */
           .hero-sun-wrap {
             position: relative;
             display: inline-block;
@@ -527,17 +526,10 @@ useEffect(() => {
             pointer-events: none;
           }
 
-          /* ★修正：ブランド文字（“じゃっかん丸い字体”＋少し上へ） */
           @keyframes brandFloat {
-            0% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-6px);
-            }
-            100% {
-              transform: translateY(0px);
-            }
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
           }
           .hero-brand-text {
             font-weight: 900;
@@ -549,22 +541,18 @@ useEffect(() => {
             -webkit-text-stroke: 2px rgba(212, 175, 55, 0.55);
             font-family: ui-rounded, "Hiragino Maru Gothic ProN",
               "Hiragino Maru Gothic Pro", "Yu Gothic", system-ui, sans-serif;
-            border-radius: 9999px; /* ※字自体は丸くならないが、レンダリングの印象を丸める */
+            border-radius: 9999px;
             animation: brandFloat 4s ease-in-out infinite;
             will-change: transform;
           }
         `}</style>
       </section>
 
-      {/* ▼▼▼ ここに購入ボタン直下の自己紹介＋メルマガを差し込む ▼▼▼ */}
       <AboutTeaser />
-      <SubFlash /> {/* ★追加：?sub=ok/err/unsub に反応して中央にモーダル表示 */}
-      {/* ▲▲▲ 差し込みここまで ▲▲▲ */}
+      <SubFlash />
 
-      {/* ② スライダー（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
         <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
-          {/* ーーー 修正②: 余計な contain/GPU 指定を削除 ーーー */}
           <div
             className="slider-track"
             style={{ transform: `translate3d(-${index * 100}%, 0, 0)` }}
@@ -586,14 +574,12 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* ③ 100円みかんの理由（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
         <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
         <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
           傷があっても味は抜群。安くて気軽に楽しんでほしい想いをそのまま箱に詰めました。
         </div>
 
-        {/* ▼▼▼ ここから追加 ▼▼▼ */}
         <div className="max-w-5xl mx-auto mt-6 space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="relative w-full h-60 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-md">
@@ -629,10 +615,8 @@ useEffect(() => {
             </a>
           </div>
         </div>
-        {/* ▲▲▲ 追加ここまで ▲▲▲ */}
       </section>
 
-      {/* ★ みかんのメリット（内容変更なし） */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <details className="group bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6">
           <summary className="cursor-pointer list-none text-center">
@@ -656,7 +640,6 @@ useEffect(() => {
         </details>
       </section>
 
-      {/* ④ ギャラリー（内容変更なし） */}
       <section className="max-w-6xl mx-auto px-6 pb-32 pt-12">
         <h2 className="text-3xl font-bold text-center mb-12">
           山口みかんギャラリー
@@ -681,8 +664,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* ーーー 修正③: スライダー CSS 最小限（img に transform 禁止） ーーー */}
-      <style>{`
+      <style suppressHydrationWarning>{`
         .slider-container {
           position: relative;
           overflow: hidden;
@@ -700,12 +682,11 @@ useEffect(() => {
           position: relative;
         }
         .slider-item img {
-          display: block; /* Safari 安定 */
+          display: block;
           pointer-events: none;
           user-select: none;
           -webkit-user-drag: none;
           backface-visibility: hidden;
-          /* transform 付与しないこと！ */
         }
         .slider-caption {
           position: absolute;
@@ -747,7 +728,7 @@ function GalleryItem({
           src={src}
           alt={title}
           fill
-          sizes="(min-width: 768px) 33vw, 100vw" /* 明示して安定 */
+          sizes="(min-width: 768px) 33vw, 100vw"
           className="object-contain"
         />
       </div>

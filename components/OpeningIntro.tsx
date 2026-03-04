@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const KEY = "mikanOpeningPlayed_v2";
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
+const VERSION_KEY = "mikanOpeningLastSeenVersion";
 
-/** 8秒（ゆっくり） */
+/** 約4.3秒（体感5秒寄り） */
 const D = {
-  IN: 300, // ふわっと入る
-  HOLD: 3300, // 泡が割れていくメイン時間
-  OUT: 700, // 最後の余韻（ほぼ使わないが保険）
+  IN: 300,
+  HOLD: 3300,
+  OUT: 700,
 };
 
 type Phase = "in" | "hold" | "out" | "done";
@@ -27,15 +29,15 @@ function usePrefersReducedMotion() {
 
 type Bubble = {
   id: string;
-  x: number; // 0..100 vw
-  y: number; // 0..100 vh (初期)
-  size: number; // px
-  driftX: number; // px
-  driftY: number; // px
-  floatDur: number; // s
-  delay: number; // s (出現遅延)
-  popAt: number; // ms (いつ割れるか)
-  hue: number; // 色味
+  x: number;
+  y: number;
+  size: number;
+  driftX: number;
+  driftY: number;
+  floatDur: number;
+  delay: number;
+  popAt: number;
+  hue: number;
 };
 
 function clamp(n: number, min: number, max: number) {
@@ -48,10 +50,20 @@ function uid() {
 
 export default function OpeningIntro() {
   const reduced = usePrefersReducedMotion();
+
+  // ✅ hydration完全対策：マウント前は何も描画しない（SSR/CSRのズレを根絶）
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // ✅ iPhone（iOS Safari）判定：ここだけ毎回オープニング
+  const isIOS = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }, []);
+
   const [phase, setPhase] = useState<Phase>("in");
   const [enabled, setEnabled] = useState(false);
 
-  // どの泡が「割れた」か
   const [popped, setPopped] = useState<Record<string, boolean>>({});
   const timers = useRef<number[]>([]);
   const prevOverflow = useRef<string>("");
@@ -63,9 +75,16 @@ export default function OpeningIntro() {
 
   const finish = () => {
     clearAll();
-    try {
-      localStorage.setItem(KEY, "true");
-    } catch {}
+
+    // ✅ PC等は「このバージョンは見た」を保存して次回スキップ
+    // ✅ iPhoneは毎回見せたいので保存しない
+    if (!isIOS) {
+      try {
+        localStorage.setItem(VERSION_KEY, APP_VERSION);
+        localStorage.setItem(KEY, "true"); // 互換用（残してOK）
+      } catch {}
+    }
+
     setPhase("done");
     setEnabled(false);
     document.body.style.overflow = prevOverflow.current;
@@ -73,38 +92,34 @@ export default function OpeningIntro() {
 
   const skip = () => finish();
 
-  /** 泡を生成（毎回同じにしない＝楽しい。でもHydrationはmountedガード済み前提） */
+  // ✅ 泡は mounted 後だけ生成（window / Math.random をSSRに持ち込まない）
   const bubbles: Bubble[] = useMemo(() => {
-    // 端末幅で個数調整（重すぎ回避）
-    const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+    if (!mounted) return [];
+
+    const w = window.innerWidth;
     const count = w < 430 ? 10 : w < 900 ? 14 : 18;
 
-    // 8秒のうち、IN後〜HOLD終盤で割らせる
     const startPop = D.IN + 350;
     const endPop = D.IN + D.HOLD - 300;
 
     const arr: Bubble[] = [];
     for (let i = 0; i < count; i++) {
-      const size = Math.round(56 + Math.random() * 92); // 56..148
+      const size = Math.round(56 + Math.random() * 92);
       const x = clamp(Math.random() * 100, 6, 94);
       const y = clamp(18 + Math.random() * 70, 10, 92);
 
-      // 浮遊の幅
       const driftX = (Math.random() - 0.5) * 110;
       const driftY = -80 - Math.random() * 170;
 
-      // ふわふわ速度
-      const floatDur = 5.2 + Math.random() * 3.6; // 秒
-      const delay = Math.random() * 0.9; // 秒
+      const floatDur = 5.2 + Math.random() * 3.6;
+      const delay = Math.random() * 0.9;
 
-      // 割れるタイミング：早いのと遅いのを混ぜる（後半に集中させて「全部割れた感」）
       const t =
         startPop +
         (i / (count - 1)) * (endPop - startPop) +
         (Math.random() - 0.5) * 520;
 
-      // 色：みかん系（橙〜黄）に軽く振る
-      const hue = 24 + Math.random() * 28; // 24..52
+      const hue = 24 + Math.random() * 28;
 
       arr.push({
         id: uid(),
@@ -120,27 +135,34 @@ export default function OpeningIntro() {
       });
     }
 
-    // 割れる順に整列（視覚的に気持ちいい）
     arr.sort((a, b) => a.popAt - b.popAt);
     return arr;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
-    // 既に再生済みならスキップ
-    try {
-      if (localStorage.getItem(KEY) === "true") {
-        setEnabled(false);
-        setPhase("done");
-        return;
-      }
-    } catch {}
+    if (!mounted) return;
 
-    // 省モーションならスキップ
-    if (reduced) {
+    // ✅ PC等は「サイト更新（バージョン変更）時だけ再生」
+    // ✅ iPhoneは「リロードのたび毎回再生」なので、このスキップ判定をしない
+    if (!isIOS) {
       try {
-        localStorage.setItem(KEY, "true");
+        const last = localStorage.getItem(VERSION_KEY);
+        if (last === APP_VERSION) {
+          setEnabled(false);
+          setPhase("done");
+          return;
+        }
       } catch {}
+    }
+
+    // ✅ 省モーションならスキップ（ただしPC等ではversion保存しておく）
+    if (reduced) {
+      if (!isIOS) {
+        try {
+          localStorage.setItem(VERSION_KEY, APP_VERSION);
+        } catch {}
+      }
       setEnabled(false);
       setPhase("done");
       return;
@@ -148,6 +170,7 @@ export default function OpeningIntro() {
 
     setEnabled(true);
     setPhase("in");
+    setPopped({}); // 念のためリセット
 
     prevOverflow.current = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -157,13 +180,11 @@ export default function OpeningIntro() {
     };
     window.addEventListener("keydown", onKey);
 
-    // フェーズ遷移
     timers.current.push(
       window.setTimeout(() => setPhase("hold"), D.IN),
       window.setTimeout(() => setPhase("out"), D.IN + D.HOLD)
     );
 
-    // 泡を順番に割る
     bubbles.forEach((b) => {
       timers.current.push(
         window.setTimeout(() => {
@@ -172,7 +193,6 @@ export default function OpeningIntro() {
       );
     });
 
-    // 最後の泡が割れて少し余韻でfinish
     const lastPopAt = bubbles[bubbles.length - 1]?.popAt ?? D.IN + D.HOLD;
     timers.current.push(window.setTimeout(() => finish(), lastPopAt + 420));
 
@@ -182,20 +202,25 @@ export default function OpeningIntro() {
       window.removeEventListener("keydown", onKey);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced]);
+  }, [mounted, reduced, bubbles, isIOS]);
 
+  // ✅ SSR/初回CSRを一致させる
+  if (!mounted) return null;
   if (!enabled || phase === "done") return null;
 
   return (
     <div className={`oi8 ${phase}`} role="presentation">
-      <button className="oi8Skip" onClick={skip} type="button" aria-label="Skip opening">
+      <button
+        className="oi8Skip"
+        onClick={skip}
+        type="button"
+        aria-label="Skip opening"
+      >
         Skip
       </button>
 
-      {/* うっすら朝もや（下地） */}
       <div className="oi8Wash" aria-hidden />
 
-      {/* みかんシャボン玉（全画面） */}
       <div className="oi8Field" aria-hidden>
         {bubbles.map((b) => {
           const isPopped = !!popped[b.id];
@@ -217,21 +242,19 @@ export default function OpeningIntro() {
                 } as any
               }
             >
-              {/* 泡本体 */}
               <div className="oi8BubbleCore" />
-              {/* ハイライト */}
               <div className="oi8BubbleHi" />
-              {/* 割れた時の粒 */}
               <div className="oi8PopBits" />
-              {/* かわいい「パチ」 */}
               <div className="oi8PopPuff" />
             </div>
           );
         })}
       </div>
 
-      {/* ロゴ（控えめに中央：泡が割れていくのが主役） */}
-      <div className="oi8Logo" aria-hidden>
+      {/* ✅ ロゴ枠＆素材を “泡” と同じ見た目にする */}
+      <div className="oi8Logo" aria-hidden style={{ ["--h" as any]: 34 } as any}>
+        <div className="oi8LogoCore" />
+        <div className="oi8LogoHi" />
         <div className="oi8Title">山口みかん農園</div>
         <div className="oi8Sub">Yamaguchi Mikan Farm</div>
       </div>
@@ -285,26 +308,59 @@ export default function OpeningIntro() {
         .oi8Skip:hover{ transform: translateY(-1px); }
         .oi8Skip:active{ transform: translateY(0px) scale(0.98); }
 
-        /* ロゴ（主張しすぎない） */
+        /* ロゴ（泡素材） */
         .oi8Logo{
           position: relative;
           z-index: 10;
           text-align: center;
           padding: 18px 22px;
-          border-radius: 26px;
-          background: rgba(255,255,255,0.40);
-          border: 1px solid rgba(255,255,255,0.55);
-          box-shadow: 0 18px 60px rgba(0,0,0,0.10);
-          backdrop-filter: blur(10px);
+          border-radius: 9999px;
           transform: translate3d(0,0,0);
           animation: oi8LogoBreath 2.8s ease-in-out infinite;
+          overflow: hidden;
+          box-shadow: 0 18px 60px rgba(0,0,0,0.10);
         }
         @keyframes oi8LogoBreath{
-          0%{ transform: translate3d(0,0,0) scale(1); opacity: .94;}
+          0%{ transform: translate3d(0,0,0) scale(1); opacity: .96;}
           50%{ transform: translate3d(0,-4px,0) scale(1.01); opacity: 1;}
-          100%{ transform: translate3d(0,0,0) scale(1); opacity: .94;}
+          100%{ transform: translate3d(0,0,0) scale(1); opacity: .96;}
         }
+
+        .oi8LogoCore{
+          position:absolute;
+          inset:0;
+          border-radius:9999px;
+          background:
+            radial-gradient(circle at 30% 30%,
+              rgba(255,255,255,0.95) 0%,
+              rgba(255,255,255,0.55) 14%,
+              hsla(var(--h), 98%, 62%, 0.78) 38%,
+              hsla(var(--h), 98%, 55%, 0.58) 60%,
+              hsla(var(--h), 95%, 50%, 0.30) 78%,
+              rgba(255,160,0,0.0) 100%);
+          border: 1px solid rgba(255,160,0,0.28);
+          box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,0.28),
+            inset 0 -18px 30px rgba(255,140,0,0.10);
+          opacity: 0.95;
+        }
+
+        .oi8LogoHi{
+          position:absolute;
+          inset: 10% 14% auto auto;
+          width: 36%;
+          height: 36%;
+          border-radius:9999px;
+          background: radial-gradient(circle, rgba(255,255,255,0.92), rgba(255,255,255,0) 70%);
+          filter: blur(0.2px);
+          opacity: .95;
+          transform: translate3d(0,0,0);
+          pointer-events:none;
+        }
+
         .oi8Title{
+          position: relative;
+          z-index: 2;
           font-weight: 900;
           letter-spacing: .12em;
           font-size: clamp(20px, 4.2vw, 44px);
@@ -312,6 +368,8 @@ export default function OpeningIntro() {
           text-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
         .oi8Sub{
+          position: relative;
+          z-index: 2;
           margin-top: 6px;
           font-weight: 700;
           letter-spacing: .10em;
@@ -328,7 +386,6 @@ export default function OpeningIntro() {
           transform: translate3d(0,0,0);
         }
 
-        /* 泡：ふわふわ上昇＋左右ゆらぎ */
         .oi8Bubble{
           position:absolute;
           border-radius: 9999px;
@@ -340,19 +397,16 @@ export default function OpeningIntro() {
           will-change: transform, opacity;
           filter: drop-shadow(0 18px 26px rgba(0,0,0,0.10));
         }
-
         @keyframes oi8Appear{
           from { opacity: 0; transform: translate3d(-50%,-50%,0) scale(0.92); }
           to   { opacity: 1; transform: translate3d(-50%,-50%,0) scale(1); }
         }
-
         @keyframes oi8Float{
           0%   { transform: translate3d(-50%,-50%,0) translate3d(0,0,0); }
           50%  { transform: translate3d(-50%,-50%,0) translate3d(var(--dx), var(--dy), 0); }
           100% { transform: translate3d(-50%,-50%,0) translate3d(0,0,0); }
         }
 
-        /* 泡の見た目（みかんっぽい） */
         .oi8BubbleCore{
           position:absolute;
           inset:0;
@@ -384,11 +438,7 @@ export default function OpeningIntro() {
           transform: translate3d(0,0,0);
         }
 
-        /* 割れる演出：ぷく→パチ→消える */
-        .oi8Bubble.isPopped{
-          animation: none;
-          filter: none;
-        }
+        .oi8Bubble.isPopped{ animation: none; filter: none; }
 
         .oi8Bubble.isPopped .oi8BubbleCore{
           animation: oi8PopCore 520ms cubic-bezier(.2,.9,.2,1) forwards;
@@ -408,7 +458,6 @@ export default function OpeningIntro() {
           100% { transform: scale(0.7); opacity: 0; }
         }
 
-        /* “パチッ”の白いふわ輪 */
         .oi8PopPuff{
           position:absolute;
           inset:-22%;
@@ -427,7 +476,6 @@ export default function OpeningIntro() {
           100%{ opacity: 0; transform: scale(1.35); }
         }
 
-        /* 粒が散る */
         .oi8PopBits{
           position:absolute;
           inset: -40%;
@@ -451,31 +499,17 @@ export default function OpeningIntro() {
           100%{ opacity: 0; transform: scale(1.25); }
         }
 
-        /* 全体フェード */
         .oi8.in{ opacity: 1; }
         .oi8.hold{ opacity: 1; }
-        .oi8.out{
-          animation: oi8Out 520ms ease-in forwards;
-        }
-        @keyframes oi8Out{
-          from{ opacity: 1; }
-          to{ opacity: 0; }
-        }
+        .oi8.out{ animation: oi8Out 520ms ease-in forwards; }
+        @keyframes oi8Out{ from{ opacity: 1; } to{ opacity: 0; } }
 
         @media (max-width: 430px){
-          .oi8Logo{
-            padding: 14px 16px;
-            border-radius: 22px;
-          }
-          .oi8Skip{
-            padding: 9px 12px;
-          }
+          .oi8Logo{ padding: 14px 16px; }
+          .oi8Skip{ padding: 9px 12px; }
         }
-
         @media (prefers-reduced-motion: reduce){
-          .oi8Wash, .oi8Logo, .oi8Bubble{
-            animation: none !important;
-          }
+          .oi8Wash, .oi8Logo, .oi8Bubble{ animation: none !important; }
         }
       `}</style>
     </div>

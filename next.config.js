@@ -71,17 +71,12 @@ const nextConfig = {
   // ✔ バージョン付与（LCP 画像のキャッシュ破棄にも使える）
   env: {
     NEXT_PUBLIC_COMMIT_SHA: commit,
-  },
-};
 
-module.exports = nextConfig;
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  env: {
-    // Vercelなら自動で毎デプロイ変わる値が入る
+    // ✅ 追加：サイト更新検知用（デプロイごとに変わる値）
     NEXT_PUBLIC_APP_VERSION:
       process.env.VERCEL_GIT_COMMIT_SHA ||
       process.env.VERCEL_DEPLOYMENT_ID ||
+      commit || // ローカル用フォールバック
       "dev",
   },
 };

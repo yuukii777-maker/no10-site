@@ -608,7 +608,7 @@ export default function Home() {
               直売所の住所はこちらにお問合せください。
             </p>
             <a
-              href="mailto:kakuda.040611@gmail.com?subject=%E7%9B%B4%E5%A3%B2%E6%89%80%E3%81%AE%E4%BD%8F%E6%89%80%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0A%E3%81%94%E7%94%A8%E4%BB%B6%EF%BC%9A%0A"
+              href="mailto:yamaguchinouen0915@gmail.com?subject=%E7%9B%B4%E5%A3%B2%E6%89%80%E3%81%AE%E4%BD%8F%E6%89%80%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0A%E3%81%94%E7%94%A8%E4%BB%B6%EF%BC%9A%0A"
               className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
             >
               お問い合わせ（メールを開く）

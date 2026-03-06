@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react"; // ← useEffectを追加（カート用）
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 /* =========================
@@ -33,11 +33,11 @@ export default function ProductsPage() {
   // 規格と価格（送料込み）
   const PRICE_TABLE: Record<"5kg" | "10kg", number> = {
     "5kg": 2500,
-    "10kg": 4000, // ★ 変更：10kg を 4000 円に
+    "10kg": 4000,
   };
 
   const [size, setSize] = useState<"5kg" | "10kg">("5kg");
-  const [withBuntan, setWithBuntan] = useState(true); // ★ 名称は既存のまま（互換維持）。true=「みかん＋500gおまけ」
+  const [withBuntan, setWithBuntan] = useState(true);
   const price = PRICE_TABLE[size];
 
   // ★ 追加：文旦用タブ/選択/箱数
@@ -51,6 +51,10 @@ export default function ProductsPage() {
   const [mikanTab, setMikanTab] = useState<"5kg" | "10kg">("5kg");
   const [mikanQty, setMikanQty] = useState<number>(1);
 
+  // ★追加：傷あり欄の等級切替（B / C）
+  const [defectGrade, setDefectGrade] = useState<"B" | "C">("B");
+  const [cGradeAccepted, setCGradeAccepted] = useState(false);
+
   // ★ 追加：size と みかんタブの同期
   useEffect(() => {
     setMikanTab(size);
@@ -58,7 +62,7 @@ export default function ProductsPage() {
   /* ========================= */
 
   /* =========================
-     ★ 追加：南津海（新商品）用：価格/タブ/数量
+     ★ 追加：南津海（A品）用：価格/タブ/数量
   ========================= */
   const NATSUMI_PRICE_TABLE: Record<"5kg" | "10kg", number> = {
     "5kg": 3000,
@@ -71,19 +75,32 @@ export default function ProductsPage() {
   const natsumiStatus = "active" as ProductItem["status"];
 
   const natsumiFeature =
-    "【青果／送料込みサイト特価】寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。2月は酸味のあとに甘さが追いかけ、3月中旬から甘みがさらに増します。酸味×糖度のバランスが良く、※種がある場合があります。";
+    "【A品／送料込みサイト特価】見た目の状態が良く、市場にも出回る品質の南津海です。寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。2月は酸味のあとに甘さが追いかけ、3月中旬から甘みがさらに増します。酸味×糖度のバランスが良く、※種がある場合があります。";
   /* ========================= */
 
   /* =========================
-     ★追加：傷あり南津海（超特価）用：価格/特徴/在庫
+     ★追加：傷あり南津海（B/C切替）用：価格/特徴/在庫
   ========================= */
-  const NATSUMI_DEFECT_PRICE_TABLE: Record<"5kg" | "10kg", number> = {
-    "5kg": 2000,
-    "10kg": 3500,
-  };
+  const NATSUMI_DEFECT_PRICE_TABLE = {
+    B: {
+      "5kg": 2000,
+      "10kg": 3500,
+      image: "/mikan/defect.png",
+      label: "B品",
+      feature:
+        "【B品／送料込み】見た目にやや傷がありますが、中身はA品同等でおいしくお召し上がりいただける南津海です。ご家庭用として人気の高い、お得な箱詰め商品です。",
+    },
+    C: {
+      "5kg": 1500,
+      "10kg": 2500, // ★必要に応じて変更してください
+      image: "/mikan/defectc.png",
+      label: "C品",
+      feature:
+        "【C品／送料込み】見た目に傷や色ムラがあり、果肉にやや隙間が見られる場合がありますが、ご家庭用として十分おいしく楽しめる南津海です。見た目よりお得さ重視の方向けです。",
+    },
+  } as const;
+
   const natsumiDefectStatus = "active" as ProductItem["status"];
-  const natsumiDefectFeature =
-    "酸味が少し薄くなり、甘味が出てきていて非常にバランスが取れておいしい南津海です。見た目に多少の傷がありますが、味は問題ありません。送料込み・超特価で販売中。";
   /* ========================= */
 
   /* =========================
@@ -130,9 +147,14 @@ export default function ProductsPage() {
   const mikanPremiumStatus = "soldout" as ProductItem["status"];
   const buntanStatus = (buntan?.status || "active") as ProductItem["status"];
 
+  // ★追加：現在選択中の傷あり等級データ
+  const currentDefect = NATSUMI_DEFECT_PRICE_TABLE[defectGrade];
+
   // ★変更：特徴文（シート優先、無ければ今回指定）
   const mikanDefectFeature =
-    (mikanDefect?.feature && String(mikanDefect.feature)) || natsumiDefectFeature;
+    defectGrade === "B"
+      ? (mikanDefect?.feature && String(mikanDefect.feature)) || currentDefect.feature
+      : currentDefect.feature;
 
   const mikanPremiumFeature =
     (mikanPremium?.feature && String(mikanPremium.feature)) ||
@@ -142,9 +164,13 @@ export default function ProductsPage() {
     (buntan?.feature && String(buntan.feature)) ||
     "さっぱりとした甘さと爽やかな香りの文旦。大きさ不揃いで、5kg箱は6個入り／10kg箱は12個入りです（目安）。";
 
-  // ★変更：傷あり南津海は「指定価格」を優先（シートがあれば5kgだけ上書き）
-  const mikanDefectPrice5 = Number(mikanDefect?.price ?? NATSUMI_DEFECT_PRICE_TABLE["5kg"]);
-  const mikanDefectPrice10 = Number(NATSUMI_DEFECT_PRICE_TABLE["10kg"]);
+  // ★変更：傷あり南津海はB/C切替に対応（Bのみシート価格の5kg上書きを許可）
+  const mikanDefectPrice5 = Number(
+    defectGrade === "B"
+      ? mikanDefect?.price ?? currentDefect["5kg"]
+      : currentDefect["5kg"]
+  );
+  const mikanDefectPrice10 = Number(currentDefect["10kg"]);
   const buntanPrice5 = Number(buntan?.price ?? PRICE_TABLE["5kg"]);
   /* ========================= */
 
@@ -157,6 +183,27 @@ export default function ProductsPage() {
 
       <div className="max-w-2xl mx-auto mt-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 text-center text-gray-700">
         歴史ある農園から採れた、おいしいみかんをサイトで特価にて販売しております。
+      </div>
+
+      {/* ★追加：A品/B品/C品の違い説明 */}
+      <div className="max-w-4xl mx-auto mt-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+        <h2 className="text-2xl font-bold text-center mb-5">A品・B品・C品の違い</h2>
+        <div className="grid md:grid-cols-3 gap-4 text-sm leading-relaxed text-gray-700">
+          <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
+            <p className="font-bold text-green-700 text-base mb-2">A品</p>
+            <p>見た目の状態が良く、市場に出回る品質のものです。</p>
+          </div>
+          <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-4">
+            <p className="font-bold text-orange-700 text-base mb-2">B品</p>
+            <p>見た目にやや傷がありますが、中身はA品同等のものです。</p>
+          </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+            <p className="font-bold text-amber-700 text-base mb-2">C品</p>
+            <p>
+              見た目に傷や色ムラがあり、果肉にやや隙間が見られる場合がありますが、ご家庭用としておいしく楽しめるお得な商品です。
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* エラーバナーは非表示にする */}
@@ -172,22 +219,55 @@ export default function ProductsPage() {
       <section className="mt-16">
         <h2 className="text-3xl font-semibold">傷あり南津海（箱詰め）</h2>
 
-        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+        {/* ★追加：B/C切替タブ */}
+        <div className="mt-4 inline-flex rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+          <button
+            onClick={() => {
+              setDefectGrade("B");
+              setCGradeAccepted(false);
+            }}
+            className={`px-5 py-2 text-sm font-semibold transition ${
+              defectGrade === "B"
+                ? "bg-orange-500 text-white"
+                : "bg-white text-gray-700 hover:bg-orange-50"
+            }`}
+            aria-pressed={defectGrade === "B"}
+          >
+            B品
+          </button>
+          <button
+            onClick={() => {
+              setDefectGrade("C");
+              setCGradeAccepted(false);
+            }}
+            className={`px-5 py-2 text-sm font-semibold transition border-l border-gray-200 ${
+              defectGrade === "C"
+                ? "bg-amber-500 text-white"
+                : "bg-white text-gray-700 hover:bg-amber-50"
+            }`}
+            aria-pressed={defectGrade === "C"}
+          >
+            C品
+          </button>
+        </div>
+
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
           {mikanDefectFeature}
         </div>
 
         <div className="grid md:grid-cols-2 gap-10 mt-10 items-center">
           <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-md">
             <Image
-              src="/mikan/defect.png"
-              alt="傷あり南津海"
+              src={currentDefect.image}
+              alt={`傷あり南津海 ${currentDefect.label}`}
               fill
               className="object-cover"
             />
           </div>
 
-          <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
             <h3 className="text-2xl font-bold mb-2">価格（送料込み）</h3>
+            <p className="text-sm font-semibold text-gray-600 mb-3">現在選択中：{currentDefect.label}</p>
 
             {/* ★★ 統一：セグメント型（SP=2行 / MD+=1行） */}
             <div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
@@ -199,11 +279,15 @@ export default function ProductsPage() {
                     setSize("5kg");
                   }}
                   className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-                    text-[15px] sm:text-sm leading-snug
-                    ${mikanTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                    text-[15px] sm:text-sm leading-snug ${
+                      mikanTab === "5kg"
+                        ? defectGrade === "B"
+                          ? "bg-orange-500 text-white"
+                          : "bg-amber-500 text-white"
+                        : "bg-white hover:bg-green-50"
+                    }`}
                   aria-pressed={mikanTab === "5kg"}
                 >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
                   <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
                     <span className="font-semibold whitespace-nowrap">
                       5kg<span className="hidden sm:inline">（6個）</span>
@@ -213,17 +297,22 @@ export default function ProductsPage() {
                     </span>
                   </span>
                 </button>
+
                 <button
                   onClick={() => {
                     setMikanTab("10kg");
                     setSize("10kg");
                   }}
                   className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-                    text-[15px] sm:text-sm leading-snug border-l border-gray-200
-                    ${mikanTab === "10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                    text-[15px] sm:text-sm leading-snug border-l border-gray-200 ${
+                      mikanTab === "10kg"
+                        ? defectGrade === "B"
+                          ? "bg-orange-500 text-white"
+                          : "bg-amber-500 text-white"
+                        : "bg-white hover:bg-green-50"
+                    }`}
                   aria-pressed={mikanTab === "10kg"}
                 >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
                   <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
                     <span className="font-semibold whitespace-nowrap">
                       10kg<span className="hidden sm:inline">（12個）</span>
@@ -267,7 +356,8 @@ export default function ProductsPage() {
 
             {/* 価格 */}
             <p className="text-2xl font-bold text-green-700 mt-6">
-              価格：{(size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10).toLocaleString()}円
+              価格：
+              {(size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10).toLocaleString()}円
             </p>
 
             {/* ★★ 追加：小計（数量反映） */}
@@ -280,6 +370,21 @@ export default function ProductsPage() {
             </p>
 
             <p className="text-sm text-gray-600 mt-2">※ 送料込みです。</p>
+
+            {/* ★追加：C品時のみ承諾チェック */}
+            {defectGrade === "C" && (
+              <label className="mt-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cGradeAccepted}
+                  onChange={(e) => setCGradeAccepted(e.target.checked)}
+                  className="w-5 h-5 accent-amber-500"
+                />
+                <span className="text-sm text-gray-700">
+                  中身にばらつきがある場合があります
+                </span>
+              </label>
+            )}
 
             {/* ★ 追加：soldout/comingsoon 表示（見た目を崩さずに） */}
             {mikanDefectStatus !== "active" && (
@@ -313,26 +418,28 @@ export default function ProductsPage() {
               </div>
             </label>
 
-            {/* ★ 2択：カート or 今すぐ購入（※ 購入手続きへ は削除） */}
+            {/* ★ 2択：カート or 今すぐ購入 */}
             <div className="mt-6 grid sm:grid-cols-2 gap-3">
               <button
                 onClick={() => {
                   addToCart({
-                    id: `natsumi-defect-${size}-${withBuntan ? "plus500" : "noextra"}`,
-                    name: "傷あり南津海（箱詰め）",
-                    variant: size,
+                    id: `natsumi-defect-${defectGrade}-${size}-${withBuntan ? "plus500" : "noextra"}`,
+                    name: `傷あり南津海（${currentDefect.label}）`,
+                    variant: `${currentDefect.label} / ${size}`,
                     unitPrice: size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10,
                     qty: mikanQty,
-                    extra: { withBonus500g: withBuntan },
+                    extra: { withBonus500g: withBuntan, defectGrade, cGradeAccepted },
                   });
                   if (typeof window !== "undefined") {
                     window.dispatchEvent(new Event("yk-cart-updated"));
                   }
                   alert("カートに追加しました。右上のカートからまとめて注文できます。");
                 }}
-                disabled={mikanDefectStatus !== "active"}
-                className={`w-full bg白 border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
-                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                disabled={mikanDefectStatus !== "active" || (defectGrade === "C" && !cGradeAccepted)}
+                className={`w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  mikanDefectStatus !== "active" || (defectGrade === "C" && !cGradeAccepted)
+                    ? "opacity-60 cursor-not-allowed"
+                    : ""
                 }`}
               >
                 カートに入れる
@@ -343,14 +450,16 @@ export default function ProductsPage() {
                   const unit = size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10;
                   const p = unit * mikanQty;
                   router.push(
-                    `/order?product=${encodeURIComponent("傷あり南津海（箱詰め）")}` +
+                    `/order?product=${encodeURIComponent(`傷あり南津海（${currentDefect.label}）`)}` +
                       `&size=${encodeURIComponent(size)}` +
-                      `&qty=${mikanQty}&price=${p}&buntan=${withBuntan}`
+                      `&qty=${mikanQty}&price=${p}&buntan=${withBuntan}&grade=${defectGrade}&accepted=${cGradeAccepted}`
                   );
                 }}
-                disabled={mikanDefectStatus !== "active"}
-                className={`w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
-                  mikanDefectStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
+                disabled={mikanDefectStatus !== "active" || (defectGrade === "C" && !cGradeAccepted)}
+                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                  mikanDefectStatus !== "active" || (defectGrade === "C" && !cGradeAccepted)
+                    ? "opacity-60 cursor-not-allowed"
+                    : ""
                 }`}
               >
                 今すぐ注文する
@@ -375,7 +484,7 @@ export default function ProductsPage() {
           ※ 南津海（青果）は <span className="font-bold">残りわずか</span> です。売り切れ次第終了となります。
         </div>
 
-        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
           {natsumiFeature}
         </div>
 
@@ -384,14 +493,13 @@ export default function ProductsPage() {
             <Image src="/mikan/premium.png" alt="南津海（青果）" fill className="object-cover" />
           </div>
 
-          <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-            <h3 className="text-2xl font-bold mb-4">南津海</h3>
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
+            <h3 className="text-2xl font-bold mb-4">南津海（A品）</h3>
 
             {/* ★ みかんと同形式：サイズ切替ボタン（ずれ解消版） */}
             <div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
               <span className="text-sm text-gray-600">内容量：</span>
 
-              {/* 2ボタンを1つの“セグメント”にまとめる */}
               <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
                 <button
                   onClick={() => {
@@ -399,11 +507,11 @@ export default function ProductsPage() {
                     setNatsumiSize("5kg");
                   }}
                   className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-        text-[15px] sm:text-sm leading-snug
-        ${natsumiTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                    text-[15px] sm:text-sm leading-snug ${
+                      natsumiTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
+                    }`}
                   aria-pressed={natsumiTab === "5kg"}
                 >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
                   <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
                     <span className="font-semibold whitespace-nowrap">5kg</span>
                     <span className="text-[13px] sm:text-sm whitespace-nowrap">
@@ -418,11 +526,13 @@ export default function ProductsPage() {
                     setNatsumiSize("10kg");
                   }}
                   className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-        text-[15px] sm:text-sm leading-snug border-l border-gray-200
-        ${natsumiTab === "10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                    text-[15px] sm:text-sm leading-snug border-l border-gray-200 ${
+                      natsumiTab === "10kg"
+                        ? "bg-green-600 text-white"
+                        : "bg-white hover:bg-green-50"
+                    }`}
                   aria-pressed={natsumiTab === "10kg"}
                 >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
                   <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
                     <span className="font-semibold whitespace-nowrap">10kg</span>
                     <span className="text-[13px] sm:text-sm whitespace-nowrap">
@@ -445,8 +555,12 @@ export default function ProductsPage() {
                 }}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
-                <option value="5kg">5kg / {Number(NATSUMI_PRICE_TABLE["5kg"]).toLocaleString()}円</option>
-                <option value="10kg">10kg / {Number(NATSUMI_PRICE_TABLE["10kg"]).toLocaleString()}円</option>
+                <option value="5kg">
+                  5kg / {Number(NATSUMI_PRICE_TABLE["5kg"]).toLocaleString()}円
+                </option>
+                <option value="10kg">
+                  10kg / {Number(NATSUMI_PRICE_TABLE["10kg"]).toLocaleString()}円
+                </option>
               </select>
             </div>
 
@@ -469,13 +583,18 @@ export default function ProductsPage() {
             {/* 価格 + 小計 */}
             <p className="text-2xl font-bold text-green-700 mt-6">
               価格：
-              {(natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"]).toLocaleString()}
+              {(natsumiTab === "5kg"
+                ? NATSUMI_PRICE_TABLE["5kg"]
+                : NATSUMI_PRICE_TABLE["10kg"]
+              ).toLocaleString()}
               円 / 箱
             </p>
             <p className="text-lg font-semibold text-green-700 mt-1">
               小計：
               {(
-                (natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"]) * natsumiQty
+                (natsumiTab === "5kg"
+                  ? NATSUMI_PRICE_TABLE["5kg"]
+                  : NATSUMI_PRICE_TABLE["10kg"]) * natsumiQty
               ).toLocaleString()}
               円
             </p>
@@ -493,11 +612,14 @@ export default function ProductsPage() {
                 onClick={() => {
                   addToCart({
                     id: `natsumi-${natsumiTab}`,
-                    name: "南津海（青果）",
+                    name: "南津海（A品）",
                     variant: natsumiTab,
-                    unitPrice: natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"],
+                    unitPrice:
+                      natsumiTab === "5kg"
+                        ? NATSUMI_PRICE_TABLE["5kg"]
+                        : NATSUMI_PRICE_TABLE["10kg"],
                     qty: natsumiQty,
-                    extra: { natsumi: true },
+                    extra: { natsumi: true, grade: "A" },
                   });
                   alert("カートに追加しました。右上のカートからまとめて注文できます。");
                   window.dispatchEvent(new Event("yk-cart-updated"));
@@ -512,16 +634,19 @@ export default function ProductsPage() {
 
               <button
                 onClick={() => {
-                  const unit = natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"];
+                  const unit =
+                    natsumiTab === "5kg"
+                      ? NATSUMI_PRICE_TABLE["5kg"]
+                      : NATSUMI_PRICE_TABLE["10kg"];
                   const p = unit * natsumiQty;
                   router.push(
-                    `/order?product=${encodeURIComponent("南津海（青果）")}` +
+                    `/order?product=${encodeURIComponent("南津海（A品）")}` +
                       `&size=${encodeURIComponent(natsumiTab)}` +
-                      `&qty=${natsumiQty}&price=${p}&buntan=${withBuntan}`
+                      `&qty=${natsumiQty}&price=${p}&buntan=${withBuntan}&grade=A`
                   );
                 }}
                 disabled={natsumiStatus !== "active"}
-                className={`w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
                   natsumiStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
@@ -538,7 +663,7 @@ export default function ProductsPage() {
       <section className="mt-24">
         <h2 className="text-3xl font-semibold">文旦（箱）</h2>
 
-        <div className="bg白/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-4 leading-relaxed text-gray-700">
           {buntanFeature}
         </div>
 
@@ -552,7 +677,6 @@ export default function ProductsPage() {
             <div className="mt-2 grid grid-cols-[auto,1fr] items-center gap-3">
               <span className="text-sm text-gray-600">内容量：</span>
 
-              {/* 2ボタンを1つの“セグメント”にまとめる */}
               <div className="inline-flex h-12 sm:h-10 rounded-xl border border-gray-200 overflow-hidden w-full sm:w-auto">
                 <button
                   onClick={() => {
@@ -560,11 +684,11 @@ export default function ProductsPage() {
                     setBuntanSize("5kg");
                   }}
                   className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-        text-[15px] sm:text-sm leading-snug
-        ${buntanTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                    text-[15px] sm:text-sm leading-snug ${
+                      buntanTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
+                    }`}
                   aria-pressed={buntanTab === "5kg"}
                 >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
                   <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
                     <span className="font-semibold whitespace-nowrap">
                       5kg<span className="hidden sm:inline">（6個）</span>
@@ -581,11 +705,11 @@ export default function ProductsPage() {
                     setBuntanSize("10kg");
                   }}
                   className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4 min-w-[140px] sm:min-w-0
-        text-[15px] sm:text-sm leading-snug border-l border-gray-200
-        ${buntanTab === "10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"}`}
+                    text-[15px] sm:text-sm leading-snug border-l border-gray-200 ${
+                      buntanTab === "10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
+                    }`}
                   aria-pressed={buntanTab === "10kg"}
                 >
-                  {/* ▼ 2行（SP）/ 1行（MD+） */}
                   <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-1">
                     <span className="font-semibold whitespace-nowrap">
                       10kg<span className="hidden sm:inline">（12個）</span>
@@ -682,12 +806,14 @@ export default function ProductsPage() {
                   const p = unit * buntanQty;
                   router.push(
                     `/order?product=${encodeURIComponent("文旦（箱）")}` +
-                      `&size=${encodeURIComponent(buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）")}` +
+                      `&size=${encodeURIComponent(
+                        buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）"
+                      )}` +
                       `&qty=${buntanQty}&price=${p}&buntan=${withBuntan}`
                   );
                 }}
                 disabled={buntanStatus !== "active"}
-                className={`w-full bg-green-600 hover:bg-green-700 text白 text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
+                className={`w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition ${
                   buntanStatus !== "active" ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
@@ -708,11 +834,11 @@ export default function ProductsPage() {
    簡易カート（localStorage）
 =========================== */
 type CartItem = {
-  id: string; // 例: "buntan-5kg"
-  name: string; // 例: "文旦（不揃い）"
-  variant: string; // 例: "5kg（6個）"
-  unitPrice: number; // 単価（送料込み）
-  qty: number; // 箱数
+  id: string;
+  name: string;
+  variant: string;
+  unitPrice: number;
+  qty: number;
   extra?: Record<string, any>;
 };
 
@@ -729,7 +855,6 @@ function readCart(): CartItem[] {
 function writeCart(items: CartItem[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CART_KEY, JSON.stringify(items));
-  // ★ 追加：右下カート更新通知
   window.dispatchEvent(new Event("yk-cart-updated"));
 }
 function addToCart(item: CartItem) {
@@ -770,7 +895,7 @@ function CartWidget() {
     <button
       onClick={() => router.push("/order?cart=1")}
       className="fixed z-50 right-5 bottom-5 flex items-center gap-2 rounded-full px-5 py-3
-                 bg-orange-500 text白 shadow-lg hover:bg-orange-600 transition"
+                 bg-orange-500 text-white shadow-lg hover:bg-orange-600 transition"
       aria-label="カートを見る"
       title="カートを見る"
     >
@@ -801,12 +926,12 @@ function CartTopButton() {
     <button
       onClick={() => router.push("/order?cart=1")}
       className="fixed z-50 right-5 top-20 sm:top-24 flex items-center gap-2 rounded-full px-4 py-2
-                 bg白/90 backdrop-blur border border-gray-200 shadow hover:bg白"
+                 bg-white/90 backdrop-blur border border-gray-200 shadow hover:bg-white"
       aria-label="カートへ（まとめて注文）"
       title="カートへ（まとめて注文）"
     >
       🛒<span className="text-sm font-semibold">カート</span>
-      <span className="ml-1 inline-flex items-center justify-center min-w-[1.5rem] h-6 text-xs font-bold rounded-full bg-green-600 text白 px-2">
+      <span className="ml-1 inline-flex items-center justify-center min-w-[1.5rem] h-6 text-xs font-bold rounded-full bg-green-600 text-white px-2">
         {count}
       </span>
     </button>

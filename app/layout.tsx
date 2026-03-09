@@ -7,7 +7,7 @@ import type { Metadata, Viewport } from "next";
 
 /** ページ基本情報 + アイコン完全版 */
 export const metadata: Metadata = {
-  title: "山口みかん農園 | 北原早生・直売所",
+  title: "山口みかん農園 |　直売所",
   description:
     "太陽と海風が育てた山口みかん。北原早生を中心に、旬の味を農家直売でお届けします。",
   icons: {

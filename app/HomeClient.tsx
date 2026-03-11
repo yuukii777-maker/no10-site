@@ -51,6 +51,8 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const INSTAGRAM_URL = "https://www.instagram.com/y_m.farm";
+
   /* ===========================
      スライダー制御（内容変更なし）
   ============================ */
@@ -603,15 +605,64 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/70 p-4 shadow-sm ring-1 ring-black/5 text-center">
-            <p className="mb-3 text-[15px] leading-relaxed sm:text-base">
-              直売所の住所はこちらにお問合せください。
+          <details className="group rounded-2xl bg-white/70 p-4 shadow-sm ring-1 ring-black/5">
+            <summary className="cursor-pointer list-none text-center">
+              <span className="inline-flex items-center justify-center gap-2 text-[15px] font-semibold sm:text-base">
+                🍊 直売所の商品案内を見る
+              </span>
+              <span className="block text-xs text-gray-500 mt-1 group-open:hidden">
+                タップして開く
+              </span>
+              <span className="hidden group-open:block text-xs text-gray-500 mt-1">
+                もう一度タップで閉じる
+              </span>
+            </summary>
+
+            <div className="mt-4 rounded-xl bg-white/80 p-4 sm:p-5 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              {`現在直売所にて
+ご用意している商品はこちらです。
+
+━━━━━━━━━━━━━━━
+🍊 みかん　南津海　100円
+🍊 みかん　南津海大容量　300円
+🍊 文旦（ぶんたん）　100円
+
+━━━━━━━━━━━━━━━
+
+南津海について
+寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。酸味×糖度のバランスが良い品種で、この時期にみかんを食べられるのも希少です。
+※種がある場合があります。
+
+
+よろしくお願いします🍊
+
+🍊山口みかん農園🍊`}
+            </div>
+
+            <div className="mt-4 text-center">
+              <a
+                href="mailto:yamaguchinouen0915@gmail.com?subject=%E7%9B%B4%E5%A3%B2%E6%89%80%E3%81%AE%E4%BD%8F%E6%89%80%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0A%E3%81%94%E7%94%A8%E4%BB%B6%EF%BC%9A%0A"
+                className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+              >
+                お問い合わせ（メールを開く）
+              </a>
+            </div>
+          </details>
+
+          <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
+            <p className="text-lg font-semibold text-[#333]">📸 農園の日常をInstagramで発信中</p>
+            <p className="mt-2 text-sm text-gray-600">
+              収穫の様子や畑の風景など、山口みかん農園のリアルな日常を公開しています。
             </p>
+            <p className="mt-1 text-sm font-medium text-orange-600">@y_m.farm</p>
+
             <a
-              href="mailto:yamaguchinouen0915@gmail.com?subject=%E7%9B%B4%E5%A3%B2%E6%89%80%E3%81%AE%E4%BD%8F%E6%89%80%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0A%E3%81%94%E7%94%A8%E4%BB%B6%EF%BC%9A%0A"
-              className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
             >
-              お問い合わせ（メールを開く）
+              Instagramを見る
             </a>
           </div>
         </div>

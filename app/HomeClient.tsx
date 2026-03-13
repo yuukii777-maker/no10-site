@@ -54,6 +54,30 @@ export default function Home() {
   const INSTAGRAM_URL = "https://www.instagram.com/y_m.farm";
 
   /* ===========================
+     ★追加：ロゴ/ボタン位置とサイズ
+     ここだけ数字を変えれば高さ調整できる
+  ============================ */
+   const HERO_POS = {
+    LOGO_TOP_SP: "30%",
+    LOGO_TOP_SM: "31%",
+    LOGO_TOP_MD: "29.5%",
+
+    BUTTON_TOP_SP: "50%",
+    BUTTON_TOP_SM: "71.5%",
+    BUTTON_TOP_MD: "45.5%",
+  } as const;
+
+  const HERO_SIZE = {
+    LOGO_SP: "w-[320px]",
+    LOGO_SM: "sm:w-[430px]",
+    LOGO_MD: "md:w-[590px]",
+
+    BUTTON_SP: "w-[260px]",
+    BUTTON_SM: "sm:w-[360px]",
+    BUTTON_MD: "md:w-[470px]",
+  } as const;
+
+  /* ===========================
      スライダー制御（内容変更なし）
   ============================ */
   const sliderImages = [
@@ -105,12 +129,20 @@ export default function Home() {
      遷移フェード（既存）
   ============================ */
   const FADE_DURATION = 250;
+  const POP_DURATION = 520;
   const [leaving, setLeaving] = useState(false);
+  const [popping, setPopping] = useState(false);
+
   const goProducts = () => {
-    setLeaving(true);
-    setTimeout(() => {
-      router.push("/products");
-    }, FADE_DURATION);
+    if (popping) return;
+    setPopping(true);
+
+    window.setTimeout(() => {
+      setLeaving(true);
+      window.setTimeout(() => {
+        router.push("/products");
+      }, FADE_DURATION);
+    }, POP_DURATION);
   };
 
   /* ===========================
@@ -210,7 +242,7 @@ export default function Home() {
       ============================ */}
       <section
         ref={heroRootRef as any}
-        className="hero-root relative h-[80svh] sm:h-[85svh] overflow-hidden z-20"
+        className="hero-root relative h-[100svh] sm:h-[85svh] overflow-hidden z-20"
       >
         {/* ★追加：② 光粒子（超控えめ） */}
         <div className="absolute inset-0 hero-particles pointer-events-none" />
@@ -221,7 +253,7 @@ export default function Home() {
         {/* 背景（固定） */}
         <div className="absolute inset-0 hero-fixed-bg">
           <Image
-            src="/mikan/hero_bg_base_lightgreen.png"
+            src="/mikan/hero_bg_base_lightgreen.png?v=20260313d"
             alt="背景"
             fill
             priority
@@ -230,10 +262,27 @@ export default function Home() {
         </div>
 
         {/* 枝＋花（同じ強さで揺らす）
-            ★修正：PNGを<Image fill>で置かず、CSS背景＋マスクで“貼ってる感”を消す */}
+            ★修正：CSS背景ではなくImageで強制表示 */}
         <div className="absolute inset-0 hero-sway pointer-events-none">
-          <div className="hero-branch-topLayer" />
-          <div className="hero-branch-bottomLayer" />
+          <div className="hero-branch-topLayer">
+            <Image
+              src="/mikan/hero_branch_top_only.png?v=20260313f"
+              alt=""
+              fill
+              priority
+              className="hero-branch-img-top"
+            />
+          </div>
+
+          <div className="hero-branch-bottomLayer">
+            <Image
+              src="/mikan/hero_branch_bottom_only.png?v=20260313f"
+              alt=""
+              fill
+              priority
+              className="hero-branch-img-bottom"
+            />
+          </div>
         </div>
 
         {/* 子供（浮遊） */}
@@ -252,7 +301,7 @@ export default function Home() {
 
         {/* 太陽（静止＋周りだけ光が発行して消える） */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute left-1/2 -translate-x-1/2 top-[10%] sm:top-[9%] md:top-[8%] hero-medal-float">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[7%] sm:top-[6.5%] md:top-[6%] hero-medal-float">
             <div className="hero-sun-wrap">
               <div className="hero-sun-glow" />
               <Image
@@ -267,22 +316,156 @@ export default function Home() {
           </div>
         </div>
 
-        {/* メダル下：山口農園（太く・丸く） */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute left-1/2 -translate-x-1/2 top-[33%] sm:top-[31%] md:top-[29%] text-center">
-            <div className="hero-brand-text">山口農園</div>
+        {/* ★変更：山口農園ロゴ素材を少し揺らす */}
+        <div className="absolute inset-0 z-[120] pointer-events-none">
+          <div
+            className="absolute left-1/2 -translate-x-1/2 text-center"
+            style={{
+              top: HERO_POS.LOGO_TOP_SP,
+            }}
+          >
+            <div
+              className="hero-brand-logo sm:hidden"
+              style={{ top: HERO_POS.LOGO_TOP_SP }}
+            >
+              <Image
+                src="/mikan/logo_yamaguchi_farm.png"
+                alt="山口農園"
+                width={1200}
+                height={420}
+                priority
+                className={`hero-brand-image ${HERO_SIZE.LOGO_SP} h-auto`}
+              />
+            </div>
+
+            <div
+              className="hero-brand-logo hidden sm:block md:hidden"
+              style={{ top: HERO_POS.LOGO_TOP_SM }}
+            >
+              <Image
+                src="/mikan/logo_yamaguchi_farm.png"
+                alt="山口農園"
+                width={1200}
+                height={420}
+                priority
+                className={`hero-brand-image ${HERO_SIZE.LOGO_SM} h-auto`}
+              />
+            </div>
+
+            <div
+              className="hero-brand-logo hidden md:block"
+              style={{ top: HERO_POS.LOGO_TOP_MD }}
+            >
+              <Image
+                src="/mikan/logo_yamaguchi_farm.png"
+                alt="山口農園"
+                width={1200}
+                height={420}
+                priority
+                className={`hero-brand-image ${HERO_SIZE.LOGO_MD} h-auto`}
+              />
+            </div>
           </div>
         </div>
 
-        {/* 購入ボタン（既存の導線を維持） */}
-        <div className="absolute inset-0 z-[999] flex flex-col justify-center items-center text-white text-center px-6 drop-shadow-xl">
-          <div className="relative mt-10 group -translate-y-8 sm:-translate-y-7 md:-translate-y-6">
-            <button
-              onClick={goProducts}
-              className="bg-orange-500/70 hover:bg-orange-500/90 backdrop-blur-sm text-white px-10 py-3 rounded-full text-base sm:text-lg shadow-lg transition-all duration-200 active:scale-95"
+        {/* ★変更：購入ボタン画像を子供たちが持っているように配置 + パン！演出 */}
+        <div className="absolute inset-0 z-[999] flex items-end justify-center text-center px-6 pointer-events-none">
+          <div className="relative w-full h-full">
+            <div
+              className="absolute left-1/2 -translate-x-1/2 z-[999] pointer-events-auto sm:hidden"
+              style={{ top: HERO_POS.BUTTON_TOP_SP }}
             >
-              🧺 みかんを購入する
-            </button>
+              <button
+                onClick={goProducts}
+                aria-label="みかんを買う"
+                className={`hero-buy-button relative block active:scale-[0.98] transition-transform duration-150 ${
+                  popping ? "is-popping" : ""
+                }`}
+              >
+                <span className="hero-buy-shadow" />
+                <span className="hero-buy-burst hero-buy-burst-1" />
+                <span className="hero-buy-burst hero-buy-burst-2" />
+                <span className="hero-buy-burst hero-buy-burst-3" />
+                <span className="hero-buy-burst hero-buy-burst-4" />
+                <span className="hero-buy-burst hero-buy-burst-5" />
+                <span className="hero-buy-burst hero-buy-burst-6" />
+                <span className="hero-buy-burst hero-buy-burst-7" />
+                <span className="hero-buy-burst hero-buy-burst-8" />
+
+                <Image
+                  src="/mikan/btn_buy_mikan.png"
+                  alt="みかんを買うボタン"
+                  width={1280}
+                  height={520}
+                  priority
+                  className={`hero-buy-image ${HERO_SIZE.BUTTON_SP} h-auto`}
+                />
+              </button>
+            </div>
+
+            <div
+              className="absolute left-1/2 -translate-x-1/2 z-[999] pointer-events-auto hidden sm:block md:hidden"
+              style={{ top: HERO_POS.BUTTON_TOP_SM }}
+            >
+              <button
+                onClick={goProducts}
+                aria-label="みかんを買う"
+                className={`hero-buy-button relative block active:scale-[0.98] transition-transform duration-150 ${
+                  popping ? "is-popping" : ""
+                }`}
+              >
+                <span className="hero-buy-shadow" />
+                <span className="hero-buy-burst hero-buy-burst-1" />
+                <span className="hero-buy-burst hero-buy-burst-2" />
+                <span className="hero-buy-burst hero-buy-burst-3" />
+                <span className="hero-buy-burst hero-buy-burst-4" />
+                <span className="hero-buy-burst hero-buy-burst-5" />
+                <span className="hero-buy-burst hero-buy-burst-6" />
+                <span className="hero-buy-burst hero-buy-burst-7" />
+                <span className="hero-buy-burst hero-buy-burst-8" />
+
+                <Image
+                  src="/mikan/btn_buy_mikan.png"
+                  alt="みかんを買うボタン"
+                  width={1280}
+                  height={520}
+                  priority
+                  className={`hero-buy-image ${HERO_SIZE.BUTTON_SM} h-auto`}
+                />
+              </button>
+            </div>
+
+            <div
+              className="absolute left-1/2 -translate-x-1/2 z-[999] pointer-events-auto hidden md:block"
+              style={{ top: HERO_POS.BUTTON_TOP_MD }}
+            >
+              <button
+                onClick={goProducts}
+                aria-label="みかんを買う"
+                className={`hero-buy-button relative block active:scale-[0.98] transition-transform duration-150 ${
+                  popping ? "is-popping" : ""
+                }`}
+              >
+                <span className="hero-buy-shadow" />
+                <span className="hero-buy-burst hero-buy-burst-1" />
+                <span className="hero-buy-burst hero-buy-burst-2" />
+                <span className="hero-buy-burst hero-buy-burst-3" />
+                <span className="hero-buy-burst hero-buy-burst-4" />
+                <span className="hero-buy-burst hero-buy-burst-5" />
+                <span className="hero-buy-burst hero-buy-burst-6" />
+                <span className="hero-buy-burst hero-buy-burst-7" />
+                <span className="hero-buy-burst hero-buy-burst-8" />
+
+                <Image
+                  src="/mikan/btn_buy_mikan.png"
+                  alt="みかんを買うボタン"
+                  width={1280}
+                  height={520}
+                  priority
+                  className={`hero-buy-image ${HERO_SIZE.BUTTON_MD} h-auto`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -300,7 +483,7 @@ export default function Home() {
 
           /* ★追加：iPhoneのsvh変動でも高さが足りなくならない保険 */
           .hero-root {
-            min-height: 80vh;
+            min-height: 100svh;
             --px: 0;
             --py: 0;
           }
@@ -312,7 +495,7 @@ export default function Home() {
           .hero-sway { z-index: 10; }
           .hero-kids-float { z-index: 12; }
           .hero-medal-float { z-index: 13; }
-          .hero-brand-text { z-index: 13; }
+          .hero-brand-logo { z-index: 13; }
 
           /* ★追加：① 超微細パララックス（背景だけ） */
           .hero-fixed-bg :global(img) {
@@ -362,110 +545,192 @@ export default function Home() {
           .hero-branch-topLayer,
           .hero-branch-bottomLayer {
             position: absolute;
-            left: -6%;
-            right: -6%;
+            left: -2%;
+            right: -2%;
             pointer-events: none;
-            background-repeat: no-repeat;
-            background-size: cover;
             will-change: transform;
             transform: translateZ(0);
             backface-visibility: hidden;
-            transform-origin: top center;
-          }
-
-          @keyframes heroSwayTop {
-            0%   { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(-1.4deg) translateY(0px); }
-            50%  { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(1.4deg) translateY(-2px); }
-            100% { transform: translate3d(calc(var(--px) * 1.5px), calc(var(--py) * 1px), 0) rotate(-1.4deg) translateY(0px); }
-          }
-          @keyframes heroSwayBottom {
-            0%   { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-1.4deg) translateY(0px); }
-            50%  { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(1.4deg) translateY(-2px); }
-            100% { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-1.4deg) translateY(0px); }
+            overflow: hidden;
           }
 
           .hero-branch-topLayer {
-            top: -6%;
-            height: 56%;
-            background-image: url("/mikan/hero_branch_top_only.png?v=20260225a");
-            background-position: center top;
+            transform-origin: center top;
+          }
 
-            animation: heroSwayTop 6s ease-in-out infinite;
+          .hero-branch-bottomLayer {
+            transform-origin: center bottom;
+          }
 
+          .hero-branch-img-top,
+          .hero-branch-img-bottom {
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
+          }
+
+          .hero-branch-img-top {
+            object-fit: cover;
+            object-position: center top;
+          }
+
+          .hero-branch-img-bottom {
+            object-fit: cover;
+            object-position: center bottom;
+          }
+
+          @keyframes heroSwayTop {
+            0%   { transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px), 0) rotate(-1.6deg) translateY(0px); }
+            50%  { transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px), 0) rotate(1.6deg) translateY(-1px); }
+            100% { transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px), 0) rotate(-1.6deg) translateY(0px); }
+          }
+          @keyframes heroSwayBottom {
+            0%   { transform: translate3d(calc(var(--px) * 0.8px), calc(var(--py) * 0.55px), 0) rotate(-1.6deg) translateY(0px); }
+            50%  { transform: translate3d(calc(var(--px) * 0.8px), calc(var(--py) * 0.55px), 0) rotate(-1.6deg) translateY(-1px); }
+            100% { transform: translate3d(calc(var(--px) * 0.8px), calc(var(--py) * 0.55px), 0) rotate(-1.6deg) translateY(0px); }
+          }
+
+          .hero-branch-topLayer {
+            top: -1%;
+            height: 38%;
+            animation: heroSwayTop 5.6s ease-in-out infinite;
             -webkit-mask-image: linear-gradient(
               to bottom,
-              rgba(0, 0, 0, 1) 0%,
-              rgba(0, 0, 0, 1) 72%,
-              rgba(0, 0, 0, 0) 100%
+              rgba(0,0,0,1) 0%,
+              rgba(0,0,0,1) 62%,
+              rgba(0,0,0,0.72) 78%,
+              rgba(0,0,0,0) 100%
             );
             mask-image: linear-gradient(
               to bottom,
-              rgba(0, 0, 0, 1) 0%,
-              rgba(0, 0, 0, 1) 72%,
-              rgba(0, 0, 0, 0) 100%
+              rgba(0,0,0,1) 0%,
+              rgba(0,0,0,1) 62%,
+              rgba(0,0,0,0.72) 78%,
+              rgba(0,0,0,0) 100%
             );
           }
 
           .hero-branch-bottomLayer {
-            bottom: -6%;
-            height: 56%;
-            background-image: url("/mikan/hero_branch_bottom_only.png?v=20260225a");
-            background-position: center bottom;
-
-            animation: heroSwayBottom 6s ease-in-out infinite;
-
+            bottom: -1%;
+            height: 24%;
+            animation: heroSwayBottom 6.4s ease-in-out infinite;
             -webkit-mask-image: linear-gradient(
               to top,
-              rgba(0, 0, 0, 1) 0%,
-              rgba(0, 0, 0, 1) 72%,
-              rgba(0, 0, 0, 0) 100%
+              rgba(0,0,0,1) 0%,
+              rgba(0,0,0,1) 58%,
+              rgba(0,0,0,0.72) 76%,
+              rgba(0,0,0,0) 100%
             );
             mask-image: linear-gradient(
               to top,
-              rgba(0, 0, 0, 1) 0%,
-              rgba(0, 0, 0, 1) 72%,
-              rgba(0,  0,  0,  0) 100%
+              rgba(0,0,0,1) 0%,
+              rgba(0,0,0,1) 58%,
+              rgba(0,0,0,0.72) 76%,
+              rgba(0,0,0,0) 100%
             );
           }
 
           @media (max-width: 430px) {
+            .hero-root {
+              height: 100svh;
+              min-height: 100svh;
+            }
+
             .hero-atmosphere,
             .hero-particles {
               display: none;
             }
 
-            @keyframes heroSwayTopSP {
-              0%   { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-0.8deg) translateY(2px); }
-              50%  { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(0.8deg) translateY(-1px); }
-              100% { transform: translate3d(calc(var(--px) * 1.2px), calc(var(--py) * 0.8px), 0) rotate(-0.8deg) translateY(2px); }
-            }
-            @keyframes heroSwayBottomSP {
-              0%   { transform: translate3d(calc(var(--px) * 1.0px), calc(var(--py) * 0.7px), 0) rotate(-0.8deg) translateY(2px); }
-              50%  { transform: translate3d(calc(var(--px) * 1.0px), calc(var(--py) * 0.7px), 0) rotate(0.8deg) translateY(-1px); }
-              100% { transform: translate3d(calc(var(--px) * 1.0px), calc(var(--py) * 0.7px), 0) rotate(-0.8deg) translateY(2px); }
+            .hero-fixed-bg :global(img) {
+              object-fit: cover !important;
+              object-position: center center !important;
+              transform: translate3d(0, 0, 0) !important;
             }
 
-            .hero-branch-topLayer,
+           @keyframes heroSwayTopSP {
+  0%   { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
+  50%  { transform: translate3d(calc(var(--px) * 1.2px + 2px), calc(var(--py) * 0.8px), 0) rotate(1.6deg) translateY(-2px); }
+  100% { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
+}
+
+@keyframes heroSwayBottomSP {
+  0%   { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
+  50%  { transform: translate3d(calc(var(--px) * 1px + 2px), calc(var(--py) * 0.7px), 0) rotate(1.35deg) translateY(-2px); }
+  100% { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
+}
+
+.hero-branch-topLayer {
+  top: -1%;
+  height: 34%;
+  animation: heroSwayTopSP 5.0s ease-in-out infinite;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 64%,
+    rgba(0,0,0,0.72) 82%,
+    rgba(0,0,0,0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 64%,
+    rgba(0,0,0,0.72) 82%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
+.hero-branch-bottomLayer {
+  bottom: -1%;
+  height: 21%;
+  animation: heroSwayBottomSP 4.8s ease-in-out infinite;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 60%,
+    rgba(0,0,0,0.72) 80%,
+    rgba(0,0,0,0) 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 60%,
+    rgba(0,0,0,0.72) 80%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
             .hero-branch-bottomLayer {
-              left: -22%;
-              right: -22%;
-              background-size: 155% auto;
-              -webkit-mask-image: none;
-              mask-image: none;
+              bottom: -1%;
+              height: 21%;
+              animation: heroSwayBottomSP 6.1s ease-in-out infinite;
+              -webkit-mask-image: linear-gradient(
+                to top,
+                rgba(0,0,0,1) 0%,
+                rgba(0,0,0,1) 60%,
+                rgba(0,0,0,0.72) 80%,
+                rgba(0,0,0,0) 100%
+              );
+              mask-image: linear-gradient(
+                to top,
+                rgba(0,0,0,1) 0%,
+                rgba(0,0,0,1) 60%,
+                rgba(0,0,0,0.72) 80%,
+                rgba(0,0,0,0) 100%
+              );
             }
 
-            .hero-branch-topLayer {
-              top: 6%;
-              height: 68%;
-              background-position: center 30%;
-              animation: heroSwayTopSP 6s ease-in-out infinite;
+            .hero-kids-float {
+              width: 94%;
+              max-width: none;
+              margin-bottom: 7.2vh;
             }
 
-            .hero-branch-bottomLayer {
-              bottom: 0%;
-              height: 60%;
-              background-position: center bottom;
-              animation: heroSwayBottomSP 6s ease-in-out infinite;
+            .hero-brand-image {
+              width: 320px !important;
+            }
+
+            .hero-buy-image {
+              width: 260px !important;
             }
           }
 
@@ -528,24 +793,231 @@ export default function Home() {
             pointer-events: none;
           }
 
-          @keyframes brandFloat {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-            100% { transform: translateY(0px); }
+          /* ★追加：ロゴは全体の揺れに合わせて少しだけ揺らす */
+          @keyframes brandLogoFloat {
+            0% {
+              transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px + 0px), 0) rotate(-0.28deg);
+            }
+            50% {
+              transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px + -4px), 0) rotate(0.28deg);
+            }
+            100% {
+              transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px + 0px), 0) rotate(-0.28deg);
+            }
           }
-          .hero-brand-text {
-            font-weight: 900;
-            letter-spacing: 0.14em;
-            font-size: clamp(34px, 6vw, 68px);
-            color: #ffffff;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.22),
-              0 0 6px rgba(255, 255, 255, 0.65);
-            -webkit-text-stroke: 2px rgba(212, 175, 55, 0.55);
-            font-family: ui-rounded, "Hiragino Maru Gothic ProN",
-              "Hiragino Maru Gothic Pro", "Yu Gothic", system-ui, sans-serif;
-            border-radius: 9999px;
-            animation: brandFloat 4s ease-in-out infinite;
+          .hero-brand-logo {
+            animation: brandLogoFloat 4.8s ease-in-out infinite;
             will-change: transform;
+          }
+          .hero-brand-image {
+            display: block;
+            filter:
+              drop-shadow(0 8px 20px rgba(0, 0, 0, 0.18))
+              drop-shadow(0 0 10px rgba(255, 230, 140, 0.22));
+          }
+
+          /* ★追加：シャボン玉ボタン */
+          .hero-buy-button {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            position: relative;
+            transform-origin: center center;
+            animation: buyButtonFloat 4.2s ease-in-out infinite;
+            will-change: transform, opacity, filter;
+            isolation: isolate;
+          }
+
+          .hero-buy-shadow {
+            position: absolute;
+            left: 50%;
+            bottom: 5%;
+            width: 76%;
+            height: 18%;
+            transform: translateX(-50%);
+            border-radius: 9999px;
+            background: radial-gradient(circle, rgba(239, 157, 20, 0.30) 0%, rgba(239, 157, 20, 0.12) 48%, rgba(239, 157, 20, 0) 78%);
+            filter: blur(10px);
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 200ms ease;
+          }
+
+          .hero-buy-image {
+            position: relative;
+            z-index: 2;
+            display: block;
+            filter: drop-shadow(0 16px 28px rgba(255, 170, 30, 0.18));
+            transition: transform 220ms ease, filter 220ms ease;
+            user-select: none;
+            -webkit-user-drag: none;
+          }
+
+          .hero-buy-button:hover .hero-buy-image {
+            transform: scale(1.035);
+            filter: drop-shadow(0 18px 30px rgba(255, 170, 30, 0.26));
+          }
+
+          @keyframes buyButtonFloat {
+            0% {
+              transform: translate3d(calc(var(--px) * 1.8px), calc(var(--py) * 1.2px + 0px), 0) rotate(-0.3deg);
+            }
+            50% {
+              transform: translate3d(calc(var(--px) * 1.8px), calc(var(--py) * 1.2px + -7px), 0) rotate(0.3deg);
+            }
+            100% {
+              transform: translate3d(calc(var(--px) * 1.8px), calc(var(--py) * 1.2px + 0px), 0) rotate(-0.3deg);
+            }
+          }
+
+          .hero-buy-burst {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 14px;
+            height: 14px;
+            margin-left: -7px;
+            margin-top: -7px;
+            border-radius: 9999px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+            background:
+              radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95) 0 28%, rgba(255,230,170,0.9) 29% 55%, rgba(255,194,68,0.55) 56% 72%, rgba(255,194,68,0) 73% 100%);
+            box-shadow:
+              0 0 0 1px rgba(255,255,255,0.4) inset,
+              0 0 18px rgba(255,196,76,0.28);
+          }
+
+          .hero-buy-button.is-popping {
+            animation: none;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-shadow {
+            opacity: 0;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-image {
+            animation: bubblePopMain 520ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-1 { animation: burst1 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-2 { animation: burst2 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-3 { animation: burst3 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-4 { animation: burst4 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-5 { animation: burst5 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-6 { animation: burst6 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-7 { animation: burst7 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-8 { animation: burst8 520ms ease-out forwards; }
+
+          @keyframes bubblePopMain {
+            0% {
+              opacity: 1;
+              transform: scale(1);
+              filter: drop-shadow(0 18px 30px rgba(255, 170, 30, 0.26));
+            }
+            22% {
+              opacity: 1;
+              transform: scale(1.08);
+              filter: drop-shadow(0 24px 36px rgba(255, 185, 60, 0.30));
+            }
+            58% {
+              opacity: 0.92;
+              transform: scale(0.78);
+              filter: brightness(1.08) saturate(1.08) blur(0.6px);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(0.22);
+              filter: brightness(1.12) saturate(1.12) blur(2.2px);
+            }
+          }
+
+          @keyframes burst1 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(-120px,-62px,0) scale(1.2); }
+          }
+          @keyframes burst2 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(126px,-54px,0) scale(1.35); }
+          }
+          @keyframes burst3 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(-148px,8px,0) scale(1.05); }
+          }
+          @keyframes burst4 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(156px,18px,0) scale(1.1); }
+          }
+          @keyframes burst5 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(-86px,82px,0) scale(1.15); }
+          }
+          @keyframes burst6 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(92px,78px,0) scale(1.22); }
+          }
+          @keyframes burst7 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(0px,-110px,0) scale(1.3); }
+          }
+          @keyframes burst8 {
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(0px,102px,0) scale(1.05); }
+          }
+
+          @media (max-width: 640px) {
+            @keyframes burst1 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(-82px,-44px,0) scale(1.05); }
+            }
+            @keyframes burst2 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(86px,-38px,0) scale(1.12); }
+            }
+            @keyframes burst3 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(-98px,4px,0) scale(0.96); }
+            }
+            @keyframes burst4 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(104px,12px,0) scale(1.0); }
+            }
+            @keyframes burst5 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(-60px,58px,0) scale(1.0); }
+            }
+            @keyframes burst6 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(66px,54px,0) scale(1.06); }
+            }
+            @keyframes burst7 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(0px,-74px,0) scale(1.14); }
+            }
+            @keyframes burst8 {
+              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+              18%  { opacity: 1; }
+              100% { opacity: 0; transform: translate3d(0px,68px,0) scale(0.96); }
+            }
           }
         `}</style>
       </section>

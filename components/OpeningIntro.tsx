@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const KEY = "mikanOpeningPlayed_v7";
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
 const VERSION_KEY = "mikanOpeningLastSeenVersion_v7";
 
@@ -41,10 +40,6 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
@@ -54,7 +49,6 @@ function uid() {
  */
 const ALIGN = {
   whole: { scale: 0.92, x: 0, y: 8 },
-  peel1: { scale: 0.9, x: 0, y: 10 },
   peel2: { scale: 0.88, x: 0, y: 12 },
 };
 
@@ -66,8 +60,7 @@ export default function OpeningIntro() {
   const [phase, setPhase] = useState<Phase>("in");
   const [popped, setPopped] = useState<Record<string, boolean>>({});
 
-  const timers = useRef<number[]>([]);
-  const prevOverflow = useRef<string>("");
+  const [timers, setTimers] = useState<number[]>([]);
 
   useEffect(() => setMounted(true), []);
 
@@ -79,14 +72,15 @@ export default function OpeningIntro() {
   /**
    * 周囲だけに泡を出す
    * 中央のみかん付近は避ける
+   * iPhoneは軽量化のため少なめ
    */
   const bubbles: Bubble[] = useMemo(() => {
-    if (!mounted) return [];
+    if (!mounted || typeof window === "undefined") return [];
 
     const w = window.innerWidth;
-    const count = w < 430 ? 8 : w < 900 ? 12 : 16;
+    const count = isIOS ? (w < 430 ? 5 : w < 900 ? 7 : 9) : w < 430 ? 8 : w < 900 ? 12 : 16;
 
-    const startPop = 1800;
+    const startPop = 2200;
     const endPop = 6100;
 
     const arr: Bubble[] = [];
@@ -95,15 +89,14 @@ export default function OpeningIntro() {
       const x = Math.random() * 100;
       const y = 10 + Math.random() * 76;
 
-      // 中央の主役エリアを避ける
       const inCenterX = x > 28 && x < 72;
       const inCenterY = y > 18 && y < 78;
       if (inCenterX && inCenterY) continue;
 
-      const size = Math.round(34 + Math.random() * 54);
-      const driftX = (Math.random() - 0.5) * 70;
-      const driftY = -30 - Math.random() * 90;
-      const floatDur = 5 + Math.random() * 3.4;
+      const size = Math.round(30 + Math.random() * (isIOS ? 42 : 54));
+      const driftX = (Math.random() - 0.5) * (isIOS ? 52 : 70);
+      const driftY = -(24 + Math.random() * (isIOS ? 58 : 90));
+      const floatDur = (isIOS ? 4.6 : 5) + Math.random() * (isIOS ? 2.2 : 3.4);
       const delay = Math.random() * 0.8;
 
       const t =
@@ -115,103 +108,124 @@ export default function OpeningIntro() {
 
       arr.push({
         id: uid(),
-        x: clamp(x, 4, 96),
-        y: clamp(y, 8, 92),
+        x: Math.max(4, Math.min(x, 96)),
+        y: Math.max(8, Math.min(y, 92)),
         size,
         driftX,
         driftY,
         floatDur,
         delay,
-        popAt: Math.round(clamp(t, startPop, endPop)),
+        popAt: Math.round(Math.max(startPop, Math.min(t, endPop))),
         hue,
       });
     }
 
     arr.sort((a, b) => a.popAt - b.popAt);
     return arr;
-  }, [mounted]);
+  }, [mounted, isIOS]);
 
   const clearAll = () => {
-    timers.current.forEach((id) => window.clearTimeout(id));
-    timers.current = [];
+    timers.forEach((id) => window.clearTimeout(id));
+    setTimers([]);
   };
 
-  const finish = () => {
+  const finish = (prevOverflow: string) => {
     clearAll();
 
     if (!isIOS) {
       try {
         localStorage.setItem(VERSION_KEY, APP_VERSION);
-        localStorage.setItem(KEY, "true");
       } catch {}
     }
 
     setPhase("done");
     setEnabled(false);
-    document.body.style.overflow = prevOverflow.current;
-  };
-
-  const skip = () => {
-    setPhase("out");
-    timers.current.push(window.setTimeout(finish, 220));
+    document.body.style.overflow = prevOverflow;
   };
 
   useEffect(() => {
     if (!mounted) return;
 
-    if (!isIOS) {
-      try {
-        const last = localStorage.getItem(VERSION_KEY);
-        if (last === APP_VERSION) {
-          setEnabled(false);
-          setPhase("done");
-          return;
-        }
-      } catch {}
-    }
+    let prevOverflow = "";
+    const localTimers: number[] = [];
 
-    if (reduced) {
+    const run = async () => {
       if (!isIOS) {
         try {
-          localStorage.setItem(VERSION_KEY, APP_VERSION);
+          const last = localStorage.getItem(VERSION_KEY);
+          if (last === APP_VERSION) {
+            setEnabled(false);
+            setPhase("done");
+            return;
+          }
         } catch {}
       }
-      setEnabled(false);
-      setPhase("done");
-      return;
-    }
 
-    setEnabled(true);
-    setPhase("in");
-    setPopped({});
+      if (reduced) {
+        if (!isIOS) {
+          try {
+            localStorage.setItem(VERSION_KEY, APP_VERSION);
+          } catch {}
+        }
+        setEnabled(false);
+        setPhase("done");
+        return;
+      }
 
-    prevOverflow.current = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+      setEnabled(true);
+      setPhase("in");
+      setPopped({});
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") skip();
-    };
-    window.addEventListener("keydown", onKey);
+      prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
 
-    bubbles.forEach((b) => {
-      timers.current.push(
-        window.setTimeout(() => {
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setPhase("out");
+          const t = window.setTimeout(() => finish(prevOverflow), 220);
+          localTimers.push(t);
+          setTimers((prev) => [...prev, t]);
+        }
+      };
+
+      window.addEventListener("keydown", onKey);
+
+      bubbles.forEach((b) => {
+        const t = window.setTimeout(() => {
           setPopped((prev) => (prev[b.id] ? prev : { ...prev, [b.id]: true }));
-        }, b.popAt)
-      );
+        }, b.popAt);
+        localTimers.push(t);
+      });
+
+      const t1 = window.setTimeout(() => setPhase("out"), D.TOTAL - D.OUT);
+      const t2 = window.setTimeout(() => finish(prevOverflow), D.TOTAL);
+
+      localTimers.push(t1, t2);
+      setTimers(localTimers);
+
+      return () => {
+        localTimers.forEach((id) => window.clearTimeout(id));
+        document.body.style.overflow = prevOverflow;
+        window.removeEventListener("keydown", onKey);
+      };
+    };
+
+    let cleanup: void | (() => void);
+    run().then((fn) => {
+      cleanup = fn;
     });
 
-    timers.current.push(
-      window.setTimeout(() => setPhase("out"), D.TOTAL - D.OUT),
-      window.setTimeout(() => finish(), D.TOTAL)
-    );
-
     return () => {
-      clearAll();
-      document.body.style.overflow = prevOverflow.current;
-      window.removeEventListener("keydown", onKey);
+      cleanup?.();
     };
   }, [mounted, reduced, isIOS, bubbles]);
+
+  const skip = () => {
+    const prevOverflow = document.body.style.overflow;
+    setPhase("out");
+    const t = window.setTimeout(() => finish(prevOverflow), 220);
+    setTimers((prev) => [...prev, t]);
+  };
 
   if (!mounted) return null;
   if (!enabled || phase === "done") return null;
@@ -235,7 +249,6 @@ export default function OpeningIntro() {
       <div className="miDust miDust2" />
       <div className="miDust miDust3" />
 
-      {/* 周囲のオレンジ泡 */}
       <div className="miBubbleField" aria-hidden>
         {bubbles.map((b) => {
           const isPopped = !!popped[b.id];
@@ -283,33 +296,13 @@ export default function OpeningIntro() {
             alt=""
             fill
             priority
-            sizes="(max-width: 768px) 72vw, 520px"
+            quality={82}
+            sizes="(max-width: 430px) 84vw, (max-width: 768px) 78vw, 520px"
             className="miImg"
           />
         </div>
 
         {/* 2枚目 */}
-        <div
-          className="miLayer peel1"
-          style={
-            {
-              ["--sx" as any]: ALIGN.peel1.scale,
-              ["--tx" as any]: `${ALIGN.peel1.x}px`,
-              ["--ty" as any]: `${ALIGN.peel1.y}px`,
-            } as any
-          }
-        >
-          <Image
-            src="/intro/intro_mikan_peel1.png?v=20260312c"
-            alt=""
-            fill
-            priority
-            sizes="(max-width: 768px) 72vw, 520px"
-            className="miImg"
-          />
-        </div>
-
-        {/* 3枚目 */}
         <div
           className="miLayer peel2"
           style={
@@ -324,8 +317,9 @@ export default function OpeningIntro() {
             src="/intro/intro_mikan_peel2.png?v=20260312c"
             alt=""
             fill
-            priority
-            sizes="(max-width: 768px) 72vw, 520px"
+            loading="eager"
+            quality={80}
+            sizes="(max-width: 430px) 84vw, (max-width: 768px) 78vw, 520px"
             className="miImg"
           />
         </div>
@@ -334,6 +328,7 @@ export default function OpeningIntro() {
       </div>
 
       <div className="miLogoWrap">
+        <div className="miLogoEyebrow">農家直送</div>
         <div className="miLogoMain">山口みかん農園</div>
         <div className="miLogoSub">Yamaguchi Mikan Farm</div>
       </div>
@@ -460,7 +455,6 @@ export default function OpeningIntro() {
           100%{ opacity:.06; transform: translateY(-6px); }
         }
 
-        /* 周囲の泡 */
         .miBubbleField{
           position:absolute;
           inset:0;
@@ -614,7 +608,6 @@ export default function OpeningIntro() {
         }
 
         .whole,
-        .peel1,
         .peel2{
           transform:
             translate(var(--tx), var(--ty))
@@ -639,51 +632,14 @@ export default function OpeningIntro() {
             transform: translate(var(--tx), var(--ty)) scale(var(--sx));
             filter: blur(0px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
           }
-          30%{
+          44%{
             opacity:1;
             transform: translate(var(--tx), calc(var(--ty) - 1px)) scale(calc(var(--sx) * 1.002));
             filter: blur(0px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
           }
-          40%{
+          56%{
             opacity:0;
             transform: translate(var(--tx), calc(var(--ty) - 1px)) scale(calc(var(--sx) * 1.004));
-            filter: blur(.5px) drop-shadow(0 10px 18px rgba(108,72,28,.06));
-          }
-          100%{
-            opacity:0;
-          }
-        }
-
-        .peel1{
-          z-index:4;
-          opacity:0;
-          animation: peel1Anim ${D.TOTAL}ms cubic-bezier(.22,.84,.2,1) both;
-        }
-
-        @keyframes peel1Anim{
-          0%, 24%{
-            opacity:0;
-            transform: translate(var(--tx), calc(var(--ty) + 12px)) scale(calc(var(--sx) * .97));
-            filter: blur(7px) drop-shadow(0 6px 10px rgba(108,72,28,.04));
-          }
-          34%{
-            opacity:1;
-            transform: translate(var(--tx), var(--ty)) scale(var(--sx));
-            filter: blur(.4px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
-          }
-          40%{
-            opacity:1;
-            transform: translate(var(--tx), var(--ty)) scale(var(--sx));
-            filter: blur(0px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
-          }
-          52%{
-            opacity:1;
-            transform: translate(var(--tx), calc(var(--ty) - 1px)) scale(calc(var(--sx) * 1.003));
-            filter: blur(0px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
-          }
-          62%{
-            opacity:0;
-            transform: translate(var(--tx), calc(var(--ty) - 1px)) scale(calc(var(--sx) * 1.005));
             filter: blur(.5px) drop-shadow(0 10px 18px rgba(108,72,28,.06));
           }
           100%{
@@ -698,17 +654,17 @@ export default function OpeningIntro() {
         }
 
         @keyframes peel2Anim{
-          0%, 48%{
+          0%, 44%{
             opacity:0;
             transform: translate(var(--tx), calc(var(--ty) + 10px)) scale(calc(var(--sx) * .98));
             filter: blur(6px) drop-shadow(0 6px 10px rgba(108,72,28,.04));
           }
-          58%{
+          56%{
             opacity:1;
             transform: translate(var(--tx), var(--ty)) scale(var(--sx));
             filter: blur(.4px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
           }
-          64%{
+          62%{
             opacity:1;
             transform: translate(var(--tx), var(--ty)) scale(var(--sx));
             filter: blur(0px) drop-shadow(0 10px 18px rgba(108,72,28,.08));
@@ -776,6 +732,16 @@ export default function OpeningIntro() {
           }
         }
 
+        .miLogoEyebrow{
+          margin-bottom: 10px;
+          font-size: clamp(11px, 1.45vw, 15px);
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: .28em;
+          color: rgba(86, 116, 56, .90);
+          text-shadow: 0 3px 14px rgba(86, 116, 56, .08);
+        }
+
         .miLogoMain{
           font-size:clamp(28px, 5.1vw, 60px);
           line-height:1.08;
@@ -813,6 +779,12 @@ export default function OpeningIntro() {
             top:43%;
           }
 
+          .miLogoEyebrow{
+            margin-bottom: 8px;
+            font-size: 11px;
+            letter-spacing: .22em;
+          }
+
           .miLogoMain{
             font-size:clamp(24px, 8vw, 40px);
             letter-spacing:.08em;
@@ -826,7 +798,7 @@ export default function OpeningIntro() {
 
         @media (prefers-reduced-motion: reduce){
           .miBg,.miGlowBack,.miGlowCenter,.miDust1,.miDust2,.miDust3,
-          .miBubble,.whole,.peel1,.peel2,.miShadow,.miLogoWrap{
+          .miBubble,.whole,.peel2,.miShadow,.miLogoWrap{
             animation:none !important;
           }
         }

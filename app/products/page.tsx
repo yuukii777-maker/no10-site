@@ -71,20 +71,18 @@ function ProductHeroCard({
         <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_20%_20%,#79b96e_0,transparent_24%),radial-gradient(circle_at_80%_28%,#f59e0b_0,transparent_20%),radial-gradient(circle_at_32%_82%,#8abf7b_0,transparent_18%)]" />
       </div>
 
-      <div className="relative px-5 py-5 md:px-8 md:py-8">
+      <div className="relative px-5 py-4 md:px-8 md:py-6">
         <div className="flex flex-wrap items-center gap-2">{badge}</div>
 
-        <h1 className="mt-3 text-[1.9rem] leading-[1.05] md:text-5xl font-black tracking-tight text-[#243224]">
+        <h1 className="mt-3 text-[1.65rem] leading-[1.05] md:text-4xl font-black tracking-tight text-[#243224]">
           {title}
         </h1>
 
-        <p className="mt-3 max-w-3xl text-sm md:text-base leading-6 md:leading-7 text-gray-700">
-          農家直送の果実を、
-          <strong className="text-green-700">送料込みの分かりやすい価格</strong>
-          で選べます。
+        <p className="mt-2 max-w-3xl text-sm md:text-base leading-6 text-gray-700">
+          農家直送・<strong className="text-green-700">送料込み価格</strong>で、すぐ選べます。
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {notes.map((n) => (
             <span
               key={n}
@@ -95,7 +93,7 @@ function ProductHeroCard({
           ))}
         </div>
 
-        <p className="mt-4 text-xs sm:text-sm text-gray-600">{subtitle}</p>
+        <p className="mt-3 text-xs sm:text-sm text-gray-600">{subtitle}</p>
       </div>
     </div>
   );
@@ -549,7 +547,7 @@ export default function ProductsPage() {
   const buntan = sheetMap[FIXED_KEYS.BUNTAN];
 
   const mikanDefectStatus = (mikanDefect?.status || "active") as ProductItem["status"];
-  const buntanStatus = (buntan?.status || "active") as ProductItem["status"];
+  const buntanStatus: ProductItem["status"] = "soldout";
 
   const currentDefect = NATSUMI_DEFECT_PRICE_TABLE[defectGrade];
 
@@ -580,15 +578,16 @@ export default function ProductsPage() {
           <>
             <SectionBadge tone="green">DIRECT FARM STORE</SectionBadge>
             <SectionBadge tone="orange">送料込み</SectionBadge>
-            <SectionBadge tone="stone">家庭用〜贈答用まで</SectionBadge>
           </>
         }
         title="商品一覧"
-        subtitle="気になる商品を選んで、そのままサイズと数量を決めるだけです。"
-        notes={["一番人気：傷あり南津海", "すべて送料込み", "スマホでも見やすい"]}
+        subtitle="下のボタンから、気になる商品へすぐ移動できます。"
+        notes={["人気：傷あり南津海", "スマホで見やすく整理済み"]}
       />
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <AnchorNav />
+
+      <div className="hidden sm:grid mt-5 gap-3 sm:grid-cols-3">
         <ProductCompareCard
           tone="orange"
           badge="人気No.1"
@@ -609,16 +608,14 @@ export default function ProductsPage() {
         />
         <ProductCompareCard
           tone="stone"
-          badge="爽やか系"
+          badge="売り切れ"
           title="文旦（箱）"
-          desc="香りとさっぱり感を楽しみたい方におすすめ。"
+          desc="現在は売り切れです。再開までお待ちください。"
           price={`${buntanPrice5.toLocaleString()}円〜`}
           buttonText="文旦を見る"
           onClick={() => jumpTo("#buntan")}
         />
       </div>
-
-      <AnchorNav />
 
       {false && sheetError && (
         <div className="max-w-2xl mx-auto mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
@@ -641,7 +638,29 @@ export default function ProductsPage() {
         subtitle="家庭用で一番選ばれている、お得な箱詰め商品です。"
       >
         <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <Panel className="p-5 md:p-7 order-1 xl:order-2">
+          <Panel className="overflow-hidden order-1 xl:order-1">
+            <div className="relative aspect-[4/3] w-full">
+              <Image
+                src={currentDefect.image}
+                alt={`傷あり南津海 ${currentDefect.label}`}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
+                    {currentDefect.label}
+                  </SectionBadge>
+                  <SectionBadge tone="green">送料込み</SectionBadge>
+                </div>
+                <p className="mt-3 text-lg md:text-xl font-black text-white">
+                  見た目より、中身とお得さで選ぶ方向け
+                </p>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel className="p-5 md:p-7 order-2 xl:order-2">
             <div className="flex flex-wrap items-center gap-2">
               <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
                 {currentDefect.label}
@@ -849,28 +868,6 @@ export default function ProductsPage() {
               ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
             </p>
           </Panel>
-
-          <Panel className="overflow-hidden order-2 xl:order-1">
-            <div className="relative aspect-[4/3] w-full">
-              <Image
-                src={currentDefect.image}
-                alt={`傷あり南津海 ${currentDefect.label}`}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
-                    {currentDefect.label}
-                  </SectionBadge>
-                  <SectionBadge tone="green">送料込み</SectionBadge>
-                </div>
-                <p className="mt-3 text-lg md:text-xl font-black text-white">
-                  見た目より、中身とお得さで選ぶ方向け
-                </p>
-              </div>
-            </div>
-          </Panel>
         </div>
       </ProductSectionFrame>
 
@@ -887,7 +884,22 @@ export default function ProductsPage() {
         subtitle="見た目の美しさや贈答向けを重視したい方におすすめです。"
       >
         <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <Panel className="p-5 md:p-7 order-1 xl:order-2">
+          <Panel className="overflow-hidden order-1 xl:order-1">
+            <div className="relative aspect-[4/3] w-full">
+              <Image src="/mikan/premium.png" alt="南津海（青果）" fill className="object-cover" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <SectionBadge tone="green">A品</SectionBadge>
+                  <SectionBadge tone="red">残りわずか</SectionBadge>
+                </div>
+                <p className="mt-3 text-lg md:text-xl font-black text-white">
+                  見た目の美しさと品質を重視する方向け
+                </p>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel className="p-5 md:p-7 order-2 xl:order-2">
             <div className="flex flex-wrap items-center gap-2">
               <SectionBadge tone="green">A品</SectionBadge>
               <SectionBadge tone="red">残りわずか</SectionBadge>
@@ -997,21 +1009,6 @@ export default function ProductsPage() {
               }}
             />
           </Panel>
-
-          <Panel className="overflow-hidden order-2 xl:order-1">
-            <div className="relative aspect-[4/3] w-full">
-              <Image src="/mikan/premium.png" alt="南津海（青果）" fill className="object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SectionBadge tone="green">A品</SectionBadge>
-                  <SectionBadge tone="red">残りわずか</SectionBadge>
-                </div>
-                <p className="mt-3 text-lg md:text-xl font-black text-white">
-                  見た目の美しさと品質を重視する方向け
-                </p>
-              </div>
-            </div>
-          </Panel>
         </div>
       </ProductSectionFrame>
 
@@ -1020,18 +1017,33 @@ export default function ProductsPage() {
         eyebrow={
           <>
             <SectionBadge tone="stone">爽やかな香り</SectionBadge>
-            <SectionBadge tone="green">送料込み</SectionBadge>
+            <SectionBadge tone="red">売り切れ</SectionBadge>
             <SectionBadge tone="stone">個数目安つき</SectionBadge>
           </>
         }
         title="文旦（箱）"
-        subtitle="さっぱりとした甘さと爽やかな香りを楽しみたい方におすすめです。"
+        subtitle="さっぱりとした甘さと爽やかな香りを楽しめる商品ですが、現在は売り切れです。"
       >
         <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <Panel className="p-5 md:p-7 order-1 xl:order-2">
+          <Panel className="overflow-hidden order-1 xl:order-1">
+            <div className="relative aspect-[4/3] w-full">
+              <Image src="/mikan/buntan.jpg" alt="文旦（箱）" fill className="object-cover" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <SectionBadge tone="stone">文旦</SectionBadge>
+                  <SectionBadge tone="red">売り切れ</SectionBadge>
+                </div>
+                <p className="mt-3 text-lg md:text-xl font-black text-white">
+                  爽やかな香りとすっきりした甘さ
+                </p>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel className="p-5 md:p-7 order-2 xl:order-2">
             <div className="flex flex-wrap items-center gap-2">
               <SectionBadge tone="stone">文旦</SectionBadge>
-              <SectionBadge tone="green">送料込み</SectionBadge>
+              <SectionBadge tone="red">売り切れ</SectionBadge>
               <SectionBadge tone="stone">個数目安あり</SectionBadge>
             </div>
 
@@ -1142,21 +1154,6 @@ export default function ProductsPage() {
                 );
               }}
             />
-          </Panel>
-
-          <Panel className="overflow-hidden order-2 xl:order-1">
-            <div className="relative aspect-[4/3] w-full">
-              <Image src="/mikan/buntan.jpg" alt="文旦（箱）" fill className="object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SectionBadge tone="stone">文旦</SectionBadge>
-                  <SectionBadge tone="green">送料込み</SectionBadge>
-                </div>
-                <p className="mt-3 text-lg md:text-xl font-black text-white">
-                  爽やかな香りとすっきりした甘さ
-                </p>
-              </div>
-            </div>
           </Panel>
         </div>
       </ProductSectionFrame>

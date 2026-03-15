@@ -56,8 +56,9 @@ export default function Home() {
   /* ===========================
      ★追加：ロゴ/ボタン位置とサイズ
      ここだけ数字を変えれば高さ調整できる
+     ※ ボタンサイズは下の BUTTON_SP / SM / MD の数字だけ変えればOK
   ============================ */
-   const HERO_POS = {
+  const HERO_POS = {
     LOGO_TOP_SP: "30%",
     LOGO_TOP_SM: "31%",
     LOGO_TOP_MD: "29.5%",
@@ -68,13 +69,13 @@ export default function Home() {
   } as const;
 
   const HERO_SIZE = {
-    LOGO_SP: "w-[320px]",
-    LOGO_SM: "sm:w-[430px]",
-    LOGO_MD: "md:w-[590px]",
+    LOGO_SP: 320,
+    LOGO_SM: 430,
+    LOGO_MD: 590,
 
-    BUTTON_SP: "w-[260px]",
-    BUTTON_SM: "sm:w-[360px]",
-    BUTTON_MD: "md:w-[470px]",
+    BUTTON_SP: 350,
+    BUTTON_SM: 420,
+    BUTTON_MD: 520,
   } as const;
 
   /* ===========================
@@ -334,7 +335,8 @@ export default function Home() {
                 width={1200}
                 height={420}
                 priority
-                className={`hero-brand-image ${HERO_SIZE.LOGO_SP} h-auto`}
+                style={{ width: `${HERO_SIZE.LOGO_SP}px`, height: "auto" }}
+                className="hero-brand-image"
               />
             </div>
 
@@ -348,7 +350,8 @@ export default function Home() {
                 width={1200}
                 height={420}
                 priority
-                className={`hero-brand-image ${HERO_SIZE.LOGO_SM} h-auto`}
+                style={{ width: `${HERO_SIZE.LOGO_SM}px`, height: "auto" }}
+                className="hero-brand-image"
               />
             </div>
 
@@ -362,7 +365,8 @@ export default function Home() {
                 width={1200}
                 height={420}
                 priority
-                className={`hero-brand-image ${HERO_SIZE.LOGO_MD} h-auto`}
+                style={{ width: `${HERO_SIZE.LOGO_MD}px`, height: "auto" }}
+                className="hero-brand-image"
               />
             </div>
           </div>
@@ -398,7 +402,8 @@ export default function Home() {
                   width={1280}
                   height={520}
                   priority
-                  className={`hero-buy-image ${HERO_SIZE.BUTTON_SP} h-auto`}
+                  style={{ width: `${HERO_SIZE.BUTTON_SP}px`, height: "auto" }}
+                  className="hero-buy-image"
                 />
               </button>
             </div>
@@ -430,7 +435,8 @@ export default function Home() {
                   width={1280}
                   height={520}
                   priority
-                  className={`hero-buy-image ${HERO_SIZE.BUTTON_SM} h-auto`}
+                  style={{ width: `${HERO_SIZE.BUTTON_SM}px`, height: "auto" }}
+                  className="hero-buy-image"
                 />
               </button>
             </div>
@@ -462,7 +468,8 @@ export default function Home() {
                   width={1280}
                   height={520}
                   priority
-                  className={`hero-buy-image ${HERO_SIZE.BUTTON_MD} h-auto`}
+                  style={{ width: `${HERO_SIZE.BUTTON_MD}px`, height: "auto" }}
+                  className="hero-buy-image"
                 />
               </button>
             </div>
@@ -647,57 +654,57 @@ export default function Home() {
               transform: translate3d(0, 0, 0) !important;
             }
 
-           @keyframes heroSwayTopSP {
-  0%   { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
-  50%  { transform: translate3d(calc(var(--px) * 1.2px + 2px), calc(var(--py) * 0.8px), 0) rotate(1.6deg) translateY(-2px); }
-  100% { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
-}
+            @keyframes heroSwayTopSP {
+              0%   { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
+              50%  { transform: translate3d(calc(var(--px) * 1.2px + 2px), calc(var(--py) * 0.8px), 0) rotate(1.6deg) translateY(-2px); }
+              100% { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
+            }
 
-@keyframes heroSwayBottomSP {
-  0%   { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
-  50%  { transform: translate3d(calc(var(--px) * 1px + 2px), calc(var(--py) * 0.7px), 0) rotate(1.35deg) translateY(-2px); }
-  100% { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
-}
+            @keyframes heroSwayBottomSP {
+              0%   { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
+              50%  { transform: translate3d(calc(var(--px) * 1px + 2px), calc(var(--py) * 0.7px), 0) rotate(1.35deg) translateY(-2px); }
+              100% { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
+            }
 
-.hero-branch-topLayer {
-  top: -1%;
-  height: 34%;
-  animation: heroSwayTopSP 5.0s ease-in-out infinite;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,1) 64%,
-    rgba(0,0,0,0.72) 82%,
-    rgba(0,0,0,0) 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,1) 64%,
-    rgba(0,0,0,0.72) 82%,
-    rgba(0,0,0,0) 100%
-  );
-}
+            .hero-branch-topLayer {
+              top: -1%;
+              height: 34%;
+              animation: heroSwayTopSP 5.0s ease-in-out infinite;
+              -webkit-mask-image: linear-gradient(
+                to bottom,
+                rgba(0,0,0,1) 0%,
+                rgba(0,0,0,1) 64%,
+                rgba(0,0,0,0.72) 82%,
+                rgba(0,0,0,0) 100%
+              );
+              mask-image: linear-gradient(
+                to bottom,
+                rgba(0,0,0,1) 0%,
+                rgba(0,0,0,1) 64%,
+                rgba(0,0,0,0.72) 82%,
+                rgba(0,0,0,0) 100%
+              );
+            }
 
-.hero-branch-bottomLayer {
-  bottom: -1%;
-  height: 21%;
-  animation: heroSwayBottomSP 4.8s ease-in-out infinite;
-  -webkit-mask-image: linear-gradient(
-    to top,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,1) 60%,
-    rgba(0,0,0,0.72) 80%,
-    rgba(0,0,0,0) 100%
-  );
-  mask-image: linear-gradient(
-    to top,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,1) 60%,
-    rgba(0,0,0,0.72) 80%,
-    rgba(0,0,0,0) 100%
-  );
-}
+            .hero-branch-bottomLayer {
+              bottom: -1%;
+              height: 21%;
+              animation: heroSwayBottomSP 4.8s ease-in-out infinite;
+              -webkit-mask-image: linear-gradient(
+                to top,
+                rgba(0,0,0,1) 0%,
+                rgba(0,0,0,1) 60%,
+                rgba(0,0,0,0.72) 80%,
+                rgba(0,0,0,0) 100%
+              );
+              mask-image: linear-gradient(
+                to top,
+                rgba(0,0,0,1) 0%,
+                rgba(0,0,0,1) 60%,
+                rgba(0,0,0,0.72) 80%,
+                rgba(0,0,0,0) 100%
+              );
+            }
 
             .hero-branch-bottomLayer {
               bottom: -1%;
@@ -723,14 +730,6 @@ export default function Home() {
               width: 94%;
               max-width: none;
               margin-bottom: 7.2vh;
-            }
-
-            .hero-brand-image {
-              width: 320px !important;
-            }
-
-            .hero-buy-image {
-              width: 260px !important;
             }
           }
 

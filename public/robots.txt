@@ -7,6 +7,4 @@
 User-agent: *
 Allow: /
 
-# 開発中でもOK。公開時は実ドメインでもう1行足すと確実です。
-# 例) Sitemap: https://your-domain.com/sitemap.xml
-Sitemap: /sitemap.xml
+Sitemap: https://yamaguchi-mikan.vercel.app/sitemap.xml

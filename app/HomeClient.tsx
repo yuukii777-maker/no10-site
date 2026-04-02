@@ -54,6 +54,62 @@ export default function Home() {
   const INSTAGRAM_URL = "https://www.instagram.com/y_m.farm";
 
   /* ===========================
+     ★追加：iPhoneで残留した scroll lock を強制解除
+     OpeningIntro や全画面レイヤー由来の body/html ロック対策
+  ============================ */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    const unlockScroll = () => {
+      html.style.overflow = "";
+      html.style.overflowY = "auto";
+      html.style.height = "auto";
+      html.style.position = "";
+
+      body.style.overflow = "";
+      body.style.overflowY = "auto";
+      body.style.height = "auto";
+      body.style.position = "";
+      body.style.touchAction = "auto";
+      (body.style as any).webkitOverflowScrolling = "touch";
+    };
+
+    // 初回・遅延・復帰時に複数回解除してiPhone Safariの残留ロックを潰す
+    unlockScroll();
+
+    const t1 = window.setTimeout(unlockScroll, 80);
+    const t2 = window.setTimeout(unlockScroll, 400);
+    const t3 = window.setTimeout(unlockScroll, 1200);
+    const t4 = window.setTimeout(unlockScroll, 2600);
+
+    const onPageShow = () => unlockScroll();
+    const onVisibility = () => {
+      if (!document.hidden) unlockScroll();
+    };
+    const onFocus = () => unlockScroll();
+    const onResize = () => unlockScroll();
+
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+      window.clearTimeout(t4);
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  /* ===========================
      ★追加：ロゴ/ボタン位置とサイズ
      ここだけ数字を変えれば高さ調整できる
      ※ ボタンサイズは下の BUTTON_SP / SM / MD の数字だけ変えればOK
@@ -66,6 +122,18 @@ export default function Home() {
     BUTTON_TOP_SP: "50%",
     BUTTON_TOP_SM: "71.5%",
     BUTTON_TOP_MD: "45.5%",
+  } as const;
+
+  /* ===========================
+     ★追加：PCだけの微調整
+     ここだけ変えればPCボタンを上下できる
+     例）
+     -36 ＝ 今より上
+      0   ＝ 元の位置
+      20 ＝ 今より下
+  ============================ */
+  const HERO_TUNE = {
+    BUTTON_PC_OFFSET_Y: -36,
   } as const;
 
   const HERO_SIZE = {
@@ -233,6 +301,10 @@ export default function Home() {
       className={`text-[#333] transition-opacity duration-300 ${
         leaving ? "opacity-0" : "opacity-100"
       }`}
+      style={{
+        touchAction: "pan-y",
+        WebkitOverflowScrolling: "touch",
+      }}
     >
       {/* ✅ [ADDED] オープニング（1回だけ再生 / Skipあり） */}
       {mounted ? <OpeningIntro /> : null}
@@ -244,6 +316,9 @@ export default function Home() {
       <section
         ref={heroRootRef as any}
         className="hero-root relative h-[100svh] sm:h-[85svh] overflow-hidden z-20"
+        style={{
+          touchAction: "pan-y",
+        }}
       >
         {/* ★追加：② 光粒子（超控えめ） */}
         <div className="absolute inset-0 hero-particles pointer-events-none" />
@@ -443,7 +518,9 @@ export default function Home() {
 
             <div
               className="absolute left-1/2 -translate-x-1/2 z-[999] pointer-events-auto hidden md:block"
-              style={{ top: HERO_POS.BUTTON_TOP_MD }}
+              style={{
+                top: `calc(${HERO_POS.BUTTON_TOP_MD} + ${HERO_TUNE.BUTTON_PC_OFFSET_Y}px)`,
+              }}
             >
               <button
                 onClick={goProducts}
@@ -493,6 +570,8 @@ export default function Home() {
             min-height: 100svh;
             --px: 0;
             --py: 0;
+            overscroll-behavior-y: auto;
+            -webkit-overflow-scrolling: touch;
           }
 
           /* ★追加：レイヤー順を固定（iPhone Safari合成バグ対策） */

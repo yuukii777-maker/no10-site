@@ -26,6 +26,21 @@ const FIXED_KEYS = {
 } as const;
 
 /* =========================
+   ★ お知らせリンク
+   ※ 実際のお知らせページURLに合わせて必要ならここだけ変更
+========================= */
+const NEWS_LINK = "/news";
+
+/* =========================
+   ★ 次回販売画像
+   ※ 下記ファイル名で public/mikan/ に保存してください
+========================= */
+const NEXT_SALE_IMAGES = {
+  hayamikan: "/mikan/next-hayamikan.jpg",
+  hinann: "/mikan/next-hinann.jpg",
+} as const;
+
+/* =========================
    ★ UIヘルパー
 ========================= */
 function SectionBadge({
@@ -75,11 +90,11 @@ function ProductHeroCard({
         <div className="flex flex-wrap items-center gap-2">{badge}</div>
 
         <h1 className="mt-3 text-[1.65rem] leading-[1.05] md:text-4xl font-black tracking-tight text-[#243224]">
-          {title}
+          商品一覧
         </h1>
 
         <p className="mt-2 max-w-3xl text-sm md:text-base leading-6 text-gray-700">
-          農家直送・<strong className="text-green-700">送料込み価格</strong>で、すぐ選べます。
+          農家直送・<strong className="text-green-700">送料込み価格</strong>で、選べます。
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -96,6 +111,160 @@ function ProductHeroCard({
         <p className="mt-3 text-xs sm:text-sm text-gray-600">{subtitle}</p>
       </div>
     </div>
+  );
+}
+
+function NextSaleMiniCard({
+  image,
+  title,
+  subtitle,
+  date,
+  tone,
+  notes,
+}: {
+  image: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  tone: "orange" | "green";
+  notes: string[];
+}) {
+  const toneWrap =
+    tone === "orange"
+      ? "border-orange-200 bg-gradient-to-br from-orange-50 via-white to-white"
+      : "border-green-200 bg-gradient-to-br from-green-50 via-white to-white";
+
+  const toneBadge =
+    tone === "orange"
+      ? "bg-orange-100 text-orange-700 border-orange-200"
+      : "bg-green-100 text-green-700 border-green-200";
+
+  const toneDate =
+    tone === "orange" ? "text-orange-700" : "text-green-700";
+
+  return (
+    <div className={`overflow-hidden rounded-[24px] border shadow-sm ${toneWrap}`}>
+      <div className="relative aspect-[4/3] w-full bg-white">
+        <Image src={image} alt={title} fill className="object-cover" />
+        <div className="absolute inset-x-0 top-0 p-4">
+          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${toneBadge}`}>
+            販売予定
+          </span>
+        </div>
+      </div>
+
+      <div className="px-4 py-4 sm:px-5 sm:py-5">
+        <p className="text-[11px] font-bold tracking-[0.08em] text-gray-500">次回販売ラインナップ</p>
+        <h3 className="mt-2 text-xl font-black tracking-tight text-[#2b3528]">{title}</h3>
+        <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
+        <p className={`mt-3 text-base font-black ${toneDate}`}>{date}</p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {notes.map((n) => (
+            <span
+              key={n}
+              className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold text-gray-700"
+            >
+              {n}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SaleNoticeCard() {
+  return (
+    <section className="mt-5">
+      <div className="relative overflow-hidden rounded-[28px] border border-orange-200 bg-gradient-to-br from-[#fff8ef] via-white to-[#f4fff3] shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-14 right-0 h-40 w-40 rounded-full bg-orange-200/25 blur-3xl" />
+          <div className="absolute -bottom-16 left-0 h-44 w-44 rounded-full bg-green-200/20 blur-3xl" />
+        </div>
+
+        <div className="relative px-5 py-5 sm:px-7 sm:py-7">
+          <div className="flex flex-wrap items-center gap-2">
+            <SectionBadge tone="orange">次回販売のお知らせ</SectionBadge>
+            <SectionBadge tone="green">2026年秋予定</SectionBadge>
+            <SectionBadge tone="stone">メルマガ案内予定</SectionBadge>
+          </div>
+
+          <div className="mt-4 grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+            <div>
+              <h2 className="text-[1.45rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#2b3528]">
+                次回は「早味かん」から販売開始予定です
+              </h2>
+
+              <p className="mt-4 text-sm sm:text-base leading-7 text-gray-700">
+                次回のみかん販売は、<strong className="text-orange-700">早味かんから開始予定</strong>です。
+                おおむねの販売開始日は、
+                <strong className="text-green-700">2026年9月10日</strong>に
+                <strong>早味かん青果・小玉</strong>を予定しています。
+                その後、
+                <strong className="text-green-700">2026年9月20日</strong>に
+                <strong>日南の青果・小玉</strong>を追加予定です。
+              </p>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-orange-200 bg-white/92 px-4 py-4">
+                  <p className="text-xs font-bold tracking-[0.08em] text-orange-700">販売予定①</p>
+                  <p className="mt-2 text-lg font-black text-[#2b3528]">早味かん 青果・小玉</p>
+                  <p className="mt-1 text-sm text-gray-600">2026年9月10日ごろ販売開始予定</p>
+                </div>
+
+                <div className="rounded-2xl border border-green-200 bg-white/92 px-4 py-4">
+                  <p className="text-xs font-bold tracking-[0.08em] text-green-700">販売予定②</p>
+                  <p className="mt-2 text-lg font-black text-[#2b3528]">日南 青果・小玉</p>
+                  <p className="mt-1 text-sm text-gray-600">2026年9月20日ごろ追加予定</p>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm leading-6 text-gray-700">
+                ※事前予約をご希望の方は、お問合せよりご連絡ください。
+            
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a
+                  href={NEWS_LINK}
+                  className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(249,115,22,0.28)] transition hover:bg-orange-600"
+                >
+                  お知らせを見る
+                </a>
+
+                <a
+                  href="#premium"
+                  className="inline-flex items-center justify-center rounded-2xl border border-green-200 bg-white px-5 py-3 text-sm font-bold text-green-700 shadow-sm transition hover:bg-green-50"
+                >
+                  現在の商品状況を見る
+                </a>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <NextSaleMiniCard
+                image={NEXT_SALE_IMAGES.hayamikan}
+                title="早味かん"
+                subtitle="青果・小玉から販売開始予定"
+                date="2026年9月10日ごろ販売開始予定"
+                tone="orange"
+                notes={["先行販売", "極早生スタート", "画像掲載あり"]}
+              />
+
+              <NextSaleMiniCard
+                image={NEXT_SALE_IMAGES.hinann}
+                title="日南"
+                subtitle="青果・小玉を順次追加予定"
+                date="2026年9月20日ごろ追加予定"
+                tone="green"
+                notes={["追って追加", "販売導線強化", "画像掲載あり"]}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -163,6 +332,7 @@ function ProductCompareCard({
 
 function AnchorNav() {
   const items = [
+    { href: "#next-sale", label: "次回販売", tone: "green" },
     { href: "#defect", label: "傷あり南津海", tone: "orange" },
     { href: "#premium", label: "南津海（青果）", tone: "green" },
     { href: "#buntan", label: "文旦", tone: "stone" },
@@ -403,6 +573,56 @@ function Panel({
   );
 }
 
+/* =========================
+   ★ 画像見え方改善用
+========================= */
+function ProductImageStage({
+  src,
+  alt,
+  badges,
+  caption,
+  tone = "green",
+}: {
+  src: string;
+  alt: string;
+  badges: React.ReactNode;
+  caption: string;
+  tone?: "green" | "orange" | "stone";
+}) {
+  const toneBg =
+    tone === "orange"
+      ? "from-[#fff4ea] via-white to-[#fffaf4]"
+      : tone === "stone"
+      ? "from-[#f7f6f3] via-white to-[#fbfbfa]"
+      : "from-[#f3fbf2] via-white to-[#fffaf2]";
+
+  return (
+    <Panel className="overflow-hidden order-1 xl:order-1">
+      <div className={`relative aspect-[4/3] w-full bg-gradient-to-br ${toneBg}`}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_20%_20%,#79b96e_0,transparent_22%),radial-gradient(circle_at_80%_25%,#f59e0b_0,transparent_18%),radial-gradient(circle_at_50%_90%,#cbd5e1_0,transparent_20%)]" />
+        </div>
+
+        <div className="absolute inset-0 p-5 sm:p-7 md:p-8">
+          <div className="relative h-full w-full rounded-[22px] border border-white/90 bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-sm">
+            <Image
+              src={src}
+              alt={alt}
+              fill
+              className="object-contain p-4 sm:p-5 md:p-6"
+            />
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/62 via-black/18 to-transparent px-5 py-5">
+          <div className="flex flex-wrap items-center gap-2">{badges}</div>
+          <p className="mt-3 text-lg md:text-xl font-black text-white">{caption}</p>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function GradeGuideAccordion() {
   const [open, setOpen] = useState(false);
 
@@ -497,7 +717,7 @@ export default function ProductsPage() {
   const [natsumiTab, setNatsumiTab] = useState<"5kg" | "10kg">("5kg");
   const [natsumiQty, setNatsumiQty] = useState<number>(1);
 
-  const natsumiStatus = "active" as ProductItem["status"];
+  const natsumiStatus = "soldout" as ProductItem["status"];
 
   const NATSUMI_DEFECT_PRICE_TABLE = {
     B: {
@@ -546,7 +766,7 @@ export default function ProductsPage() {
   const mikanDefect = sheetMap[FIXED_KEYS.MIKAN_DEFECT];
   const buntan = sheetMap[FIXED_KEYS.BUNTAN];
 
-  const mikanDefectStatus = (mikanDefect?.status || "active") as ProductItem["status"];
+  const mikanDefectStatus = "soldout" as ProductItem["status"];
   const buntanStatus: ProductItem["status"] = "soldout";
 
   const currentDefect = NATSUMI_DEFECT_PRICE_TABLE[defectGrade];
@@ -581,29 +801,33 @@ export default function ProductsPage() {
           </>
         }
         title="商品一覧"
-        subtitle="下のボタンから、気になる商品へすぐ移動できます。"
-        notes={["人気：傷あり南津海", "スマホで見やすく整理済み"]}
+        subtitle="次回販売のみかんの詳細はお知らせから、確認できます。"
+        notes={["南津海は完売", "次回販売情報を掲載中", ]}
       />
+
+      <div id="next-sale">
+        <SaleNoticeCard />
+      </div>
 
       <AnchorNav />
 
       <div className="hidden sm:grid mt-5 gap-3 sm:grid-cols-3">
         <ProductCompareCard
           tone="orange"
-          badge="人気No.1"
+          badge="現在完売"
           title="傷あり南津海"
-          desc="家庭用で一番人気。中身重視・お得重視ならこれ。"
-          price={`${mikanDefectPrice5.toLocaleString()}円〜`}
-          buttonText="人気No.1を見る"
+          desc="家庭用で人気の商品でしたが、現在は完売しています。"
+          price="今季分完売"
+          buttonText="商品を見る"
           onClick={() => jumpTo("#defect")}
         />
         <ProductCompareCard
           tone="green"
-          badge="贈答向け"
+          badge="現在完売"
           title="南津海（青果）"
-          desc="見た目のきれいさを重視したい方におすすめ。"
-          price={`${NATSUMI_PRICE_TABLE["5kg"].toLocaleString()}円〜`}
-          buttonText="A品を見る"
+          desc="見た目のきれいさ重視の商品ですが、現在は完売しています。"
+          price="今季分完売"
+          buttonText="商品を見る"
           onClick={() => jumpTo("#premium")}
         />
         <ProductCompareCard
@@ -628,44 +852,37 @@ export default function ProductsPage() {
         eyebrow={
           <>
             <SectionBadge tone="orange">人気No.1</SectionBadge>
-            <SectionBadge tone="stone">家庭用おすすめ</SectionBadge>
+            <SectionBadge tone="red">完売</SectionBadge>
             <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
               現在選択中：{currentDefect.label}
             </SectionBadge>
           </>
         }
         title="傷あり南津海（箱詰め）"
-        subtitle="家庭用で一番選ばれている、お得な箱詰め商品です。"
+        subtitle="家庭用で一番選ばれていた、お得な箱詰め商品です。現在は完売しています。"
       >
         <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <Panel className="overflow-hidden order-1 xl:order-1">
-            <div className="relative aspect-[4/3] w-full">
-              <Image
-                src={currentDefect.image}
-                alt={`傷あり南津海 ${currentDefect.label}`}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
-                    {currentDefect.label}
-                  </SectionBadge>
-                  <SectionBadge tone="green">送料込み</SectionBadge>
-                </div>
-                <p className="mt-3 text-lg md:text-xl font-black text-white">
-                  見た目より、中身とお得さで選ぶ方向け
-                </p>
-              </div>
-            </div>
-          </Panel>
+          <ProductImageStage
+            src={currentDefect.image}
+            alt={`傷あり南津海 ${currentDefect.label}`}
+            tone="orange"
+            badges={
+              <>
+                <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
+                  {currentDefect.label}
+                </SectionBadge>
+                <SectionBadge tone="red">完売</SectionBadge>
+              </>
+            }
+            caption="見た目より、中身とお得さで選ぶ方向け"
+          />
 
           <Panel className="p-5 md:p-7 order-2 xl:order-2">
             <div className="flex flex-wrap items-center gap-2">
               <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
                 {currentDefect.label}
               </SectionBadge>
-              <SectionBadge tone="green">送料込み</SectionBadge>
+              <SectionBadge tone="red">完売</SectionBadge>
               <SectionBadge tone="stone">数量選択可</SectionBadge>
             </div>
 
@@ -876,33 +1093,31 @@ export default function ProductsPage() {
         eyebrow={
           <>
             <SectionBadge tone="green">青果品質</SectionBadge>
-            <SectionBadge tone="red">残りわずか</SectionBadge>
+            <SectionBadge tone="red">完売</SectionBadge>
             <SectionBadge tone="stone">贈答にもおすすめ</SectionBadge>
           </>
         }
         title="南津海（青果）"
-        subtitle="見た目の美しさや贈答向けを重視したい方におすすめです。"
+        subtitle="見た目の美しさや贈答向けを重視したい方におすすめの商品でした。現在は完売しています。"
       >
         <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <Panel className="overflow-hidden order-1 xl:order-1">
-            <div className="relative aspect-[4/3] w-full">
-              <Image src="/mikan/premium.png" alt="南津海（青果）" fill className="object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SectionBadge tone="green">A品</SectionBadge>
-                  <SectionBadge tone="red">残りわずか</SectionBadge>
-                </div>
-                <p className="mt-3 text-lg md:text-xl font-black text-white">
-                  見た目の美しさと品質を重視する方向け
-                </p>
-              </div>
-            </div>
-          </Panel>
+          <ProductImageStage
+            src="/mikan/premium.png"
+            alt="南津海（青果）"
+            tone="green"
+            badges={
+              <>
+                <SectionBadge tone="green">A品</SectionBadge>
+                <SectionBadge tone="red">完売</SectionBadge>
+              </>
+            }
+            caption="見た目の美しさと品質を重視する方向け"
+          />
 
           <Panel className="p-5 md:p-7 order-2 xl:order-2">
             <div className="flex flex-wrap items-center gap-2">
               <SectionBadge tone="green">A品</SectionBadge>
-              <SectionBadge tone="red">残りわずか</SectionBadge>
+              <SectionBadge tone="red">完売</SectionBadge>
               <SectionBadge tone="stone">送料込み</SectionBadge>
             </div>
 
@@ -1025,20 +1240,18 @@ export default function ProductsPage() {
         subtitle="さっぱりとした甘さと爽やかな香りを楽しめる商品ですが、現在は売り切れです。"
       >
         <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <Panel className="overflow-hidden order-1 xl:order-1">
-            <div className="relative aspect-[4/3] w-full">
-              <Image src="/mikan/buntan.jpg" alt="文旦（箱）" fill className="object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SectionBadge tone="stone">文旦</SectionBadge>
-                  <SectionBadge tone="red">売り切れ</SectionBadge>
-                </div>
-                <p className="mt-3 text-lg md:text-xl font-black text-white">
-                  爽やかな香りとすっきりした甘さ
-                </p>
-              </div>
-            </div>
-          </Panel>
+          <ProductImageStage
+            src="/mikan/buntan.jpg"
+            alt="文旦（箱）"
+            tone="stone"
+            badges={
+              <>
+                <SectionBadge tone="stone">文旦</SectionBadge>
+                <SectionBadge tone="red">売り切れ</SectionBadge>
+              </>
+            }
+            caption="爽やかな香りとすっきりした甘さ"
+          />
 
           <Panel className="p-5 md:p-7 order-2 xl:order-2">
             <div className="flex flex-wrap items-center gap-2">

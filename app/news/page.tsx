@@ -57,14 +57,14 @@ export default function NewsPage() {
 
           <p className="mt-5 text-[15px] sm:text-base text-[#333] leading-8">
             次回のみかん販売は、
-            <strong className="text-[#1f1f1f]">極早生みかんではなく早味かんから開始予定</strong>
+            <strong className="text-[#1f1f1f]">極早生みかんの「早味かん」から開始予定</strong>
             です。おおむねの販売開始日は、
             <strong className="text-[#1f1f1f]">2026年9月10日</strong>
             に
             <strong className="text-[#1f1f1f]">早味かん青果・小玉</strong>
             を予定しています。
             その後、
-            <strong className="text-[#1f1f1f]">2026年9月20日</strong>
+            <strong className="tすxt-[#1f1f1f]">2026年9月20日</strong>
             に
             <strong className="text-[#1f1f1f]">日南の青果・小玉</strong>
             を追加予定です。
@@ -94,8 +94,8 @@ export default function NewsPage() {
             <div className="rounded-xl border border-orange-200 bg-white p-5">
               <h3 className="text-lg font-bold text-[#1f1f1f]">早味かんの特徴</h3>
               <p className="mt-2 text-[#333] leading-7">
-                極早生の時期に楽しめる、出始めのみかんです。さわやかな香りがあり、
-                小ぶりで食べやすく、軽やかな食味が魅力です。
+                極早生の時期に楽しめる、出始めのみかんです。糖度が11度前後あり、
+                極早生みかんの中でも、特に甘いです。
               </p>
             </div>
 

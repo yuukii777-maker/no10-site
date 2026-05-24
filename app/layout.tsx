@@ -36,6 +36,9 @@ export const metadata: Metadata = {
     google: "7o9WMb-8_znavqpAlo0-Y6WUuuIyb_jwnVCK8n8-cbI",
   },
   applicationName: siteName,
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
   generator: "Next.js",
   category: "shopping",
   manifest: "/site.webmanifest",
@@ -117,9 +120,48 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteName,
+    alternateName: ["山口農園", "山口みかん農園 みかん通販"],
+    url: siteUrl,
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteName,
+    url: siteUrl,
+    logo: `${siteUrl}/icon.png`,
+    email: "yamaguchinouen0915@gmail.com",
+    telephone: "080-1543-9704",
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "JP",
+      addressRegion: "福岡県",
+      addressLocality: "みやま市瀬高町上庄",
+      streetAddress: "63-11",
+    },
+  };
+
   return (
     <html lang="ja">
       <body className="text-[#36332e]">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+
         <Header />
 
         <div className="pt-[64px]">

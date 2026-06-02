@@ -1,93 +1,38 @@
-// app/api/products/route.ts
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-type ProductItem = {
-  id?: string;
-  product: string;
-  price: number;
-  status: "active" | "soldout" | "comingsoon";
-  feature: string;
-};
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-type GasRes =
-  | { ok: true; items: ProductItem[] }
-  | { ok: false; error: string; [k: string]: any };
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export async function GET() {
   try {
-    const GAS_URL = process.env.GAS_URL || process.env.NEXT_PUBLIC_GAS_URL;
-    const ADMIN_PW = process.env.ADMIN_PW;
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
 
-    if (!GAS_URL) {
+    if (error) {
       return NextResponse.json(
-        { ok: false, error: "GAS_URL is not set" },
+        { ok: false, message: error.message },
         { status: 500 }
       );
     }
 
-    // ★ GAS側が readProducts を password 必須にしているので、サーバー側で付与して叩く
-    if (!ADMIN_PW) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "ADMIN_PW is not set",
-          hint:
-            "Set ADMIN_PW in .env.local (local) and Vercel Environment Variables (production).",
-        },
-        { status: 500 }
-      );
-    }
-
-    const r = await fetch(GAS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // GAS: handlePost_ は JSON body の action / password / payload を拾える実装になってる前提
-      body: JSON.stringify({ action: "readProducts", password: ADMIN_PW }),
-      cache: "no-store",
+    return NextResponse.json({
+      ok: true,
+      products: data ?? [],
     });
+  } catch (error) {
+    console.error("PUBLIC_PRODUCTS_GET_ERROR", error);
 
-    const text = await r.text();
-
-    // GASがエラーでも本文を返して原因を見える化
-    let parsed: any = null;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      return NextResponse.json(
-        { ok: false, error: "GAS returned non-JSON", raw: text.slice(0, 500) },
-        { status: 200 }
-      );
-    }
-
-    const data = parsed as GasRes;
-
-    if (!data || data.ok !== true || !Array.isArray((data as any).items)) {
-      return NextResponse.json(
-        { ok: false, error: (data as any)?.error || "unknown", raw: data },
-        { status: 200 }
-      );
-    }
-
-    // 形を軽く正規化（壊れてても落とさず吸収）
-    const items: ProductItem[] = (data.items || []).map((it: any) => ({
-      id: String(it?.id ?? ""),
-      product: String(it?.product ?? ""),
-      price: Number(it?.price ?? 0),
-      status: (it?.status === "active" ||
-      it?.status === "soldout" ||
-      it?.status === "comingsoon"
-        ? it.status
-        : "soldout") as ProductItem["status"],
-      feature: String(it?.feature ?? ""),
-    }));
-
-    return NextResponse.json({ ok: true, items }, { status: 200 });
-  } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: String(err?.message || err) },
+      { ok: false, message: "商品の取得に失敗しました。" },
       { status: 500 }
     );
   }

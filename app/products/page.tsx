@@ -1,53 +1,87 @@
 "use client";
 
-import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-/* =========================
-   ★ シート連動用の型 & 取得
-========================= */
-type ProductItem = {
-  id?: string;
-  product: string;
-  price: number;
-  status: "active" | "soldout" | "comingsoon";
-  feature: string;
+type Product = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  tag: string;
+  image_url: string | null;
+  description: string | null;
+  notice: string | null;
+  price_5kg: number | null;
+  price_10kg: number | null;
+  unit_label: string | null;
+  stock_status: string;
+  is_active: boolean;
+  sort_order: number | null;
 };
 
-type ApiProductsRes =
-  | { ok: true; items: ProductItem[] }
-  | { ok: false; error: string; raw?: any };
+type CartItem = {
+  id: string;
+  name: string;
+  variant: string;
+  unitPrice: number;
+  qty: number;
+  extra?: Record<string, any>;
+};
 
-const FIXED_KEYS = {
-  MIKAN_DEFECT: "傷あり南津海（箱詰め）",
-  MIKAN_PREMIUM: "青果みかん",
-  BUNTAN: "文旦（箱）",
-} as const;
-
-/* =========================
-   ★ お知らせリンク
-   ※ 実際のお知らせページURLに合わせて必要ならここだけ変更
-========================= */
+const CART_KEY = "yk_cart";
 const NEWS_LINK = "/news";
 
-/* =========================
-   ★ 次回販売画像
-   ※ 下記ファイル名で public/mikan/ に保存してください
-========================= */
-const NEXT_SALE_IMAGES = {
-  hayamikan: "/mikan/next-hayamikan.jpg",
-  hinann: "/mikan/next-hinann.jpg",
-} as const;
+/* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_START] 告知終了後はここから削除 ===== */
+const NEXT_SALE_COMPARISON_IMAGE = "/mikan/hayami-hinami-comparison.png";
+/* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_END] 告知終了後はここまで削除 ===== */
 
-/* =========================
-   ★ UIヘルパー
-========================= */
+function readCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function writeCart(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+
+  localStorage.setItem(CART_KEY, JSON.stringify(items));
+  window.dispatchEvent(new Event("yk-cart-updated"));
+}
+
+function addToCart(item: CartItem) {
+  const items = readCart();
+  const index = items.findIndex(
+    (cartItem) => cartItem.id === item.id && cartItem.variant === item.variant
+  );
+
+  if (index >= 0) {
+    items[index].qty += item.qty;
+  } else {
+    items.push(item);
+  }
+
+  writeCart(items);
+}
+
+function cartCount() {
+  return readCart().reduce((sum, item) => sum + item.qty, 0);
+}
+
+function yen(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  return `${value.toLocaleString()}円`;
+}
+
 function SectionBadge({
   tone = "green",
   children,
 }: {
-  tone?: "green" | "orange" | "amber" | "red" | "stone";
+  tone?: "green" | "orange" | "amber" | "red" | "stone" | "gold";
   children: React.ReactNode;
 }) {
   const tones = {
@@ -56,570 +90,172 @@ function SectionBadge({
     amber: "bg-amber-50 text-amber-700 border-amber-200",
     red: "bg-red-50 text-red-700 border-red-200",
     stone: "bg-stone-50 text-stone-700 border-stone-200",
+    gold: "bg-yellow-50 text-yellow-800 border-yellow-200",
   } as const;
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] sm:text-xs font-bold tracking-[0.08em] ${tones[tone]}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] sm:text-xs font-black tracking-[0.08em] ${tones[tone]}`}
     >
       {children}
     </span>
   );
 }
 
-function ProductHeroCard({
-  badge,
-  title,
-  subtitle,
-  notes,
-}: {
-  badge: React.ReactNode;
-  title: string;
-  subtitle: string;
-  notes: string[];
-}) {
+function CartTopButton() {
+  const router = useRouter();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const update = () => setCount(cartCount());
+
+    update();
+    window.addEventListener("storage", update);
+    window.addEventListener("yk-cart-updated", update as any);
+
+    return () => {
+      window.removeEventListener("storage", update);
+      window.removeEventListener("yk-cart-updated", update as any);
+    };
+  }, []);
+
   return (
-    <div className="relative overflow-hidden rounded-[24px] border border-white/70 bg-gradient-to-br from-[#f6fff5] via-white to-[#fff8ee] shadow-[0_16px_40px_rgba(0,0,0,0.07)]">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-16 -left-16 h-40 w-40 rounded-full bg-green-200/20 blur-3xl" />
-        <div className="absolute -bottom-20 right-0 h-48 w-48 rounded-full bg-orange-200/20 blur-3xl" />
-        <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(circle_at_20%_20%,#79b96e_0,transparent_24%),radial-gradient(circle_at_80%_28%,#f59e0b_0,transparent_20%),radial-gradient(circle_at_32%_82%,#8abf7b_0,transparent_18%)]" />
-      </div>
-
-      <div className="relative px-5 py-4 md:px-8 md:py-6">
-        <div className="flex flex-wrap items-center gap-2">{badge}</div>
-
-        <h1 className="mt-3 text-[1.65rem] leading-[1.05] md:text-4xl font-black tracking-tight text-[#243224]">
-          商品一覧
-        </h1>
-
-        <p className="mt-2 max-w-3xl text-sm md:text-base leading-6 text-gray-700">
-          農家直送・<strong className="text-green-700">送料込み価格</strong>で、選べます。
-        </p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {notes.map((n) => (
-            <span
-              key={n}
-              className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs sm:text-sm font-semibold text-green-800"
-            >
-              {n}
-            </span>
-          ))}
-        </div>
-
-        <p className="mt-3 text-xs sm:text-sm text-gray-600">{subtitle}</p>
-      </div>
-    </div>
+    <button
+      onClick={() => router.push("/order?cart=1")}
+      className="hidden sm:flex fixed z-50 right-5 top-20 sm:top-24 items-center gap-2 rounded-full px-4 py-2.5 bg-white/92 backdrop-blur border border-white/80 shadow-[0_10px_25px_rgba(0,0,0,0.12)] hover:bg-white transition"
+      aria-label="カートへ"
+      title="カートへ"
+    >
+      <span className="text-lg">🛒</span>
+      <span className="text-sm font-bold text-gray-800">カート</span>
+      <span className="ml-1 inline-flex items-center justify-center min-w-[1.6rem] h-6 text-xs font-black rounded-full bg-green-600 text-white px-2">
+        {count}
+      </span>
+    </button>
   );
 }
 
-function NextSaleMiniCard({
-  image,
-  title,
-  subtitle,
-  date,
-  tone,
-  notes,
-}: {
-  image: string;
-  title: string;
-  subtitle: string;
-  date: string;
-  tone: "orange" | "green";
-  notes: string[];
-}) {
-  const toneWrap =
-    tone === "orange"
-      ? "border-orange-200 bg-gradient-to-br from-orange-50 via-white to-white"
-      : "border-green-200 bg-gradient-to-br from-green-50 via-white to-white";
+function CartWidget() {
+  const router = useRouter();
+  const [count, setCount] = useState(0);
 
-  const toneBadge =
-    tone === "orange"
-      ? "bg-orange-100 text-orange-700 border-orange-200"
-      : "bg-green-100 text-green-700 border-green-200";
+  useEffect(() => {
+    const update = () => setCount(cartCount());
 
-  const toneDate =
-    tone === "orange" ? "text-orange-700" : "text-green-700";
+    update();
+    window.addEventListener("storage", update);
+    window.addEventListener("yk-cart-updated", update as any);
+
+    return () => {
+      window.removeEventListener("storage", update);
+      window.removeEventListener("yk-cart-updated", update as any);
+    };
+  }, []);
+
+  if (count <= 0) return null;
 
   return (
-    <div className={`overflow-hidden rounded-[24px] border shadow-sm ${toneWrap}`}>
-      <div className="relative aspect-[4/3] w-full bg-white">
-        <Image src={image} alt={title} fill className="object-cover" />
-        <div className="absolute inset-x-0 top-0 p-4">
-          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${toneBadge}`}>
-            販売予定
-          </span>
-        </div>
-      </div>
-
-      <div className="px-4 py-4 sm:px-5 sm:py-5">
-        <p className="text-[11px] font-bold tracking-[0.08em] text-gray-500">次回販売ラインナップ</p>
-        <h3 className="mt-2 text-xl font-black tracking-tight text-[#2b3528]">{title}</h3>
-        <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
-        <p className={`mt-3 text-base font-black ${toneDate}`}>{date}</p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {notes.map((n) => (
-            <span
-              key={n}
-              className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-semibold text-gray-700"
-            >
-              {n}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
+    <button
+      onClick={() => router.push("/order?cart=1")}
+      className="fixed sm:hidden z-50 right-5 bottom-5 flex items-center gap-2 rounded-full px-5 py-3 bg-orange-500 text-white shadow-[0_16px_35px_rgba(249,115,22,0.35)] hover:bg-orange-600 transition"
+      aria-label="カートを見る"
+      title="カートを見る"
+    >
+      🛒 カート <span className="ml-1 font-bold">{count}</span>
+    </button>
   );
 }
 
 function SaleNoticeCard() {
   return (
-    <section className="mt-5">
-      <div className="relative overflow-hidden rounded-[28px] border border-orange-200 bg-gradient-to-br from-[#fff8ef] via-white to-[#f4fff3] shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
+    <section id="next-sale" className="mt-5 scroll-mt-28">
+      <div className="relative overflow-hidden rounded-[30px] border border-orange-200 bg-gradient-to-br from-[#fff8ef] via-white to-[#f4fff3] shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-14 right-0 h-40 w-40 rounded-full bg-orange-200/25 blur-3xl" />
           <div className="absolute -bottom-16 left-0 h-44 w-44 rounded-full bg-green-200/20 blur-3xl" />
         </div>
 
-        <div className="relative px-5 py-5 sm:px-7 sm:py-7">
+        <div className="relative px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center gap-2">
             <SectionBadge tone="orange">次回販売のお知らせ</SectionBadge>
             <SectionBadge tone="green">2026年秋予定</SectionBadge>
             <SectionBadge tone="stone">メルマガ案内予定</SectionBadge>
           </div>
 
-          <div className="mt-4 grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-            <div>
-              <h2 className="text-[1.45rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#2b3528]">
-                次回は「早味かん」から販売開始予定です
-              </h2>
+          <h2 className="mt-4 text-[1.45rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#2b3528]">
+            次回は「早味かん」から販売開始予定です
+          </h2>
 
-              <p className="mt-4 text-sm sm:text-base leading-7 text-gray-700">
-                次回のみかん販売は、<strong className="text-orange-700">早味かんから開始予定</strong>です。
-                おおむねの販売開始日は、
-                <strong className="text-green-700">2026年9月10日</strong>に
-                <strong>早味かん青果・小玉</strong>を予定しています。
-                その後、
-                <strong className="text-green-700">2026年9月20日</strong>に
-                <strong>日南の青果・小玉</strong>を追加予定です。
+          {/* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_START] 告知終了後はここから削除 ===== */}
+          <div className="mt-5 overflow-hidden rounded-[24px] border border-orange-100 bg-white shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
+            <div className="relative aspect-[16/9] w-full">
+              <img
+                src={NEXT_SALE_COMPARISON_IMAGE}
+                alt="早味かんと日南の次回販売予定"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+          {/* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_END] 告知終了後はここまで削除 ===== */}
+
+          <p className="mt-4 text-sm sm:text-base leading-7 text-gray-700">
+            次回のみかん販売は、
+            <strong className="text-orange-700">早味かんから開始予定</strong>
+            です。おおむねの販売開始日は、
+            <strong className="text-green-700">2026年9月10日</strong>に
+            <strong>早味かん 青果・小玉</strong>を予定しています。その後、
+            <strong className="text-green-700">2026年9月20日</strong>に
+            <strong>日南の青果・小玉</strong>を追加予定です。
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-orange-200 bg-white/92 px-4 py-4">
+              <p className="text-xs font-bold tracking-[0.08em] text-orange-700">
+                販売予定①
               </p>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-orange-200 bg-white/92 px-4 py-4">
-                  <p className="text-xs font-bold tracking-[0.08em] text-orange-700">販売予定①</p>
-                  <p className="mt-2 text-lg font-black text-[#2b3528]">早味かん 青果・小玉</p>
-                  <p className="mt-1 text-sm text-gray-600">2026年9月10日ごろ販売開始予定</p>
-                </div>
-
-                <div className="rounded-2xl border border-green-200 bg-white/92 px-4 py-4">
-                  <p className="text-xs font-bold tracking-[0.08em] text-green-700">販売予定②</p>
-                  <p className="mt-2 text-lg font-black text-[#2b3528]">日南 青果・小玉</p>
-                  <p className="mt-1 text-sm text-gray-600">2026年9月20日ごろ追加予定</p>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm leading-6 text-gray-700">
-                ※事前予約をご希望の方は、お問合せよりご連絡ください。
-            
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <a
-                  href={NEWS_LINK}
-                  className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(249,115,22,0.28)] transition hover:bg-orange-600"
-                >
-                  お知らせを見る
-                </a>
-
-                <a
-                  href="#premium"
-                  className="inline-flex items-center justify-center rounded-2xl border border-green-200 bg-white px-5 py-3 text-sm font-bold text-green-700 shadow-sm transition hover:bg-green-50"
-                >
-                  現在の商品状況を見る
-                </a>
-              </div>
+              <p className="mt-2 text-lg font-black text-[#2b3528]">
+                早味かん 青果・小玉
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                2026年9月10日ごろ販売開始予定
+              </p>
             </div>
 
-            <div className="grid gap-4">
-              <NextSaleMiniCard
-                image={NEXT_SALE_IMAGES.hayamikan}
-                title="早味かん"
-                subtitle="青果・小玉から販売開始予定"
-                date="2026年9月10日ごろ販売開始予定"
-                tone="orange"
-                notes={["先行販売", "極早生スタート", "画像掲載あり"]}
-              />
-
-              <NextSaleMiniCard
-                image={NEXT_SALE_IMAGES.hinann}
-                title="日南"
-                subtitle="青果・小玉を順次追加予定"
-                date="2026年9月20日ごろ追加予定"
-                tone="green"
-                notes={["追って追加", "販売導線強化", "画像掲載あり"]}
-              />
+            <div className="rounded-2xl border border-green-200 bg-white/92 px-4 py-4">
+              <p className="text-xs font-bold tracking-[0.08em] text-green-700">
+                販売予定②
+              </p>
+              <p className="mt-2 text-lg font-black text-[#2b3528]">
+                日南 青果・小玉
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                2026年9月20日ごろ追加予定
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function ProductCompareCard({
-  tone,
-  title,
-  desc,
-  price,
-  badge,
-  buttonText,
-  onClick,
-}: {
-  tone: "orange" | "green" | "stone";
-  title: string;
-  desc: string;
-  price: string;
-  badge: string;
-  buttonText: string;
-  onClick: () => void;
-}) {
-  const toneMap = {
-    orange: {
-      wrap: "border-orange-200 bg-gradient-to-br from-orange-50 via-white to-white",
-      badge: "bg-orange-100 text-orange-700 border-orange-200",
-      price: "text-orange-700",
-      button: "bg-orange-500 hover:bg-orange-600 text-white",
-    },
-    green: {
-      wrap: "border-green-200 bg-gradient-to-br from-green-50 via-white to-white",
-      badge: "bg-green-100 text-green-700 border-green-200",
-      price: "text-green-700",
-      button: "bg-green-600 hover:bg-green-700 text-white",
-    },
-    stone: {
-      wrap: "border-stone-200 bg-gradient-to-br from-stone-50 via-white to-white",
-      badge: "bg-stone-100 text-stone-700 border-stone-200",
-      price: "text-stone-700",
-      button: "bg-stone-700 hover:bg-stone-800 text-white",
-    },
-  } as const;
+          <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm leading-6 text-gray-700">
+            ※ 事前予約をご希望の方は、お問合せよりご連絡ください。
+          </div>
 
-  const t = toneMap[tone];
-
-  return (
-    <div className={`rounded-[22px] border p-4 sm:p-5 shadow-sm ${t.wrap}`}>
-      <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${t.badge}`}>
-        {badge}
-      </span>
-
-      <h2 className="mt-3 text-lg sm:text-xl font-black tracking-tight text-[#2b3528]">{title}</h2>
-
-      <p className="mt-2 text-sm leading-6 text-gray-600">{desc}</p>
-
-      <p className={`mt-4 text-xl sm:text-2xl font-black ${t.price}`}>{price}</p>
-
-      <button
-        onClick={onClick}
-        className={`mt-4 w-full rounded-2xl px-4 py-3 text-sm font-bold shadow transition ${t.button}`}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-}
-
-function AnchorNav() {
-  const items = [
-    { href: "#next-sale", label: "次回販売", tone: "green" },
-    { href: "#defect", label: "傷あり南津海", tone: "orange" },
-    { href: "#premium", label: "南津海（青果）", tone: "green" },
-    { href: "#buntan", label: "文旦", tone: "stone" },
-  ] as const;
-
-  return (
-    <div className="mt-4 z-30 sm:sticky sm:top-[84px]">
-      <div className="rounded-2xl border border-white/80 bg-white/94 backdrop-blur-md shadow-[0_10px_26px_rgba(0,0,0,0.08)] px-3 py-3">
-        <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-none">
-          {items.map((it) => (
+          <div className="mt-5 flex flex-wrap gap-3">
             <a
-              key={it.href}
-              href={it.href}
-              className={`inline-flex shrink-0 items-center rounded-full px-4 py-2 text-sm font-bold shadow-sm border transition hover:-translate-y-0.5 ${
-                it.tone === "orange"
-                  ? "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
-                  : it.tone === "green"
-                  ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                  : "bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
-              }`}
+              href={NEWS_LINK}
+              className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(249,115,22,0.28)] transition hover:bg-orange-600"
             >
-              {it.label}
+              お知らせを見る
             </a>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function GradeGuideCard({
-  title,
-  tone,
-  body,
-  points,
-}: {
-  title: string;
-  tone: "green" | "orange" | "amber";
-  body: string;
-  points: string[];
-}) {
-  const toneClass =
-    tone === "green"
-      ? "border-green-200 bg-green-50/80"
-      : tone === "orange"
-      ? "border-orange-200 bg-orange-50/80"
-      : "border-amber-200 bg-amber-50/80";
-
-  const titleClass =
-    tone === "green"
-      ? "text-green-700"
-      : tone === "orange"
-      ? "text-orange-700"
-      : "text-amber-700";
-
-  return (
-    <div className={`rounded-3xl border ${toneClass} px-5 py-5 shadow-sm`}>
-      <p className={`text-lg font-black ${titleClass}`}>{title}</p>
-      <p className="mt-3 text-sm leading-6 text-gray-700">{body}</p>
-      <ul className="mt-4 space-y-2">
-        {points.map((p) => (
-          <li key={p} className="flex items-start gap-2 text-sm text-gray-700">
-            <span className="mt-[2px] text-green-700">✓</span>
-            <span>{p}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ProductSectionFrame({
-  id,
-  eyebrow,
-  title,
-  subtitle,
-  children,
-}: {
-  id: string;
-  eyebrow: React.ReactNode;
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="mt-12 sm:mt-18 scroll-mt-24 sm:scroll-mt-36">
-      <div className="flex flex-wrap items-center gap-3">{eyebrow}</div>
-      <h2 className="mt-3 text-[1.6rem] leading-tight md:text-[2rem] font-black tracking-tight text-[#263426]">
-        {title}
-      </h2>
-      <p className="mt-2 max-w-3xl text-sm sm:text-base text-gray-600 leading-6 sm:leading-7">
-        {subtitle}
-      </p>
-      <div className="mt-5 sm:mt-7">{children}</div>
-    </section>
-  );
-}
-
-function SummaryStrip({
-  items,
-}: {
-  items: { icon: string; label: string }[];
-}) {
-  return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-      {items.map((it) => (
-        <div
-          key={it.label}
-          className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm"
-        >
-          <span className="mr-2">{it.icon}</span>
-          {it.label}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PriceSummary({
-  priceLabel,
-  subtotalLabel,
-  accent = "green",
-}: {
-  priceLabel: string;
-  subtotalLabel: string;
-  accent?: "green" | "orange" | "amber";
-}) {
-  const color =
-    accent === "green"
-      ? "text-green-700"
-      : accent === "orange"
-      ? "text-orange-700"
-      : "text-amber-700";
-
-  const bg =
-    accent === "green"
-      ? "from-green-50 to-white border-green-100"
-      : accent === "orange"
-      ? "from-orange-50 to-white border-orange-100"
-      : "from-amber-50 to-white border-amber-100";
-
-  return (
-    <div className={`mt-5 rounded-3xl border bg-gradient-to-br ${bg} px-5 py-5`}>
-      <div className={`text-[1.65rem] sm:text-3xl font-black ${color}`}>{priceLabel}</div>
-      <div className={`mt-2 text-base sm:text-lg font-bold ${color}`}>{subtotalLabel}</div>
-      <p className="mt-3 text-xs text-gray-500">※ すべて送料込み価格です。</p>
-    </div>
-  );
-}
-
-function CTAButtons({
-  onCart,
-  onBuy,
-  disabled,
-  accent = "green",
-}: {
-  onCart: () => void;
-  onBuy: () => void;
-  disabled?: boolean;
-  accent?: "green" | "orange" | "amber";
-}) {
-  const primary =
-    accent === "green"
-      ? "bg-green-600 hover:bg-green-700"
-      : accent === "orange"
-      ? "bg-orange-500 hover:bg-orange-600"
-      : "bg-amber-500 hover:bg-amber-600";
-
-  const secondary =
-    accent === "green"
-      ? "border-green-600 text-green-700 hover:bg-green-50"
-      : accent === "orange"
-      ? "border-orange-500 text-orange-700 hover:bg-orange-50"
-      : "border-amber-500 text-amber-700 hover:bg-amber-50";
-
-  return (
-    <div className="mt-5 grid gap-3 sm:grid-cols-2">
-      <button
-        onClick={onCart}
-        disabled={disabled}
-        className={`w-full rounded-2xl border bg-white px-5 py-4 text-base font-bold shadow-sm transition ${secondary} ${
-          disabled ? "opacity-60 cursor-not-allowed" : ""
-        }`}
-      >
-        カートに入れる
-      </button>
-
-      <button
-        onClick={onBuy}
-        disabled={disabled}
-        className={`w-full rounded-2xl px-5 py-4 text-base font-bold text-white shadow-lg transition ${primary} ${
-          disabled ? "opacity-60 cursor-not-allowed" : ""
-        }`}
-      >
-        今すぐ注文する
-      </button>
-    </div>
-  );
-}
-
-function SoftSelect({
-  value,
-  onChange,
-  options,
-}: {
-  value: string | number;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-[15px] shadow-sm outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-100"
-    >
-      {options.map((opt) => (
-        <option key={`${opt.value}-${opt.label}`} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function Panel({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`rounded-[22px] sm:rounded-[26px] border border-white/70 bg-white/88 backdrop-blur-md shadow-[0_14px_36px_rgba(0,0,0,0.07)] ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* =========================
-   ★ 画像見え方改善用
-========================= */
-function ProductImageStage({
-  src,
-  alt,
-  badges,
-  caption,
-  tone = "green",
-}: {
-  src: string;
-  alt: string;
-  badges: React.ReactNode;
-  caption: string;
-  tone?: "green" | "orange" | "stone";
-}) {
-  const toneBg =
-    tone === "orange"
-      ? "from-[#fff4ea] via-white to-[#fffaf4]"
-      : tone === "stone"
-      ? "from-[#f7f6f3] via-white to-[#fbfbfa]"
-      : "from-[#f3fbf2] via-white to-[#fffaf2]";
-
-  return (
-    <Panel className="overflow-hidden order-1 xl:order-1">
-      <div className={`relative aspect-[4/3] w-full bg-gradient-to-br ${toneBg}`}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_20%_20%,#79b96e_0,transparent_22%),radial-gradient(circle_at_80%_25%,#f59e0b_0,transparent_18%),radial-gradient(circle_at_50%_90%,#cbd5e1_0,transparent_20%)]" />
-        </div>
-
-        <div className="absolute inset-0 p-5 sm:p-7 md:p-8">
-          <div className="relative h-full w-full rounded-[22px] border border-white/90 bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-sm">
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              className="object-contain p-4 sm:p-5 md:p-6"
-            />
+            <a
+              href="#products"
+              className="inline-flex items-center justify-center rounded-2xl border border-green-200 bg-white px-5 py-3 text-sm font-bold text-green-700 shadow-sm transition hover:bg-green-50"
+            >
+              現在の商品状況を見る
+            </a>
           </div>
         </div>
-
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/62 via-black/18 to-transparent px-5 py-5">
-          <div className="flex flex-wrap items-center gap-2">{badges}</div>
-          <p className="mt-3 text-lg md:text-xl font-black text-white">{caption}</p>
-        </div>
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -627,7 +263,7 @@ function GradeGuideAccordion() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Panel className="mt-10 p-5 md:p-8">
+    <section className="mt-10 rounded-[28px] border border-white/70 bg-white/90 backdrop-blur-md p-5 md:p-8 shadow-[0_14px_36px_rgba(0,0,0,0.07)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <SectionBadge tone="green">選び方ガイド</SectionBadge>
@@ -638,150 +274,334 @@ function GradeGuideAccordion() {
 
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen((value) => !value)}
           className="inline-flex items-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50"
-          aria-expanded={open}
         >
           {open ? "閉じる" : "詳しく見る"}
         </button>
       </div>
 
       <p className="mt-3 text-sm sm:text-base text-gray-600 leading-6 sm:leading-7">
-        迷ったら<strong>「B品」</strong>、見た目重視なら<strong>「A品」</strong>、価格重視なら
+        迷ったら<strong>「B品」</strong>、見た目重視なら
+        <strong>「A品」</strong>、価格重視なら
         <strong>「C品」</strong>です。
       </p>
 
       {open && (
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <GradeGuideCard
-            title="A品"
-            tone="green"
-            body="見た目がきれいで、贈答向けにも選びやすい品質です。"
-            points={["市場品質", "贈答向け"]}
-          />
-          <GradeGuideCard
-            title="B品"
-            tone="orange"
-            body="見た目にやや傷がありますが、中身はA品同等。家庭用で一番人気です。"
-            points={["中身はA品同等", "価格とのバランス◎"]}
-          />
-          <GradeGuideCard
-            title="C品"
-            tone="amber"
-            body="見た目に個体差があります。価格重視で選びたい方向けです。"
-            points={["最安クラス", "お得重視向け"]}
-          />
+          <div className="rounded-3xl border border-green-200 bg-green-50/80 px-5 py-5 shadow-sm">
+            <p className="text-lg font-black text-green-700">A品</p>
+            <p className="mt-3 text-sm leading-6 text-gray-700">
+              見た目がきれいで、贈答向けにも選びやすい品質です。
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-gray-700">
+              <li>✓ 市場品質</li>
+              <li>✓ 贈答向け</li>
+            </ul>
+          </div>
+
+          <div className="rounded-3xl border border-orange-200 bg-orange-50/80 px-5 py-5 shadow-sm">
+            <p className="text-lg font-black text-orange-700">B品</p>
+            <p className="mt-3 text-sm leading-6 text-gray-700">
+              見た目にやや傷がありますが、中身はA品同等。家庭用で一番人気です。
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-gray-700">
+              <li>✓ 中身はA品同等</li>
+              <li>✓ 価格とのバランス◎</li>
+            </ul>
+          </div>
+
+          <div className="rounded-3xl border border-amber-200 bg-amber-50/80 px-5 py-5 shadow-sm">
+            <p className="text-lg font-black text-amber-700">C品</p>
+            <p className="mt-3 text-sm leading-6 text-gray-700">
+              見た目に個体差があります。価格重視で選びたい方向けです。
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-gray-700">
+              <li>✓ 最安クラス</li>
+              <li>✓ お得重視向け</li>
+            </ul>
+          </div>
         </div>
       )}
-    </Panel>
+    </section>
   );
 }
-/* ========================= */
 
-export default function ProductsPage() {
+function ProductCard({
+  product,
+  onToast,
+}: {
+  product: Product;
+  onToast: (message: string) => void;
+}) {
   const router = useRouter();
 
-  const PRICE_TABLE: Record<"5kg" | "10kg", number> = {
-    "5kg": 2500,
-    "10kg": 4000,
-  };
+  const options = useMemo(() => {
+    const list: { key: "5kg" | "10kg"; label: string; price: number }[] = [];
 
-  const [size, setSize] = useState<"5kg" | "10kg">("5kg");
-  const [withBonus500g, setWithBonus500g] = useState(true);
+    if (product.price_5kg !== null && product.price_5kg !== undefined) {
+      list.push({
+        key: "5kg",
+        label: "5kg",
+        price: product.price_5kg,
+      });
+    }
 
-  const [buntanTab, setBuntanTab] = useState<"5kg" | "10kg">("5kg");
-  const [buntanQty, setBuntanQty] = useState<number>(1);
+    if (product.price_10kg !== null && product.price_10kg !== undefined) {
+      list.push({
+        key: "10kg",
+        label: "10kg",
+        price: product.price_10kg,
+      });
+    }
 
-  const [mikanTab, setMikanTab] = useState<"5kg" | "10kg">("5kg");
-  const [mikanQty, setMikanQty] = useState<number>(1);
+    return list;
+  }, [product.price_5kg, product.price_10kg]);
 
-  const [defectGrade, setDefectGrade] = useState<"B" | "C">("B");
-  const [cGradeAccepted, setCGradeAccepted] = useState(false);
+  const [selectedKey, setSelectedKey] = useState<"5kg" | "10kg">(
+    options[0]?.key || "5kg"
+  );
+  const [qty, setQty] = useState(1);
 
+  const selected =
+    options.find((option) => option.key === selectedKey) || options[0];
+
+  const unitLabel = product.unit_label || "箱";
+  const isOnSale = product.stock_status === "販売中";
+  const total = selected ? selected.price * qty : 0;
+
+  useEffect(() => {
+    if (
+      options.length > 0 &&
+      !options.find((option) => option.key === selectedKey)
+    ) {
+      setSelectedKey(options[0].key);
+    }
+  }, [options, selectedKey]);
+
+  return (
+    <article className="overflow-hidden rounded-[30px] border border-white/80 bg-white/92 backdrop-blur shadow-[0_18px_48px_rgba(0,0,0,0.08)]">
+      <div className="relative bg-gradient-to-br from-[#f7fff4] via-white to-[#fff8eb]">
+        <div className="relative mx-auto aspect-[4/3] w-full max-w-[720px]">
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="absolute inset-0 h-full w-full object-contain object-center p-3"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+              画像未設定
+            </div>
+          )}
+
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+          <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+            <SectionBadge tone="stone">{product.tag || "商品"}</SectionBadge>
+            <SectionBadge tone={isOnSale ? "green" : "red"}>
+              {product.stock_status || "販売中"}
+            </SectionBadge>
+          </div>
+
+          <div className="absolute left-5 right-5 bottom-5">
+            <p className="text-xl sm:text-2xl font-black text-white drop-shadow">
+              {product.name}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5 sm:p-7 lg:p-8">
+        <div className="flex flex-wrap items-center gap-2">
+          <SectionBadge tone="gold">送料込み</SectionBadge>
+          <SectionBadge tone="green">農家直送</SectionBadge>
+          <SectionBadge tone={isOnSale ? "green" : "red"}>
+            {isOnSale ? "販売中" : "売り切れ"}
+          </SectionBadge>
+        </div>
+
+        <h2 className="mt-4 text-[1.8rem] sm:text-[2.15rem] leading-tight font-black tracking-tight text-[#243224]">
+          {product.name}
+        </h2>
+
+        {product.description && (
+          <p className="mt-4 text-sm sm:text-base leading-7 text-gray-700">
+            {product.description}
+          </p>
+        )}
+
+        {options.length > 0 ? (
+          <div className="mt-6">
+            <p className="text-sm font-bold text-gray-700 mb-2">
+              内容量を選択
+            </p>
+
+            <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              {options.map((option) => (
+                <button
+                  key={option.key}
+                  onClick={() => setSelectedKey(option.key)}
+                  className={`px-3 py-3 text-sm sm:text-base font-black transition ${
+                    selectedKey === option.key
+                      ? "bg-green-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-green-50"
+                  }`}
+                >
+                  <span className="block">{option.label}</span>
+                  <span className="block text-xs sm:text-sm">
+                    {yen(option.price)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
+            価格が未設定です。
+          </div>
+        )}
+
+        <div className="mt-5">
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            数量（{unitLabel}）
+          </label>
+
+          <select
+            value={qty}
+            onChange={(event) => setQty(Number(event.target.value))}
+            className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-[15px] shadow-sm outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-100"
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((number) => (
+              <option key={number} value={number}>
+                {number} {unitLabel}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mt-6 rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-white px-5 py-5">
+          <div className="text-[1.7rem] sm:text-3xl font-black text-green-700">
+            価格：{selected ? yen(selected.price) : "-"} / {unitLabel}
+          </div>
+          <div className="mt-2 text-base sm:text-lg font-bold text-green-700">
+            小計：{yen(total)}
+          </div>
+          <p className="mt-3 text-xs text-gray-500">
+            ※ すべて送料込み価格です。
+          </p>
+        </div>
+
+        {!isOnSale && (
+          <div className="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-2xl px-4 py-4">
+            現在売り切れです。
+          </div>
+        )}
+
+        {product.notice && (
+          <div className="mt-4 rounded-3xl border border-yellow-200 bg-yellow-50 px-4 py-4">
+            <p className="text-sm text-gray-700 leading-6">{product.notice}</p>
+          </div>
+        )}
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <button
+            onClick={() => {
+              if (!selected) return;
+
+              addToCart({
+                id: `${product.id}-${selected.key}`,
+                name: product.name,
+                variant: selected.key,
+                unitPrice: selected.price,
+                qty,
+                extra: {
+                  tag: product.tag,
+                  unit_label: unitLabel,
+                },
+              });
+
+              onToast("カートに追加しました");
+            }}
+            disabled={!isOnSale || !selected}
+            className={`w-full rounded-2xl border bg-white px-5 py-4 text-base font-bold shadow-sm transition ${
+              isOnSale && selected
+                ? "border-green-600 text-green-700 hover:bg-green-50"
+                : "border-gray-200 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            カートに入れる
+          </button>
+
+          <button
+            onClick={() => {
+              if (!selected) return;
+
+              router.push(
+                `/order?product=${encodeURIComponent(product.name)}` +
+                  `&size=${encodeURIComponent(selected.key)}` +
+                  `&qty=${qty}` +
+                  `&price=${total}`
+              );
+            }}
+            disabled={!isOnSale || !selected}
+            className={`w-full rounded-2xl px-5 py-4 text-base font-bold text-white shadow-lg transition ${
+              isOnSale && selected
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+          >
+            今すぐ注文する
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    setMikanTab(size);
-  }, [size]);
+    const loadProducts = async () => {
+      setLoading(true);
+      setMessage("");
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(null), 2200);
-    return () => window.clearTimeout(t);
-  }, [toast]);
-
-  const NATSUMI_PRICE_TABLE: Record<"5kg" | "10kg", number> = {
-    "5kg": 3000,
-    "10kg": 5000,
-  };
-  const [natsumiTab, setNatsumiTab] = useState<"5kg" | "10kg">("5kg");
-  const [natsumiQty, setNatsumiQty] = useState<number>(1);
-
-  const natsumiStatus = "soldout" as ProductItem["status"];
-
-  const NATSUMI_DEFECT_PRICE_TABLE = {
-    B: {
-      "5kg": 2000,
-      "10kg": 3500,
-      image: "/mikan/defect.png",
-      label: "B品",
-    },
-    C: {
-      "5kg": 1500,
-      "10kg": 2500,
-      image: "/mikan/defectc.png",
-      label: "C品",
-    },
-  } as const;
-
-  const [sheetMap, setSheetMap] = useState<Record<string, ProductItem>>({});
-  const [sheetError, setSheetError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const run = async () => {
       try {
-        setSheetError(null);
-        const r = await fetch("/api/products", { cache: "no-store" });
-        const data = (await r.json()) as ApiProductsRes;
+        const res = await fetch("/api/products", {
+          cache: "no-store",
+        });
 
-        if (!data || data.ok !== true) {
-          setSheetMap({});
-          setSheetError((data as any)?.error || "unknown");
+        const data = await res.json();
+
+        if (!res.ok) {
+          setMessage(data?.message || "商品情報の取得に失敗しました。");
           return;
         }
 
-        const map: Record<string, ProductItem> = {};
-        for (const it of data.items || []) {
-          if (it?.product) map[String(it.product)] = it;
-        }
-        setSheetMap(map);
-      } catch (e: any) {
-        setSheetMap({});
-        setSheetError(e?.message || String(e));
+        setProducts(data.products || []);
+      } catch (error) {
+        setMessage("通信エラーが発生しました。");
+      } finally {
+        setLoading(false);
       }
     };
-    run();
+
+    loadProducts();
   }, []);
 
-  const mikanDefect = sheetMap[FIXED_KEYS.MIKAN_DEFECT];
-  const buntan = sheetMap[FIXED_KEYS.BUNTAN];
+  useEffect(() => {
+    if (!toast) return;
 
-  const mikanDefectStatus = "soldout" as ProductItem["status"];
-  const buntanStatus: ProductItem["status"] = "soldout";
+    const timer = window.setTimeout(() => {
+      setToast(null);
+    }, 2200);
 
-  const currentDefect = NATSUMI_DEFECT_PRICE_TABLE[defectGrade];
-
-  const mikanDefectPrice5 = Number(
-    defectGrade === "B" ? mikanDefect?.price ?? currentDefect["5kg"] : currentDefect["5kg"]
-  );
-  const mikanDefectPrice10 = Number(currentDefect["10kg"]);
-  const buntanPrice5 = Number(buntan?.price ?? PRICE_TABLE["5kg"]);
-
-  const jumpTo = (href: string) => {
-    const el = document.querySelector(href);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   return (
     <main className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-24 text-[#333]">
@@ -793,583 +613,77 @@ export default function ProductsPage() {
 
       <CartTopButton />
 
-      <ProductHeroCard
-        badge={
-          <>
+      <section className="relative overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-[#f6fff5] via-white to-[#fff8ee] shadow-[0_16px_40px_rgba(0,0,0,0.07)]">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-16 -left-16 h-40 w-40 rounded-full bg-green-200/20 blur-3xl" />
+          <div className="absolute -bottom-20 right-0 h-48 w-48 rounded-full bg-orange-200/20 blur-3xl" />
+        </div>
+
+        <div className="relative px-5 py-5 md:px-8 md:py-7">
+          <div className="flex flex-wrap items-center gap-2">
             <SectionBadge tone="green">DIRECT FARM STORE</SectionBadge>
             <SectionBadge tone="orange">送料込み</SectionBadge>
-          </>
-        }
-        title="商品一覧"
-        subtitle="次回販売のみかんの詳細はお知らせから、確認できます。"
-        notes={["南津海は完売", "次回販売情報を掲載中", ]}
-      />
+            <SectionBadge tone="gold">管理画面連動</SectionBadge>
+          </div>
 
-      <div id="next-sale">
-        <SaleNoticeCard />
-      </div>
+          <h1 className="mt-4 text-[1.85rem] leading-[1.05] md:text-4xl font-black tracking-tight text-[#243224]">
+            商品一覧
+          </h1>
 
-      <AnchorNav />
-
-      <div className="hidden sm:grid mt-5 gap-3 sm:grid-cols-3">
-        <ProductCompareCard
-          tone="orange"
-          badge="現在完売"
-          title="傷あり南津海"
-          desc="家庭用で人気の商品でしたが、現在は完売しています。"
-          price="今季分完売"
-          buttonText="商品を見る"
-          onClick={() => jumpTo("#defect")}
-        />
-        <ProductCompareCard
-          tone="green"
-          badge="現在完売"
-          title="南津海（青果）"
-          desc="見た目のきれいさ重視の商品ですが、現在は完売しています。"
-          price="今季分完売"
-          buttonText="商品を見る"
-          onClick={() => jumpTo("#premium")}
-        />
-        <ProductCompareCard
-          tone="stone"
-          badge="売り切れ"
-          title="文旦（箱）"
-          desc="現在は売り切れです。再開までお待ちください。"
-          price={`${buntanPrice5.toLocaleString()}円〜`}
-          buttonText="文旦を見る"
-          onClick={() => jumpTo("#buntan")}
-        />
-      </div>
-
-      {false && sheetError && (
-        <div className="max-w-2xl mx-auto mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          ※ 商品データの読み込みに失敗しています（/api/products）: {sheetError}
+          <p className="mt-3 max-w-3xl text-sm md:text-base leading-7 text-gray-700">
+            農家直送・<strong className="text-green-700">送料込み価格</strong>
+            でご注文いただけます。販売状況・価格・商品画像は管理画面の内容が反映されます。
+          </p>
         </div>
-      )}
+      </section>
 
-      <ProductSectionFrame
-        id="defect"
-        eyebrow={
-          <>
-            <SectionBadge tone="orange">人気No.1</SectionBadge>
-            <SectionBadge tone="red">完売</SectionBadge>
-            <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
-              現在選択中：{currentDefect.label}
-            </SectionBadge>
-          </>
-        }
-        title="傷あり南津海（箱詰め）"
-        subtitle="家庭用で一番選ばれていた、お得な箱詰め商品です。現在は完売しています。"
-      >
-        <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <ProductImageStage
-            src={currentDefect.image}
-            alt={`傷あり南津海 ${currentDefect.label}`}
-            tone="orange"
-            badges={
-              <>
-                <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
-                  {currentDefect.label}
-                </SectionBadge>
-                <SectionBadge tone="red">完売</SectionBadge>
-              </>
-            }
-            caption="見た目より、中身とお得さで選ぶ方向け"
-          />
+      <SaleNoticeCard />
 
-          <Panel className="p-5 md:p-7 order-2 xl:order-2">
+      <section id="products" className="mt-10 scroll-mt-28">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
             <div className="flex flex-wrap items-center gap-2">
-              <SectionBadge tone={defectGrade === "B" ? "orange" : "amber"}>
-                {currentDefect.label}
-              </SectionBadge>
-              <SectionBadge tone="red">完売</SectionBadge>
-              <SectionBadge tone="stone">数量選択可</SectionBadge>
+              <SectionBadge tone="green">現在の商品</SectionBadge>
+              <SectionBadge tone="stone">価格・在庫は最新情報</SectionBadge>
             </div>
 
-            <h3 className="mt-3 text-[1.75rem] md:text-[2rem] font-black tracking-tight text-[#2b3528]">
-              家庭用ならまずこれ
-            </h3>
+            <h2 className="mt-3 text-[1.65rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#263426]">
+              ご注文可能な商品
+            </h2>
 
-            <SummaryStrip
-              items={
-                defectGrade === "B"
-                  ? [
-                      { icon: "🏠", label: "家庭用で一番人気" },
-                      { icon: "✨", label: "中身はA品同等" },
-                      { icon: "💰", label: "価格とのバランス◎" },
-                    ]
-                  : [
-                      { icon: "💸", label: "価格重視向け" },
-                      { icon: "🏠", label: "家庭用として十分" },
-                      { icon: "⚠️", label: "見た目に個体差あり" },
-                    ]
-              }
-            />
-
-            <div className="mt-5">
-              <div className="inline-flex rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm">
-                <button
-                  onClick={() => {
-                    setDefectGrade("B");
-                    setCGradeAccepted(false);
-                  }}
-                  className={`px-5 py-3 text-sm font-bold transition ${
-                    defectGrade === "B"
-                      ? "bg-orange-500 text-white"
-                      : "bg-white text-gray-700 hover:bg-orange-50"
-                  }`}
-                  aria-pressed={defectGrade === "B"}
-                >
-                  B品
-                </button>
-                <button
-                  onClick={() => {
-                    setDefectGrade("C");
-                    setCGradeAccepted(false);
-                  }}
-                  className={`px-5 py-3 text-sm font-bold transition border-l border-gray-200 ${
-                    defectGrade === "C"
-                      ? "bg-amber-500 text-white"
-                      : "bg-white text-gray-700 hover:bg-amber-50"
-                  }`}
-                  aria-pressed={defectGrade === "C"}
-                >
-                  C品
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <p className="text-sm font-semibold text-gray-700 mb-2">内容量を選択</p>
-              <div className="inline-flex h-12 sm:h-11 rounded-2xl border border-gray-200 overflow-hidden w-full">
-                <button
-                  onClick={() => {
-                    setMikanTab("5kg");
-                    setSize("5kg");
-                  }}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
-                    text-[15px] sm:text-sm leading-snug ${
-                      mikanTab === "5kg"
-                        ? defectGrade === "B"
-                          ? "bg-orange-500 text-white"
-                          : "bg-amber-500 text-white"
-                        : "bg-white hover:bg-green-50"
-                    }`}
-                  aria-pressed={mikanTab === "5kg"}
-                >
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-2">
-                    <span className="font-bold whitespace-nowrap">5kg</span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {mikanDefectPrice5.toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setMikanTab("10kg");
-                    setSize("10kg");
-                  }}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
-                    text-[15px] sm:text-sm leading-snug border-l border-gray-200 ${
-                      mikanTab === "10kg"
-                        ? defectGrade === "B"
-                          ? "bg-orange-500 text-white"
-                          : "bg-amber-500 text-white"
-                        : "bg-white hover:bg-green-50"
-                    }`}
-                  aria-pressed={mikanTab === "10kg"}
-                >
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-2">
-                    <span className="font-bold whitespace-nowrap">10kg</span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {mikanDefectPrice10.toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">数量（箱）</label>
-              <SoftSelect
-                value={mikanQty}
-                onChange={(v) => setMikanQty(Number(v))}
-                options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n} 箱` }))}
-              />
-            </div>
-
-            <PriceSummary
-              accent={defectGrade === "B" ? "orange" : "amber"}
-              priceLabel={`価格：${(
-                size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10
-              ).toLocaleString()}円`}
-              subtotalLabel={`小計：${(
-                (size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10) * mikanQty
-              ).toLocaleString()}円`}
-            />
-
-            {mikanDefectStatus !== "active" && (
-              <div className="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-2xl px-4 py-4">
-                {mikanDefectStatus === "soldout"
-                  ? "現在売り切れです。"
-                  : "近日、事前予約可能予定です。"}
-              </div>
-            )}
-
-            <div className="mt-4 rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white px-5 py-5">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">🎁</div>
-                <div>
-                  <p className="text-base font-black text-orange-700">今だけ 500gおまけ付き</p>
-                  <p className="mt-1 text-sm text-gray-600">数量限定・なくなり次第終了です。</p>
-                </div>
-              </div>
-
-              <label className="mt-4 flex items-center gap-3 rounded-2xl border border-orange-200 bg-white px-4 py-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={withBonus500g}
-                  onChange={(e) => setWithBonus500g(e.target.checked)}
-                  className="w-5 h-5 accent-orange-500"
-                />
-                <span className="text-sm font-semibold text-gray-700">
-                  南津海＋500gおまけを希望する
-                </span>
-              </label>
-            </div>
-
-            {defectGrade === "C" && (
-              <label className="mt-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-4 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={cGradeAccepted}
-                  onChange={(e) => setCGradeAccepted(e.target.checked)}
-                  className="w-5 h-5 accent-amber-500"
-                />
-                <span className="text-sm font-semibold text-gray-700">
-                  中身にばらつきがある場合があることを理解しました
-                </span>
-              </label>
-            )}
-
-            <CTAButtons
-              accent={defectGrade === "B" ? "orange" : "amber"}
-              disabled={mikanDefectStatus !== "active" || (defectGrade === "C" && !cGradeAccepted)}
-              onCart={() => {
-                addToCart({
-                  id: `natsumi-defect-${defectGrade}-${size}-${withBonus500g ? "plus500" : "noextra"}`,
-                  name: `傷あり南津海（${currentDefect.label}）`,
-                  variant: `${currentDefect.label} / ${size}`,
-                  unitPrice: size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10,
-                  qty: mikanQty,
-                  extra: { withBonus500g, defectGrade, cGradeAccepted },
-                });
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new Event("yk-cart-updated"));
-                }
-                setToast("カートに追加しました");
-              }}
-              onBuy={() => {
-                const unit = size === "5kg" ? mikanDefectPrice5 : mikanDefectPrice10;
-                const p = unit * mikanQty;
-                router.push(
-                  `/order?product=${encodeURIComponent(`傷あり南津海（${currentDefect.label}）`)}` +
-                    `&size=${encodeURIComponent(size)}` +
-                    `&qty=${mikanQty}&price=${p}&buntan=${withBonus500g}&grade=${defectGrade}&accepted=${cGradeAccepted}`
-                );
-              }}
-            />
-
-            <p className="text-xs text-gray-500 mt-4 text-center leading-6">
-              ※ 家庭用・不揃い商品のため、見た目による返品交換はご遠慮ください
+            <p className="mt-2 text-sm sm:text-base text-gray-600 leading-7">
+              販売中の商品は「カートに入れる」「今すぐ注文する」ボタンを押せます。
+              売り切れの商品は、ボタンが押せない状態になります。
             </p>
-          </Panel>
+          </div>
         </div>
-      </ProductSectionFrame>
 
-      <ProductSectionFrame
-        id="premium"
-        eyebrow={
-          <>
-            <SectionBadge tone="green">青果品質</SectionBadge>
-            <SectionBadge tone="red">完売</SectionBadge>
-            <SectionBadge tone="stone">贈答にもおすすめ</SectionBadge>
-          </>
-        }
-        title="南津海（青果）"
-        subtitle="見た目の美しさや贈答向けを重視したい方におすすめの商品でした。現在は完売しています。"
-      >
-        <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <ProductImageStage
-            src="/mikan/premium.png"
-            alt="南津海（青果）"
-            tone="green"
-            badges={
-              <>
-                <SectionBadge tone="green">A品</SectionBadge>
-                <SectionBadge tone="red">完売</SectionBadge>
-              </>
-            }
-            caption="見た目の美しさと品質を重視する方向け"
-          />
+        {message && (
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
+            {message}
+          </div>
+        )}
 
-          <Panel className="p-5 md:p-7 order-2 xl:order-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <SectionBadge tone="green">A品</SectionBadge>
-              <SectionBadge tone="red">完売</SectionBadge>
-              <SectionBadge tone="stone">送料込み</SectionBadge>
-            </div>
-
-            <h3 className="mt-3 text-[1.75rem] md:text-[2rem] font-black tracking-tight text-[#2b3528]">
-              きれいさ重視の方に
-            </h3>
-
-            <SummaryStrip
-              items={[
-                { icon: "🎁", label: "贈答向きの見た目" },
-                { icon: "🍊", label: "市場にも出回る品質" },
-                { icon: "❄️", label: "サンテで守って育成" },
-              ]}
-            />
-
-            <div className="mt-5">
-              <p className="text-sm font-semibold text-gray-700 mb-2">内容量を選択</p>
-              <div className="inline-flex h-12 sm:h-11 rounded-2xl border border-gray-200 overflow-hidden w-full">
-                <button
-                  onClick={() => setNatsumiTab("5kg")}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
-                    text-[15px] sm:text-sm leading-snug ${
-                      natsumiTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
-                    }`}
-                  aria-pressed={natsumiTab === "5kg"}
-                >
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-2">
-                    <span className="font-bold whitespace-nowrap">5kg</span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {NATSUMI_PRICE_TABLE["5kg"].toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => setNatsumiTab("10kg")}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
-                    text-[15px] sm:text-sm leading-snug border-l border-gray-200 ${
-                      natsumiTab === "10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
-                    }`}
-                  aria-pressed={natsumiTab === "10kg"}
-                >
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-2">
-                    <span className="font-bold whitespace-nowrap">10kg</span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {NATSUMI_PRICE_TABLE["10kg"].toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">数量（箱）</label>
-              <SoftSelect
-                value={natsumiQty}
-                onChange={(v) => setNatsumiQty(Number(v))}
-                options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n} 箱` }))}
+        {loading ? (
+          <div className="mt-6 rounded-[28px] border border-white/70 bg-white/90 px-6 py-12 text-center text-gray-500 shadow-sm">
+            商品情報を読み込み中...
+          </div>
+        ) : products.length === 0 ? (
+          <div className="mt-6 rounded-[28px] border border-white/70 bg-white/90 px-6 py-12 text-center text-gray-500 shadow-sm">
+            現在表示中の商品はありません。
+          </div>
+        ) : (
+          <div className="mt-6 space-y-7">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onToast={(text) => setToast(text)}
               />
-            </div>
-
-            <PriceSummary
-              accent="green"
-              priceLabel={`価格：${(
-                natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"]
-              ).toLocaleString()}円 / 箱`}
-              subtotalLabel={`小計：${(
-                (natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"]) *
-                natsumiQty
-              ).toLocaleString()}円`}
-            />
-
-            {natsumiStatus !== "active" && (
-              <div className="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-2xl px-4 py-4">
-                {natsumiStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
-              </div>
-            )}
-
-            <CTAButtons
-              accent="green"
-              disabled={natsumiStatus !== "active"}
-              onCart={() => {
-                addToCart({
-                  id: `natsumi-${natsumiTab}`,
-                  name: "南津海（A品）",
-                  variant: natsumiTab,
-                  unitPrice:
-                    natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"],
-                  qty: natsumiQty,
-                  extra: { natsumi: true, grade: "A" },
-                });
-                window.dispatchEvent(new Event("yk-cart-updated"));
-                setToast("カートに追加しました");
-              }}
-              onBuy={() => {
-                const unit =
-                  natsumiTab === "5kg" ? NATSUMI_PRICE_TABLE["5kg"] : NATSUMI_PRICE_TABLE["10kg"];
-                const p = unit * natsumiQty;
-                router.push(
-                  `/order?product=${encodeURIComponent("南津海（A品）")}` +
-                    `&size=${encodeURIComponent(natsumiTab)}` +
-                    `&qty=${natsumiQty}&price=${p}&buntan=${withBonus500g}&grade=A`
-                );
-              }}
-            />
-          </Panel>
-        </div>
-      </ProductSectionFrame>
-
-      <ProductSectionFrame
-        id="buntan"
-        eyebrow={
-          <>
-            <SectionBadge tone="stone">爽やかな香り</SectionBadge>
-            <SectionBadge tone="red">売り切れ</SectionBadge>
-            <SectionBadge tone="stone">個数目安つき</SectionBadge>
-          </>
-        }
-        title="文旦（箱）"
-        subtitle="さっぱりとした甘さと爽やかな香りを楽しめる商品ですが、現在は売り切れです。"
-      >
-        <div className="grid gap-5 sm:gap-6 xl:grid-cols-[1.02fr_0.98fr] items-stretch">
-          <ProductImageStage
-            src="/mikan/buntan.jpg"
-            alt="文旦（箱）"
-            tone="stone"
-            badges={
-              <>
-                <SectionBadge tone="stone">文旦</SectionBadge>
-                <SectionBadge tone="red">売り切れ</SectionBadge>
-              </>
-            }
-            caption="爽やかな香りとすっきりした甘さ"
-          />
-
-          <Panel className="p-5 md:p-7 order-2 xl:order-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <SectionBadge tone="stone">文旦</SectionBadge>
-              <SectionBadge tone="red">売り切れ</SectionBadge>
-              <SectionBadge tone="stone">個数目安あり</SectionBadge>
-            </div>
-
-            <h3 className="mt-3 text-[1.75rem] md:text-[2rem] font-black tracking-tight text-[#2b3528]">
-              香りとさっぱり感を楽しむ
-            </h3>
-
-            <SummaryStrip
-              items={[
-                { icon: "🍋", label: "爽やかな香り" },
-                { icon: "😋", label: "さっぱりした甘さ" },
-                { icon: "📦", label: "5kg箱は6個目安" },
-              ]}
-            />
-
-            <div className="mt-5">
-              <p className="text-sm font-semibold text-gray-700 mb-2">内容量を選択</p>
-              <div className="inline-flex h-12 sm:h-11 rounded-2xl border border-gray-200 overflow-hidden w-full">
-                <button
-                  onClick={() => setBuntanTab("5kg")}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
-                    text-[15px] sm:text-sm leading-snug ${
-                      buntanTab === "5kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
-                    }`}
-                  aria-pressed={buntanTab === "5kg"}
-                >
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-2">
-                    <span className="font-bold whitespace-nowrap">5kg（6個）</span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {buntanPrice5.toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => setBuntanTab("10kg")}
-                  className={`flex-1 inline-flex items-center justify-center text-center px-3 sm:px-4
-                    text-[15px] sm:text-sm leading-snug border-l border-gray-200 ${
-                      buntanTab === "10kg" ? "bg-green-600 text-white" : "bg-white hover:bg-green-50"
-                    }`}
-                  aria-pressed={buntanTab === "10kg"}
-                >
-                  <span className="flex flex-col items-center leading-tight sm:flex-row sm:gap-2">
-                    <span className="font-bold whitespace-nowrap">10kg（12個）</span>
-                    <span className="text-[13px] sm:text-sm whitespace-nowrap">
-                      {PRICE_TABLE["10kg"].toLocaleString()}円
-                    </span>
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">数量（箱）</label>
-              <SoftSelect
-                value={buntanQty}
-                onChange={(v) => setBuntanQty(Number(v))}
-                options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n} 箱` }))}
-              />
-            </div>
-
-            <PriceSummary
-              accent="green"
-              priceLabel={`価格：${(
-                buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"]
-              ).toLocaleString()}円 / 箱`}
-              subtotalLabel={`小計：${(
-                (buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"]) * buntanQty
-              ).toLocaleString()}円`}
-            />
-
-            {buntanStatus !== "active" && (
-              <div className="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-2xl px-4 py-4">
-                {buntanStatus === "soldout" ? "現在売り切れです。" : "近日、事前予約可能予定です。"}
-              </div>
-            )}
-
-            <div className="mt-4 rounded-3xl border border-yellow-200 bg-yellow-50 px-4 py-4">
-              <p className="text-sm text-gray-700 leading-6">
-                「5kg／10kg」は箱サイズの目安です。実際は個数基準（5kg箱=6個・10kg箱=12個）で詰めるため、総重量は前後します。
-              </p>
-            </div>
-
-            <CTAButtons
-              accent="green"
-              disabled={buntanStatus !== "active"}
-              onCart={() => {
-                addToCart({
-                  id: `buntan-${buntanTab}`,
-                  name: "文旦（箱）",
-                  variant: buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）",
-                  unitPrice: buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"],
-                  qty: buntanQty,
-                  extra: { buntan: true },
-                });
-                window.dispatchEvent(new Event("yk-cart-updated"));
-                setToast("カートに追加しました");
-              }}
-              onBuy={() => {
-                const unit = buntanTab === "5kg" ? buntanPrice5 : PRICE_TABLE["10kg"];
-                const p = unit * buntanQty;
-                router.push(
-                  `/order?product=${encodeURIComponent("文旦（箱）")}` +
-                    `&size=${encodeURIComponent(
-                      buntanTab === "5kg" ? "5kg（6個）" : "10kg（12個）"
-                    )}` +
-                    `&qty=${buntanQty}&price=${p}&buntan=${withBonus500g}`
-                );
-              }}
-            />
-          </Panel>
-        </div>
-      </ProductSectionFrame>
+            ))}
+          </div>
+        )}
+      </section>
 
       <GradeGuideAccordion />
 
@@ -1383,117 +697,5 @@ export default function ProductsPage() {
         </div>
       )}
     </main>
-  );
-}
-
-/* ===========================
-   簡易カート（localStorage）
-=========================== */
-type CartItem = {
-  id: string;
-  name: string;
-  variant: string;
-  unitPrice: number;
-  qty: number;
-  extra?: Record<string, any>;
-};
-
-const CART_KEY = "yk_cart";
-
-function readCart(): CartItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function writeCart(items: CartItem[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(CART_KEY, JSON.stringify(items));
-  window.dispatchEvent(new Event("yk-cart-updated"));
-}
-
-function addToCart(item: CartItem) {
-  const items = readCart();
-  const idx = items.findIndex((x) => x.id === item.id && x.variant === item.variant);
-  if (idx >= 0) {
-    items[idx].qty += item.qty;
-  } else {
-    items.push(item);
-  }
-  writeCart(items);
-}
-
-function cartCount(): number {
-  return readCart().reduce((sum, it) => sum + it.qty, 0);
-}
-
-/* ===========================
-   右下フローティング・カート（スマホ用）
-=========================== */
-function CartWidget() {
-  const [count, setCount] = useState<number>(0);
-  const router = useRouter();
-
-  useEffect(() => {
-    const update = () => setCount(cartCount());
-    update();
-    window.addEventListener("storage", update);
-    window.addEventListener("yk-cart-updated", update as any);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("yk-cart-updated", update as any);
-    };
-  }, []);
-
-  if (count <= 0) return null;
-
-  return (
-    <button
-      onClick={() => router.push("/order?cart=1")}
-      className="fixed sm:hidden z-50 right-5 bottom-5 flex items-center gap-2 rounded-full px-5 py-3
-                 bg-orange-500 text-white shadow-[0_16px_35px_rgba(249,115,22,0.35)] hover:bg-orange-600 transition"
-      aria-label="カートを見る"
-      title="カートを見る"
-    >
-      🛒 カート <span className="ml-1 font-bold">{count}</span>
-    </button>
-  );
-}
-
-/* ===========================
-   右上カート（PC用）
-=========================== */
-function CartTopButton() {
-  const router = useRouter();
-  const [count, setCount] = useState<number>(0);
-
-  useEffect(() => {
-    const update = () => setCount(cartCount());
-    update();
-    window.addEventListener("storage", update);
-    window.addEventListener("yk-cart-updated", update as any);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("yk-cart-updated", update as any);
-    };
-  }, []);
-
-  return (
-    <button
-      onClick={() => router.push("/order?cart=1")}
-      className="hidden sm:flex fixed z-50 right-5 top-20 sm:top-24 items-center gap-2 rounded-full px-4 py-2.5
-                 bg-white/92 backdrop-blur border border-white/80 shadow-[0_10px_25px_rgba(0,0,0,0.12)] hover:bg-white transition"
-      aria-label="カートへ（まとめて注文）"
-      title="カートへ（まとめて注文）"
-    >
-      <span className="text-lg">🛒</span>
-      <span className="text-sm font-bold text-gray-800">カート</span>
-      <span className="ml-1 inline-flex items-center justify-center min-w-[1.6rem] h-6 text-xs font-black rounded-full bg-green-600 text-white px-2">
-        {count}
-      </span>
-    </button>
   );
 }

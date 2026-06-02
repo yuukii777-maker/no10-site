@@ -621,7 +621,7 @@ export default function ProductsPage() {
 
         <div className="relative px-5 py-5 md:px-8 md:py-7">
           <div className="flex flex-wrap items-center gap-2">
-            <SectionBadge tone="green">送料込み価格</SectionBadge>
+            <SectionBadge tone="green">送料込み表記</SectionBadge>
             <SectionBadge tone="orange">100円みかん</SectionBadge>
             <SectionBadge tone="gold">産地直送</SectionBadge>
           </div>

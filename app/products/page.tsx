@@ -621,9 +621,9 @@ export default function ProductsPage() {
 
         <div className="relative px-5 py-5 md:px-8 md:py-7">
           <div className="flex flex-wrap items-center gap-2">
-            <SectionBadge tone="green">DIRECT FARM STORE</SectionBadge>
-            <SectionBadge tone="orange">送料込み</SectionBadge>
-            <SectionBadge tone="gold">管理画面連動</SectionBadge>
+            <SectionBadge tone="green">送料込み表記</SectionBadge>
+            <SectionBadge tone="orange">100円みかん</SectionBadge>
+            <SectionBadge tone="gold">産地直送</SectionBadge>
           </div>
 
           <h1 className="mt-4 text-[1.85rem] leading-[1.05] md:text-4xl font-black tracking-tight text-[#243224]">
@@ -648,7 +648,7 @@ export default function ProductsPage() {
             </div>
 
             <h2 className="mt-3 text-[1.65rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#263426]">
-              ご注文可能な商品
+              旬の商品一覧
             </h2>
 
             <p className="mt-2 text-sm sm:text-base text-gray-600 leading-7">

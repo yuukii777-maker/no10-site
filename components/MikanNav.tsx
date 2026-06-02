@@ -31,7 +31,7 @@ export default function MikanNav() {
   return (
     <>
       {/* PCナビ */}
-      <nav className="hidden sm:block w-full bg-transparent py-3 z-[40]">
+      <nav className="hidden sm:block relative w-full bg-transparent py-3 z-[40]">
         <div className="max-w-6xl mx-auto px-4 flex gap-4 justify-center">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -53,6 +53,14 @@ export default function MikanNav() {
             );
           })}
         </div>
+
+        {/* 管理画面リンク */}
+        <Link
+          href="/admin/orders"
+          className="absolute right-4 bottom-1 text-[11px] font-bold text-gray-400 hover:text-green-700 transition"
+        >
+          管理画面
+        </Link>
       </nav>
 
       {/* SP用：開くトリガー（ヘッダー右上の透明ボタン想定） */}

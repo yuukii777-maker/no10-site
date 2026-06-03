@@ -213,64 +213,67 @@ function SortableProductCard({
     <article
       ref={setNodeRef}
       style={style}
-      className="group overflow-hidden rounded-3xl border border-white/10 bg-black/25 hover:bg-white/[0.07] transition shadow-xl"
+      className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1114]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(0,0,0,0.65),0_20px_44px_rgba(0,0,0,0.38)] transition duration-300 hover:-translate-y-1 hover:border-yellow-300/25 hover:bg-white/[0.075]"
     >
-      <div className="relative h-52 bg-gradient-to-br from-yellow-300/15 to-green-400/10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-yellow-300/80 via-green-300/40 to-transparent" />
+
+      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-yellow-300/18 via-green-400/10 to-black/30">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="h-full w-full object-cover opacity-90 group-hover:scale-105 transition duration-500"
+            className="h-full w-full object-cover opacity-95 transition duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-white/30">
+          <div className="flex h-full w-full items-center justify-center text-white/30">
             画像未設定
           </div>
         )}
 
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/85 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
 
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="absolute right-4 top-4 rounded-full border border-white/20 bg-black/45 px-3 py-2 text-xs font-black text-white/80 backdrop-blur hover:bg-black/70 cursor-grab active:cursor-grabbing touch-none"
+          className="absolute right-4 top-4 rounded-2xl border border-white/20 bg-black/55 px-3 py-2 text-xs font-black text-white/85 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_20px_rgba(0,0,0,0.28)] hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
           title="長押し・ドラッグで並び替え"
         >
           並び替え
         </button>
 
         <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-black">
+          <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-black text-black shadow-[0_8px_18px_rgba(0,0,0,0.24)]">
             {product.tag || "みかん"}
           </span>
 
           <span
             className={
               product.stock_status === "販売中"
-                ? "rounded-full bg-green-400 px-3 py-1 text-xs font-black text-black"
-                : "rounded-full bg-red-400 px-3 py-1 text-xs font-black text-black"
+                ? "rounded-full bg-green-300 px-3 py-1 text-xs font-black text-black shadow-[0_8px_18px_rgba(0,0,0,0.24)]"
+                : "rounded-full bg-red-400 px-3 py-1 text-xs font-black text-black shadow-[0_8px_18px_rgba(0,0,0,0.24)]"
             }
           >
             {product.stock_status}
           </span>
         </div>
 
-        <h4 className="absolute left-4 right-4 bottom-4 text-lg font-black text-white drop-shadow">
+        <h4 className="absolute bottom-4 left-4 right-4 text-lg font-black text-white drop-shadow">
           {product.name}
         </h4>
       </div>
 
       <div className="p-5">
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <p className="text-xs text-white/40">5kg</p>
             <p className="mt-1 font-black text-yellow-100">
               {formatPrice(product.price_5kg)}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <p className="text-xs text-white/40">10kg</p>
             <p className="mt-1 font-black text-yellow-100">
               {formatPrice(product.price_10kg)}
@@ -278,7 +281,7 @@ function SortableProductCard({
           </div>
         </div>
 
-        <p className="text-sm text-white/55 line-clamp-2 min-h-[42px]">
+        <p className="min-h-[42px] text-sm leading-6 text-white/58 line-clamp-2">
           {product.description || "説明文は未設定です。"}
         </p>
 
@@ -286,7 +289,7 @@ function SortableProductCard({
           <button
             onClick={() => onEdit(product)}
             disabled={disabled}
-            className="rounded-2xl bg-white text-black px-4 py-3 text-sm font-black hover:bg-yellow-100 disabled:opacity-50"
+            className="rounded-2xl bg-gradient-to-r from-white to-yellow-100 px-4 py-3 text-sm font-black text-black shadow-[0_12px_24px_rgba(0,0,0,0.25)] transition hover:brightness-105 active:translate-y-[2px] disabled:opacity-50"
           >
             編集
           </button>
@@ -294,7 +297,7 @@ function SortableProductCard({
           <button
             onClick={() => onHide(product)}
             disabled={disabled}
-            className="rounded-2xl border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-100 hover:bg-red-500/20 disabled:opacity-50"
+            className="rounded-2xl border border-red-300/20 bg-red-500/12 px-4 py-3 text-sm font-bold text-red-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_22px_rgba(0,0,0,0.18)] transition hover:bg-red-500/20 active:translate-y-[2px] disabled:opacity-50"
           >
             削除
           </button>
@@ -303,7 +306,7 @@ function SortableProductCard({
         <button
           onClick={() => onRemoveImage(product)}
           disabled={disabled || !product.image_url}
-          className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/60 hover:bg-white/10 disabled:opacity-35"
+          className="mt-3 w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-bold text-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:bg-white/10 active:translate-y-[2px] disabled:opacity-35"
         >
           画像だけ外す
         </button>
@@ -724,15 +727,16 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#090b0f] text-white">
+    <main className="min-h-screen bg-[#05070a] text-white">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(245,180,50,0.22),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(20,160,120,0.16),transparent_30%),linear-gradient(135deg,#07090d_0%,#10141d_45%,#050608_100%)]" />
-        <div className="absolute inset-0 opacity-[0.08] bg-[linear-gradient(90deg,white_1px,transparent_1px),linear-gradient(0deg,white_1px,transparent_1px)] bg-[size:42px_42px]" />
-        <div className="absolute left-0 top-0 h-full w-[420px] bg-gradient-to-r from-yellow-500/10 to-transparent blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_8%,rgba(250,204,21,0.20),transparent_32%),radial-gradient(circle_at_84%_18%,rgba(34,197,94,0.14),transparent_30%),radial-gradient(circle_at_50%_84%,rgba(59,130,246,0.11),transparent_34%),linear-gradient(135deg,#05070a_0%,#101827_46%,#020304_100%)]" />
+        <div className="absolute inset-0 opacity-[0.10] bg-[linear-gradient(90deg,white_1px,transparent_1px),linear-gradient(0deg,white_1px,transparent_1px)] bg-[size:38px_38px]" />
+        <div className="absolute left-[-180px] top-[-120px] h-[460px] w-[460px] rounded-full bg-yellow-400/10 blur-3xl" />
+        <div className="absolute right-[-220px] top-[160px] h-[520px] w-[520px] rounded-full bg-green-400/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 flex min-h-screen">
-        <aside className="hidden lg:flex w-72 shrink-0 flex-col border-r border-white/10 bg-black/35 backdrop-blur-xl">
+        <aside className="hidden lg:flex w-72 shrink-0 flex-col border-r border-white/10 bg-black/45 backdrop-blur-2xl shadow-[8px_0_40px_rgba(0,0,0,0.34)]">
           <div className="px-7 py-7 border-b border-white/10">
             <p className="text-xs tracking-[0.35em] text-yellow-300/80">
               MIKAN AGENT
@@ -746,87 +750,170 @@ export default function AdminProductsPage() {
           <nav className="flex-1 px-4 py-6 space-y-2">
             <a
               href="/admin/orders"
-              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
+              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white transition shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
               注文管理
             </a>
+
             <a
               href="/admin/products"
-              className="block rounded-2xl px-4 py-3 text-sm font-bold bg-gradient-to-r from-yellow-400/20 to-green-400/10 text-yellow-100 border border-yellow-300/20"
+              className="block rounded-2xl px-4 py-3 text-sm font-bold bg-gradient-to-r from-yellow-400/22 to-green-400/12 text-yellow-100 border border-yellow-300/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_14px_26px_rgba(0,0,0,0.28)]"
             >
               商品管理
             </a>
+
             <a
               href="/admin/banners"
-              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
+              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white transition shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
               ホームバナー管理
             </a>
+
             <a
               href="/products"
-              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
+              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white transition shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
               お客様商品ページ
             </a>
           </nav>
 
           <div className="px-6 py-6 border-t border-white/10">
-            <p className="text-xs text-white/40 leading-relaxed">
+            <p className="text-xs text-white/42 leading-6">
               商品の販売状態・価格・説明・画像・並び順をここから編集できます。
             </p>
           </div>
         </aside>
 
-        <section className="flex-1 px-5 sm:px-8 lg:px-10 py-8">
-          <header
-  className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5 mb-8 rounded-[2rem] border border-lime-300/30 backdrop-blur-2xl px-5 sm:px-6 py-6"
-  style={{
-    background:
-      "linear-gradient(135deg, rgba(190,242,100,0.16), rgba(80,120,35,0.24), rgba(5,12,8,0.72))",
-    boxShadow: "0 0 45px rgba(190,242,100,0.14)",
-  }}
->
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-yellow-300/20 bg-yellow-400/10 px-4 py-2 text-xs text-yellow-100 mb-4">
-                <span className="h-2 w-2 rounded-full bg-yellow-300 shadow-[0_0_18px_rgba(250,204,21,0.9)]" />
-                PRODUCT COMMAND CENTER
+        <section className="flex-1 px-3 sm:px-8 lg:px-10 py-4 sm:py-8">
+          <div className="lg:hidden mb-4 rounded-[1.4rem] border border-white/10 bg-black/35 p-3 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_40px_rgba(0,0,0,0.28)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] tracking-[0.22em] text-yellow-200/70">
+                  PRODUCT
+                </p>
+                <p className="mt-1 text-sm font-black text-white">
+                  商品管理
+                </p>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-                商品管理システム
-              </h2>
-              <p className="mt-3 text-white/55 text-sm sm:text-base">
-                商品画像はトリミング可能。商品カードは長押し・ドラッグで並び替えできます。
-              </p>
+              <a
+                href="/"
+                className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-[11px] font-bold text-white/70 active:translate-y-[2px]"
+              >
+                ホーム
+              </a>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <div className="rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-xl px-5 py-4 min-w-[150px]">
-                <p className="text-xs text-white/45">表示中の商品</p>
-                <p className="text-2xl font-black text-yellow-200 mt-1">
-                  {totalActive}
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <a
+                href="/admin/orders"
+                className="rounded-xl border border-white/10 bg-white/[0.06] px-2 py-3 text-center text-[11px] font-black text-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:translate-y-[2px]"
+              >
+                注文管理
+              </a>
+
+              <a
+                href="/admin/banners"
+                className="rounded-xl border border-yellow-300/20 bg-yellow-400/12 px-2 py-3 text-center text-[11px] font-black text-yellow-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:translate-y-[2px]"
+              >
+                バナー管理
+              </a>
+
+              <a
+                href="/products"
+                className="rounded-xl border border-green-300/20 bg-green-400/10 px-2 py-3 text-center text-[11px] font-black text-green-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:translate-y-[2px]"
+              >
+                商品ページ
+              </a>
+            </div>
+          </div>
+
+          <header
+            className="relative mb-5 sm:mb-8 overflow-hidden rounded-[1.6rem] sm:rounded-[2rem] border border-lime-300/25 backdrop-blur-2xl px-4 sm:px-6 py-5 sm:py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(0,0,0,0.70),0_24px_60px_rgba(0,0,0,0.38)]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(190,242,100,0.16), rgba(80,120,35,0.22), rgba(5,12,8,0.74))",
+            }}
+          >
+            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-yellow-300/90 via-green-300/45 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-px bg-white/25" />
+
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-yellow-300/20 bg-yellow-400/10 px-4 py-2 text-xs text-yellow-100 mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]">
+                  <span className="h-2 w-2 rounded-full bg-yellow-300 shadow-[0_0_18px_rgba(250,204,21,0.9)]" />
+                  PRODUCT COMMAND CENTER
+                </div>
+
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
+                  商品管理システム
+                </h2>
+
+                <p className="mt-3 text-white/58 text-xs sm:text-base leading-6">
+                  商品画像はトリミング可能。商品カードは長押し・ドラッグで並び替えできます。
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-green-300/20 bg-green-400/[0.08] backdrop-blur-xl px-5 py-4 min-w-[150px]">
-                <p className="text-xs text-white/45">販売中</p>
-                <p className="text-2xl font-black text-green-200 mt-1">
-                  {totalOnSale}
-                </p>
-              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-black/28 backdrop-blur-xl px-3 sm:px-5 py-4 min-w-0 sm:min-w-[150px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_32px_rgba(0,0,0,0.24)]">
+                  <p className="text-[10px] sm:text-xs text-white/45">
+                    表示中
+                  </p>
+                  <p className="text-xl sm:text-2xl font-black text-yellow-200 mt-1">
+                    {totalActive}
+                  </p>
+                </div>
 
-              <div className="rounded-3xl border border-red-300/20 bg-red-400/[0.08] backdrop-blur-xl px-5 py-4 min-w-[150px]">
-                <p className="text-xs text-white/45">売り切れ</p>
-                <p className="text-2xl font-black text-red-200 mt-1">
-                  {totalSoldOut}
-                </p>
+                <div className="rounded-2xl sm:rounded-3xl border border-green-300/20 bg-green-400/[0.08] backdrop-blur-xl px-3 sm:px-5 py-4 min-w-0 sm:min-w-[150px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_32px_rgba(0,0,0,0.24)]">
+                  <p className="text-[10px] sm:text-xs text-white/45">
+                    販売中
+                  </p>
+                  <p className="text-xl sm:text-2xl font-black text-green-200 mt-1">
+                    {totalOnSale}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl sm:rounded-3xl border border-red-300/20 bg-red-400/[0.08] backdrop-blur-xl px-3 sm:px-5 py-4 min-w-0 sm:min-w-[150px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_32px_rgba(0,0,0,0.24)]">
+                  <p className="text-[10px] sm:text-xs text-white/45">
+                    売切れ
+                  </p>
+                  <p className="text-xl sm:text-2xl font-black text-red-200 mt-1">
+                    {totalSoldOut}
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <div className="hidden lg:flex mt-5 flex-wrap gap-3">
+              <a
+                href="/admin/orders"
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-bold text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_22px_rgba(0,0,0,0.20)] transition hover:bg-white/10 active:translate-y-[2px]"
+              >
+                注文管理へ
+              </a>
+
+              <a
+                href="/admin/banners"
+                className="rounded-2xl border border-yellow-300/20 bg-yellow-400/12 px-4 py-3 text-sm font-black text-yellow-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_22px_rgba(0,0,0,0.20)] transition hover:bg-yellow-400/20 active:translate-y-[2px]"
+              >
+                ホームバナー管理へ
+              </a>
+
+              <a
+                href="/products"
+                className="rounded-2xl border border-green-300/20 bg-green-400/10 px-4 py-3 text-sm font-bold text-green-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_22px_rgba(0,0,0,0.20)] transition hover:bg-green-400/20 active:translate-y-[2px]"
+              >
+                お客様商品ページへ
+              </a>
             </div>
           </header>
 
-          <div className="grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-6 items-start">
-            <section className="rounded-[2rem] border border-white/10 bg-white/[0.07] backdrop-blur-2xl shadow-2xl overflow-hidden">
-              <div className="px-6 py-5 border-b border-white/10 bg-gradient-to-r from-yellow-400/15 to-transparent">
+          <div className="grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-5 sm:gap-6 items-start">
+            <section className="relative overflow-hidden rounded-[1.6rem] sm:rounded-[2rem] border border-white/10 bg-[#0b1114]/90 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(0,0,0,0.70),0_24px_55px_rgba(0,0,0,0.38)]">
+              <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
+              <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-yellow-300/80 via-green-300/40 to-transparent" />
+
+              <div className="px-5 sm:px-6 py-5 border-b border-white/10 bg-gradient-to-r from-yellow-400/15 to-transparent">
                 <p className="text-xs tracking-[0.25em] text-yellow-200/80">
                   PRODUCT FORM
                 </p>
@@ -835,9 +922,9 @@ export default function AdminProductsPage() {
                 </h3>
               </div>
 
-              <div className="p-6 space-y-5">
+              <div className="p-5 sm:p-6 space-y-5">
                 {message && (
-                  <div className="rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-4 py-3 text-sm text-yellow-100">
+                  <div className="rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-4 py-3 text-sm text-yellow-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_24px_rgba(0,0,0,0.20)]">
                     {message}
                   </div>
                 )}
@@ -853,15 +940,13 @@ export default function AdminProductsPage() {
                   }}
                 />
 
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="w-full rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-4 py-3 text-sm font-black text-yellow-100 hover:bg-yellow-300/15"
-                  >
-                    新規商品を入力する
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="w-full rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-4 py-3 text-sm font-black text-yellow-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_20px_rgba(0,0,0,0.18)] transition hover:bg-yellow-300/15 active:translate-y-[2px]"
+                >
+                  新規商品を入力する
+                </button>
 
                 <div>
                   <label className="block text-xs text-white/55 mb-2">
@@ -873,7 +958,7 @@ export default function AdminProductsPage() {
                       setForm({ ...form, name: e.target.value })
                     }
                     placeholder="例：香りとさっぱり感を楽しむ"
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                    className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                   />
                 </div>
 
@@ -888,7 +973,7 @@ export default function AdminProductsPage() {
                         setForm({ ...form, tag: e.target.value })
                       }
                       placeholder="みかん / 文旦"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                      className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     />
                   </div>
 
@@ -901,7 +986,7 @@ export default function AdminProductsPage() {
                       onChange={(e) =>
                         setForm({ ...form, unit_label: e.target.value })
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                      className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     >
                       <option className="bg-[#111]" value="箱">
                         箱
@@ -921,9 +1006,9 @@ export default function AdminProductsPage() {
                     商品画像
                   </label>
 
-                  <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="rounded-[1.5rem] border border-white/10 bg-black/28 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_28px_rgba(0,0,0,0.22)]">
                     {form.image_url ? (
-                      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-[0_12px_24px_rgba(0,0,0,0.25)]">
                         <img
                           src={form.image_url}
                           alt=""
@@ -931,7 +1016,7 @@ export default function AdminProductsPage() {
                         />
                       </div>
                     ) : (
-                      <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/30 text-sm text-white/35">
+                      <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/35 text-sm text-white/35">
                         画像未設定
                       </div>
                     )}
@@ -940,7 +1025,7 @@ export default function AdminProductsPage() {
                       <button
                         type="button"
                         onClick={openFilePicker}
-                        className="rounded-2xl bg-gradient-to-r from-yellow-300 to-yellow-500 px-4 py-3 text-sm font-black text-black hover:brightness-110"
+                        className="rounded-2xl bg-gradient-to-r from-yellow-300 to-yellow-500 px-4 py-3 text-sm font-black text-black shadow-[0_14px_26px_rgba(250,204,21,0.18)] transition hover:brightness-110 active:translate-y-[2px]"
                       >
                         画像を選んでトリミング
                       </button>
@@ -953,7 +1038,7 @@ export default function AdminProductsPage() {
                             "画像を外しました。最後に商品を保存してください。"
                           );
                         }}
-                        className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/70 hover:bg-white/10"
+                        className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-bold text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:bg-white/10 active:translate-y-[2px]"
                       >
                         画像を外す
                       </button>
@@ -965,7 +1050,7 @@ export default function AdminProductsPage() {
                         setForm({ ...form, image_url: e.target.value })
                       }
                       placeholder="画像URLを直接貼ることもできます"
-                      className="mt-3 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-xs outline-none focus:border-yellow-300/60"
+                      className="mt-3 w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-xs outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     />
 
                     <p className="mt-2 text-xs leading-5 text-white/35">
@@ -988,7 +1073,7 @@ export default function AdminProductsPage() {
                         })
                       }
                       placeholder="2500"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                      className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     />
                   </div>
 
@@ -1005,7 +1090,7 @@ export default function AdminProductsPage() {
                         })
                       }
                       placeholder="4000"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                      className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     />
                   </div>
                 </div>
@@ -1020,7 +1105,7 @@ export default function AdminProductsPage() {
                       onChange={(e) =>
                         setForm({ ...form, stock_status: e.target.value })
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                      className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     >
                       <option className="bg-[#111]" value="販売中">
                         販売中
@@ -1044,7 +1129,7 @@ export default function AdminProductsPage() {
                         })
                       }
                       placeholder="1"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                      className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                     />
                   </div>
                 </div>
@@ -1060,7 +1145,7 @@ export default function AdminProductsPage() {
                     }
                     rows={4}
                     placeholder="商品の特徴や味を入力"
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                    className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                   />
                 </div>
 
@@ -1075,11 +1160,11 @@ export default function AdminProductsPage() {
                     }
                     rows={3}
                     placeholder="配送、重量、個数などの注意書き"
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-yellow-300/60"
+                    className="w-full rounded-2xl border border-white/10 bg-black/42 px-4 py-3 text-sm outline-none shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)] focus:border-yellow-300/60"
                   />
                 </div>
 
-                <label className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+                <label className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                   <span>
                     <span className="block text-sm font-bold">サイトに表示</span>
                     <span className="block text-xs text-white/45 mt-1">
@@ -1100,7 +1185,7 @@ export default function AdminProductsPage() {
                   <button
                     onClick={saveProduct}
                     disabled={saving || uploadingImage || sorting}
-                    className="rounded-2xl bg-gradient-to-r from-yellow-300 to-yellow-500 px-5 py-4 text-sm font-black text-black shadow-[0_0_35px_rgba(250,204,21,0.25)] hover:brightness-110 disabled:opacity-50"
+                    className="rounded-2xl bg-gradient-to-r from-yellow-300 to-yellow-500 px-5 py-4 text-sm font-black text-black shadow-[0_18px_36px_rgba(250,204,21,0.23)] transition hover:brightness-110 active:translate-y-[2px] disabled:opacity-50"
                   >
                     {saving
                       ? "保存中..."
@@ -1112,7 +1197,7 @@ export default function AdminProductsPage() {
                   <button
                     onClick={resetForm}
                     disabled={saving || uploadingImage || sorting}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-bold text-white/75 hover:bg-white/10 disabled:opacity-50"
+                    className="rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-4 text-sm font-bold text-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_24px_rgba(0,0,0,0.16)] transition hover:bg-white/10 active:translate-y-[2px] disabled:opacity-50"
                   >
                     リセット
                   </button>
@@ -1121,21 +1206,23 @@ export default function AdminProductsPage() {
             </section>
 
             <section className="space-y-5">
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.07] backdrop-blur-2xl shadow-2xl overflow-hidden">
-                <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between gap-4">
+              <div className="relative overflow-hidden rounded-[1.6rem] sm:rounded-[2rem] border border-white/10 bg-[#0b1114]/90 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(0,0,0,0.70),0_24px_55px_rgba(0,0,0,0.38)]">
+                <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
+
+                <div className="px-5 sm:px-6 py-5 border-b border-white/10 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs tracking-[0.25em] text-green-200/80">
                       PRODUCT LIST
                     </p>
                     <h3 className="mt-2 text-xl font-black">登録商品一覧</h3>
-                    <p className="mt-2 text-xs text-white/40">
+                    <p className="mt-2 text-xs text-white/40 leading-5">
                       PCは「並び替え」をドラッグ。iPhoneは「並び替え」を長押しして動かします。
                     </p>
                   </div>
 
                   <button
                     onClick={loadProducts}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/70 hover:bg-white/10"
+                    className="shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-bold text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_20px_rgba(0,0,0,0.18)] transition hover:bg-white/10 active:translate-y-[2px]"
                   >
                     再読み込み
                   </button>
@@ -1143,11 +1230,11 @@ export default function AdminProductsPage() {
 
                 <div className="p-4 sm:p-6">
                   {loading ? (
-                    <div className="rounded-3xl border border-white/10 bg-black/20 px-6 py-10 text-center text-white/50">
+                    <div className="rounded-3xl border border-white/10 bg-black/25 px-6 py-12 text-center text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                       読み込み中...
                     </div>
                   ) : activeProducts.length === 0 ? (
-                    <div className="rounded-3xl border border-white/10 bg-black/20 px-6 py-10 text-center text-white/50">
+                    <div className="rounded-3xl border border-white/10 bg-black/25 px-6 py-12 text-center text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                       表示中の商品はありません。
                     </div>
                   ) : (
@@ -1179,8 +1266,10 @@ export default function AdminProductsPage() {
               </div>
 
               {hiddenProducts.length > 0 && (
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6">
-                  <h3 className="text-sm font-black text-white/70 mb-4">
+                <div className="relative overflow-hidden rounded-[1.6rem] sm:rounded-[2rem] border border-white/10 bg-[#0b1114]/70 backdrop-blur-2xl p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_44px_rgba(0,0,0,0.30)]">
+                  <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
+
+                  <h3 className="text-sm font-black text-white/75 mb-4">
                     削除済み・非表示の商品
                   </h3>
 
@@ -1188,10 +1277,10 @@ export default function AdminProductsPage() {
                     {hiddenProducts.map((product) => (
                       <div
                         key={product.id}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                       >
                         <div>
-                          <p className="font-bold text-white/70">
+                          <p className="font-bold text-white/75">
                             {product.name}
                           </p>
                           <p className="text-xs text-white/35 mt-1">
@@ -1203,7 +1292,7 @@ export default function AdminProductsPage() {
                           <button
                             onClick={() => editProduct(product)}
                             disabled={saving || sorting}
-                            className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/60 hover:bg-white/10 disabled:opacity-50"
+                            className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 hover:bg-white/10 disabled:opacity-50"
                           >
                             再編集
                           </button>
@@ -1227,8 +1316,8 @@ export default function AdminProductsPage() {
       </div>
 
       {cropModalOpen && imageSrc && (
-        <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex flex-col">
-          <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-white/10">
+        <div className="fixed inset-0 z-[999] bg-black/92 backdrop-blur-sm flex flex-col">
+          <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-white/10 bg-[#090b0f]">
             <div>
               <p className="text-xs tracking-[0.25em] text-yellow-200/80">
                 IMAGE CROP
@@ -1268,6 +1357,7 @@ export default function AdminProductsPage() {
               <label className="block text-xs text-white/50 mb-2">
                 拡大・縮小
               </label>
+
               <input
                 type="range"
                 min={1}
@@ -1295,7 +1385,7 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={uploadCroppedImage}
                   disabled={uploadingImage}
-                  className="rounded-2xl bg-gradient-to-r from-yellow-300 to-yellow-500 px-5 py-4 text-sm font-black text-black disabled:opacity-50"
+                  className="rounded-2xl bg-gradient-to-r from-yellow-300 to-yellow-500 px-5 py-4 text-sm font-black text-black shadow-[0_14px_28px_rgba(250,204,21,0.22)] disabled:opacity-50"
                 >
                   {uploadingImage ? "アップロード中..." : "この画像で決定"}
                 </button>

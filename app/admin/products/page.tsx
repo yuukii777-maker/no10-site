@@ -757,6 +757,12 @@ export default function AdminProductsPage() {
               商品管理
             </a>
             <a
+              href="/admin/banners"
+              className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
+            >
+              ホームバナー管理
+            </a>
+            <a
               href="/products"
               className="block rounded-2xl px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
             >

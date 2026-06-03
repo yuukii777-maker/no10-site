@@ -38,6 +38,15 @@ const nextConfig = {
     deviceSizes: [360, 414, 640, 768, 1024, 1280, 1536, 1920],
     imageSizes: [64, 96, 128, 256, 320, 480, 640, 750, 828, 1080, 1200, 1920],
     minimumCacheTTL: ONE_YEAR,
+
+    // ✅ Supabase Storage の画像表示を許可
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ijwzowoqkeuisyuupzxz.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
   },
 
   // ✔ 静的アセットの強力キャッシュ

@@ -147,9 +147,10 @@ export default function Home() {
   } as const;
 
   /* ===========================
-     スライダー制御（内容変更なし）
+     スライダー制御
+     管理画面 /admin/banners から変更できる
   ============================ */
-  const sliderImages = [
+  const fallbackSliderImages = [
     {
       src: "/mikan/bnr_shipping_campaign.png?v=20260120a",
       caption: "山川の100円みかんを箱に詰めました。",
@@ -158,10 +159,56 @@ export default function Home() {
       src: "/mikan/bnr_open_special.png?v=20260120a",
       caption: "みかん購入で豪華なおまけ付き!!",
     },
-    { src: "/mikan/bnr_oseibo.png?v=20260120a", caption: "二種の支払い方法" },
+    {
+      src: "/mikan/bnr_oseibo.png?v=20260120a",
+      caption: "二種の支払い方法",
+    },
   ];
+
+  const [sliderImages, setSliderImages] = useState(fallbackSliderImages);
   const [index, setIndex] = useState(0);
 
+  useEffect(() => {
+    const loadHomeBanners = async () => {
+      try {
+        const res = await fetch("/api/home-banners", {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) return;
+
+        if (!Array.isArray(data.banners) || data.banners.length === 0) return;
+
+        const nextImages = data.banners
+          .filter((banner: any) => banner.image_url && banner.caption)
+          .sort((a: any, b: any) => Number(a.slot) - Number(b.slot))
+          .map((banner: any) => {
+            const imageUrl = String(banner.image_url);
+            const version = banner.updated_at
+              ? new Date(banner.updated_at).getTime()
+              : Date.now();
+
+            return {
+              src: imageUrl.includes("?")
+                ? `${imageUrl}&v=${version}`
+                : `${imageUrl}?v=${version}`,
+              caption: String(banner.caption),
+            };
+          });
+
+        if (nextImages.length > 0) {
+          setSliderImages(nextImages);
+          setIndex(0);
+        }
+      } catch (error) {
+        console.error("HOME_BANNERS_LOAD_ERROR", error);
+      }
+    };
+
+    loadHomeBanners();
+  }, []);
   // ーーー 修正①: タイマー多重起動ガード（既存） ーーー
   const sliderTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => {

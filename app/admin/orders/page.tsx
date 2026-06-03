@@ -842,7 +842,7 @@ export default function AdminOrdersPage() {
           <div className="lg:hidden mb-3 flex items-center justify-between gap-3">
             <div className="rounded-lg border border-yellow-300/20 bg-black/45 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_22px_rgba(0,0,0,0.22)]">
               <p className="text-[10px] tracking-[0.18em] text-yellow-200/70">
-                ORDER
+                オーダー状況
               </p>
               <p className="mt-1 text-[11px] text-white/55">
                 通常 {counts.active} / ordered {counts.ordered} / PAID{" "}
@@ -854,7 +854,7 @@ export default function AdminOrdersPage() {
               href="/admin/login"
               className="rounded-lg border border-red-300/20 bg-red-500/10 px-3 py-2 text-[11px] font-black text-red-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_22px_rgba(0,0,0,0.20)] active:translate-y-[2px]"
             >
-              ログイン画面
+              ログアウト
             </a>
           </div>
 
@@ -872,7 +872,7 @@ export default function AdminOrdersPage() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-md border border-yellow-300/20 bg-yellow-400/10 px-3 py-2 text-[11px] sm:text-xs text-yellow-100 mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                   <span className="h-2 w-2 rounded-full bg-yellow-300 shadow-[0_0_18px_rgba(250,204,21,0.9)]" />
-                  ORDER CONTROL SYSTEM
+                  オーダー　システム
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
@@ -923,7 +923,7 @@ export default function AdminOrdersPage() {
             >
               <div>
                 <p className="text-[11px] tracking-[0.22em] text-yellow-200/75">
-                  OPERATION GUIDE
+                  Manual
                 </p>
                 <p className="mt-1 text-sm font-black text-white">
                   処理手順

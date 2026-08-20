@@ -119,7 +119,7 @@ export default function Home() {
     LOGO_TOP_SM: "31%",
     LOGO_TOP_MD: "29.5%",
 
-    BUTTON_TOP_SP: "47%",
+    BUTTON_TOP_SP: "52%",
     BUTTON_TOP_SM: "71.5%",
     BUTTON_TOP_MD: "45.5%",
   } as const;
@@ -141,7 +141,7 @@ export default function Home() {
     LOGO_SM: 430,
     LOGO_MD: 590,
 
-    BUTTON_SP: 450,
+    BUTTON_SP: 380,
     BUTTON_SM: 420,
     BUTTON_MD: 520,
   } as const;
@@ -524,7 +524,11 @@ export default function Home() {
                   width={1280}
                   height={520}
                   priority
-                  style={{ width: `${HERO_SIZE.BUTTON_SP}px`, maxWidth: "none", height: "auto" }}
+                  style={{
+                    width: `${HERO_SIZE.BUTTON_SP}px`,
+                    maxWidth: "none",
+                    height: "auto",
+                  }}
                   className="hero-buy-image"
                 />
               </button>
@@ -694,7 +698,7 @@ export default function Home() {
           .hero-branch-bottomLayer {
             transform-origin: center bottom;
           }
-                      .hero-branch-img-top,
+               .hero-branch-img-top,
           .hero-branch-img-bottom {
             pointer-events: none;
             user-select: none;
@@ -1091,10 +1095,10 @@ export default function Home() {
             100% { opacity: 0; transform: translate3d(92px,78px,0) scale(1.22); }
           }
           @keyframes burst7 {
-  0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-  18%  { opacity: 1; }
-  100% { opacity: 0; transform: translate3d(0px,-110px,0) scale(1.3); }
-}
+            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            18%  { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(0px,-110px,0) scale(1.3); }
+          }
           @keyframes burst8 {
             0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
             18%  { opacity: 1; }
@@ -1381,4 +1385,4 @@ function GalleryItem({
       </div>
     </div>
   );
-}
+}       

@@ -119,7 +119,7 @@ export default function Home() {
     LOGO_TOP_SM: "31%",
     LOGO_TOP_MD: "29.5%",
 
-    BUTTON_TOP_SP: "44%",
+    BUTTON_TOP_SP: "40%",
     BUTTON_TOP_SM: "71.5%",
     BUTTON_TOP_MD: "45.5%",
   } as const;

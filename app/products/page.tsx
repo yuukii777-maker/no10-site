@@ -357,8 +357,7 @@ function ProductCard({
 
     return list;
   }, [product.price_5kg, product.price_10kg]);
-
-  const [selectedKey, setSelectedKey] = useState<"5kg" | "10kg">(
+    const [selectedKey, setSelectedKey] = useState<"5kg" | "10kg">(
     options[0]?.key || "5kg"
   );
   const [qty, setQty] = useState(1);
@@ -637,8 +636,6 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      <SaleNoticeCard />
-
       <section id="products" className="mt-10 scroll-mt-28">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -684,6 +681,8 @@ export default function ProductsPage() {
           </div>
         )}
       </section>
+
+      <SaleNoticeCard />
 
       <GradeGuideAccordion />
 

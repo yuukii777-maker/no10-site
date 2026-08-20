@@ -119,7 +119,7 @@ export default function Home() {
     LOGO_TOP_SM: "31%",
     LOGO_TOP_MD: "29.5%",
 
-    BUTTON_TOP_SP: "50%",
+    BUTTON_TOP_SP: "47%",
     BUTTON_TOP_SM: "71.5%",
     BUTTON_TOP_MD: "45.5%",
   } as const;
@@ -141,7 +141,7 @@ export default function Home() {
     LOGO_SM: 430,
     LOGO_MD: 590,
 
-    BUTTON_SP: 350,
+    BUTTON_SP: 450,
     BUTTON_SM: 420,
     BUTTON_MD: 520,
   } as const;
@@ -1092,7 +1092,7 @@ export default function Home() {
             100% { opacity: 0; transform: translate3d(92px,78px,0) scale(1.22); }
           }
           @keyframes burst7 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
+            0%   { opacity: 0; transform: translate3d(0px,-110px,0) scale(1.3); }
             18%  { opacity: 1; }
             100% { opacity: 0; transform: translate3d(0px,-110px,0) scale(1.3); }
           }
@@ -1216,22 +1216,18 @@ export default function Home() {
             </summary>
 
             <div className="mt-4 rounded-xl bg-white/80 p-4 sm:p-5 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-              {`現在直売所にて
-ご用意している商品はこちらです。
+              {`現在直売所にて ご用意している商品はこちらです。  ━━━━━━━━━━━━━━━ 
 
-━━━━━━━━━━━━━━━
-🍊 みかん　南津海　100円
-🍊 みかん　南津海大容量　300円
-🍊 文旦（ぶんたん）　100円
+🍊 みかん　早味かん小玉　100円 
 
-━━━━━━━━━━━━━━━
+🍊 みかん　早味かん小玉大容量　　　　　300円 
 
-南津海について
-寒波から果実を守るため、11月頃に一つ一つ“サンテ（布）”を掛けて育てた手間ひま品。酸味×糖度のバランスが良い品種で、この時期にみかんを食べられるのも希少です。
-※種がある場合があります。
+━━━━━━━━━━━━━━━  
 
 
-よろしくお願いします🍊
+早味かん・・・極早生の時期に楽しめる、出始めのみかんです。色は青いですが、糖度が12度前後あり、 極早生みかんの中でも、特に甘いです。福岡県でしか栽培できない希少な品種です。よろしくお願いします🍊  
+
+
 
 🍊山口みかん農園🍊`}
             </div>
@@ -1386,4 +1382,4 @@ function GalleryItem({
       </div>
     </div>
   );
-}
+}            

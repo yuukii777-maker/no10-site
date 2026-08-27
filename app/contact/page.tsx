@@ -12,7 +12,7 @@ export default function ContactPage() {
   const faqs: FAQ[] = [
     {
       q: "本当に100円みかんなんですか？なぜこんなに安いのですか？",
-      a: "はい。山口農園の直売所では、実際に1袋100円で販売している家庭用みかんです。市場には流通しにくい“小玉”や“外皮に傷のあるもの”が中心ですが、味・中身（果肉）の品質は全く問題ありません。これらを箱詰めして全国へお届けしています。",
+      a: "はい。山口農園の直売所では、実際に1袋100円で販売している家庭用みかんがあります。市場には流通しにくい“小玉”や“外皮に傷のあるもの”が中心ですが、味・中身（果肉）の品質は全く問題ありません。",
     },
     {
       q: "どのような商品が届きますか？",
@@ -20,11 +20,11 @@ export default function ContactPage() {
     },
     {
       q: "内容量はどれくらいですか？",
-      a: "1箱あたり約5～10kgを目安にお届けします。1袋約600g換算で、約5kg(8袋)または、10kg(16袋)分相当となります。自然物のため多少前後する場合があります。",
+      a: "1箱あたり約5kgまたは10kgでお届けします。個数の目安は、5kgで約40個〜60個、10kgで約90個〜110個です。みかんの大きさによって個数は前後する場合があります。",
     },
     {
       q: "価格はいくらですか？追加料金はかかりますか？",
-      a: "価格は送料込みで【5kg 2,500円】、【10kg 3,500円】【5kg 2,500円】、【10kg 3,500円】です。文旦は【5kg 2,500円】、【10kg 4,000円】全国一律料金で、表示金額以外の追加費用は一切かかりません。",
+      a: "価格は品種や販売時期によって異なる場合があります。最新の価格については商品ページをご確認ください。商品ページに表示されている金額以外に追加料金が発生する場合は、注文確定前にご案内します。",
     },
     {
       q: "発送はいつ頃になりますか？",
@@ -73,7 +73,7 @@ export default function ContactPage() {
       </h1>
 
       <p className="text-center text-gray-600 mb-12 leading-relaxed">
-        山川100円みかんについて、<br className="sm:hidden" />
+        山口農園のみかんについて、<br className="sm:hidden" />
         ご購入前に多くいただくご質問をまとめました。
       </p>
 
@@ -85,7 +85,7 @@ export default function ContactPage() {
       </div>
 
       {/* 導線 */}
-      <div className="mt-16 flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="mt-16 flex justify-center">
         <Link
           href="/products"
           className="
@@ -96,18 +96,6 @@ export default function ContactPage() {
           "
         >
           商品一覧へ戻る →
-        </Link>
-
-        <Link
-          href="/order"
-          className="
-            border border-orange-400
-            text-orange-600 font-semibold
-            px-10 py-4 rounded-full
-            hover:bg-orange-50 transition text-center
-          "
-        >
-          今すぐ注文する
         </Link>
       </div>
     </main>

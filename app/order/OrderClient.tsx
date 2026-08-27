@@ -177,9 +177,7 @@ export default function OrderClient() {
         subtotal,
         buyer: { name, postal, prefecture, address, phone, email },
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
-        // ★ 到着希望（時間帯のみ）
         request_time: reqTime,
-        // ★ 支払い方法（代引き追加）
         payment_method: paymentMethod,
         cod_fee: codFee,
       };
@@ -196,7 +194,6 @@ export default function OrderClient() {
       setLoading(false);
     }
   };
-  /* ========================= */
 
   const fetchAddress = async (zip: string) => {
     if (!/^\d{7}$/.test(zip)) return;
@@ -232,16 +229,13 @@ export default function OrderClient() {
         phone,
         email,
         ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
-        // ★ 到着希望（時間帯のみ）
         request_time: reqTime,
-        // ★ 支払い方法（代引き追加）
         payment_method: paymentMethod,
         cod_fee: codFee,
       };
 
       await postToSupabaseOrder(payload);
 
-      // ★ 画面表示用に完了状態へ
       setSubmitted(true);
 
     } catch (e) {
@@ -305,7 +299,6 @@ export default function OrderClient() {
                 </div>
               </div>
 
-              {/* ★ 支払い方法（代引き追加） */}
               <div className="pt-2">
                 <label className="block text-sm mb-1 font-semibold">お支払い方法</label>
                 <select
@@ -322,40 +315,89 @@ export default function OrderClient() {
                   </p>
                 )}
               </div>
-              {/* ========================= */}
             </div>
           )}
         </section>
 
-        {/* お届け先（既存フォームをそのまま使用） */}
         {cartItems.length > 0 && (
           <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-8">
             <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
+
             <div className="grid sm:grid-cols-2 gap-4">
-              <input className="w-full border rounded-lg px-4 py-2" placeholder="お名前（必須）" value={name} onChange={(e) => setName(e.target.value)} />
-              <input className="w-full border rounded-lg px-4 py-2" placeholder="郵便番号（7桁・必須）" value={postal}
+              <input
+                className="w-full border rounded-lg px-4 py-2"
+                placeholder="お名前（必須）"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+
+              <input
+                className="w-full border rounded-lg px-4 py-2"
+                placeholder="郵便番号（7桁・必須）"
+                value={postal}
                 onChange={(e) => {
                   const v = e.target.value.replace(/\D/g, "");
                   setPostal(v);
                   if (v.length === 7) fetchAddress(v);
                 }}
               />
-              <select className="w-full border rounded-lg px-4 py-2" value={prefecture} onChange={(e) => setPrefecture(e.target.value)}>
+
+              <select
+                className="w-full border rounded-lg px-4 py-2"
+                value={prefecture}
+                onChange={(e) => setPrefecture(e.target.value)}
+              >
                 <option value="">都道府県を選択（必須）</option>
-                {PREFECTURES.map((p) => (<option key={p} value={p}>{p}</option>))}
+                {PREFECTURES.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
               </select>
-              <input className="w-full border rounded-lg px-4 py-2" placeholder="市区町村・番地（必須）" value={address} onChange={(e) => setAddress(e.target.value)} />
-              <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（任意）" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
+
+              <input
+                className="w-full border rounded-lg px-4 py-2"
+                placeholder="市区町村・番地（必須）"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+
+              <input
+                className="w-full border rounded-lg px-4 py-2"
+                placeholder="電話番号（任意）"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+
+              <input
+                className="w-full border rounded-lg px-4 py-2"
+                placeholder="メールアドレス（必須）"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
-            {/* ★ 到着希望（時間帯のみ） */}
+            {/* ★ 連絡先についての注意 */}
+            <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-relaxed text-gray-700">
+              <p>
+                ご注文内容の確認や発送に関するご連絡のため、
+                SMSまたはメールでご連絡させていただく場合があります。
+              </p>
+
+              <p className="mt-2">
+                携帯電話をお持ちの方は、SMSを受信できる携帯電話番号をご入力ください。
+                携帯電話をお持ちでない場合は、連絡可能なメールアドレスをご入力ください。
+              </p>
+
+              <p className="mt-2 font-semibold text-orange-700">
+                ※ ご連絡が取れない場合、注文確認や発送手続きを進められない場合があります。
+              </p>
+            </div>
+
             <DeliveryPicker
               valueSlot={reqTime}
               onChange={(s) => setReqTime(s)}
             />
 
-            <div className="mt-6 flex結-col sm:flex-row gap-3 justify-end">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
               <button
                 onClick={submitCartOrder}
                 disabled={loading}
@@ -363,6 +405,7 @@ export default function OrderClient() {
               >
                 {loading ? "送信中..." : "注文を確定する"}
               </button>
+
               <button
                 onClick={() => router.push("/products")}
                 className="px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50"
@@ -381,6 +424,7 @@ export default function OrderClient() {
     return (
       <main className="max-w-2xl mx-auto px-6 pt-40 pb-24 text-center text-[#333]">
         <h1 className="text-3xl font-bold mb-6">ご購入ありがとうございます</h1>
+
         <p className="text-lg leading-relaxed">
           詳細は、ご登録いただいたメールアドレス宛へのメッセージをご確認の上、<br />
           {paymentMethod === "cod" ? (
@@ -412,57 +456,120 @@ export default function OrderClient() {
 
       <h1 className="text-3xl font-bold text-center mb-8">ご購入手続き</h1>
 
-      {/* 注文内容 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mb-10">
         <h2 className="text-xl font-bold mb-4">注文内容</h2>
-        <p>商品：<strong>{product}</strong></p>
-        <p className="mt-2">規格：<strong>{size}</strong></p>
+
+        <p>
+          商品：<strong>{product}</strong>
+        </p>
+
+        <p className="mt-2">
+          規格：<strong>{size}</strong>
+        </p>
+
         <p className="text-2xl font-bold text-green-700 mt-4">
           商品代金：{(price + codFee).toLocaleString()}円
         </p>
+
         <p className="text-sm text-gray-600 mt-2">※ 送料込みです</p>
-        {/* ★ 支払い方法（代引き追加） */}
+
         <div className="mt-4">
-          <label className="block text-sm mb-1 font-semibold">お支払い方法</label>
+          <label className="block text-sm mb-1 font-semibold">
+            お支払い方法
+          </label>
+
           <select
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod((e.target.value as any) || "bank")}
+            onChange={(e) =>
+              setPaymentMethod((e.target.value as any) || "bank")
+            }
           >
             <option value="bank">銀行振込 / PayPay（事前払い）</option>
             <option value="cod">代金引換（＋300円）</option>
           </select>
+
           {paymentMethod === "cod" && (
             <p className="text-xs text-gray-600 mt-2">
               ※ 代引き手数料として {COD_FEE}円 が加算されます。
             </p>
           )}
         </div>
-        {/* ========================= */}
       </section>
 
-      {/* お届け先 */}
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
         <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
+
         <div className="space-y-4">
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="お名前（必須）" value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="郵便番号（7桁・必須）" value={postal}
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="お名前（必須）"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="郵便番号（7桁・必須）"
+            value={postal}
             onChange={(e) => {
               const v = e.target.value.replace(/\D/g, "");
               setPostal(v);
               if (v.length === 7) fetchAddress(v);
             }}
           />
-          <select className="w-full border rounded-lg px-4 py-2" value={prefecture} onChange={(e) => setPrefecture(e.target.value)}>
+
+          <select
+            className="w-full border rounded-lg px-4 py-2"
+            value={prefecture}
+            onChange={(e) => setPrefecture(e.target.value)}
+          >
             <option value="">都道府県を選択（必須）</option>
-            {PREFECTURES.map((p) => (<option key={p} value={p}>{p}</option>))}
+
+            {PREFECTURES.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
           </select>
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="市区町村・番地（必須）" value={address} onChange={(e) => setAddress(e.target.value)} />
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="電話番号（任意）" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <input className="w-full border rounded-lg px-4 py-2" placeholder="メールアドレス（必須）" value={email} onChange={(e) => setEmail(e.target.value)} />
+
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="市区町村・番地（必須）"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="電話番号（任意）"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+
+          <input
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="メールアドレス（必須）"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
 
-        {/* ★ 到着希望（時間帯のみ） */}
+        {/* ★ 連絡先についての注意 */}
+        <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-relaxed text-gray-700">
+          <p>
+            ご注文内容の確認や発送に関するご連絡のため、
+            SMSまたはメールでご連絡させていただく場合があります。
+          </p>
+
+          <p className="mt-2">
+            携帯電話をお持ちの方は、SMSを受信できる携帯電話番号をご入力ください。
+            携帯電話をお持ちでない場合は、連絡可能なメールアドレスをご入力ください。
+          </p>
+
+          <p className="mt-2 font-semibold text-orange-700">
+            ※ ご連絡が取れない場合、注文確認や発送手続きを進められない場合があります。
+          </p>
+        </div>
+
         <DeliveryPicker
           valueSlot={reqTime}
           onChange={(s) => setReqTime(s)}
@@ -476,7 +583,10 @@ export default function OrderClient() {
           {loading ? "送信中..." : "注文を確定する"}
         </button>
 
-        <button onClick={() => router.back()} className="mt-4 w-full text-sm text-gray-500 underline">
+        <button
+          onClick={() => router.back()}
+          className="mt-4 w-full text-sm text-gray-500 underline"
+        >
           商品ページへ戻る
         </button>
       </section>

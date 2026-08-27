@@ -258,7 +258,7 @@ function GradeGuideAccordion() {
           <SectionBadge tone="green">選び方ガイド</SectionBadge>
 
           <h2 className="text-xl md:text-[1.85rem] font-black tracking-tight text-[#263426]">
-            A品・B品・C品の違い
+            青果と小玉の違い
           </h2>
         </div>
 
@@ -271,11 +271,13 @@ function GradeGuideAccordion() {
         </button>
       </div>
 
-      <p className="mt-3 text-sm sm:text-base text-gray-600 leading-6 sm:leading-7">
-        迷ったら<strong>「B品」</strong>、見た目重視なら
-        <strong>「A品」</strong>、価格重視なら
-        <strong>「C品」</strong>です。
-      </p>
+<p className="mt-3 text-sm sm:text-base text-gray-600 leading-6 sm:leading-7">
+  <strong>「青果」</strong>は見た目も整った一般的なサイズで、
+  ご家庭用はもちろん<strong>特に、贈答用にも選ばれています。</strong>
+  <br />
+  <strong>「小玉」</strong>はお手頃の価格で小さめで食べやすく、
+  ご家庭用や贈答用としても気軽に楽しみたい方におすすめです。
+</p>
 
       {open && (
         <div className="mt-6 grid gap-4 md:grid-cols-3">

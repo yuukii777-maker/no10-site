@@ -183,7 +183,7 @@ function SaleNoticeCard() {
           </div>
 
           <h2 className="mt-4 text-[1.45rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#2b3528]">
-            次回は「早味かん」から販売開始予定です
+            次回は「北原早生」を販売開始予定です
           </h2>
 
           {/* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_START] 告知終了後はここから削除 ===== */}
@@ -191,7 +191,7 @@ function SaleNoticeCard() {
             <div className="relative aspect-[16/9] w-full">
               <img
                 src={NEXT_SALE_COMPARISON_IMAGE}
-                alt="早味かんと日南の次回販売予定"
+                alt="北原早生は10月20日頃販売予定"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -199,37 +199,33 @@ function SaleNoticeCard() {
           {/* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_END] 告知終了後はここまで削除 ===== */}
 
           <p className="mt-4 text-sm sm:text-base leading-7 text-gray-700">
-            次回のみかん販売は、
-            <strong className="text-orange-700">早味かんから開始予定</strong>
-            です。おおむねの販売開始日は、
-            <strong className="text-green-700">2026年9月10日</strong>に
-            <strong>早味かん 青果・小玉</strong>を予定しています。その後、
-            <strong className="text-green-700">2026年9月20日</strong>に
-            <strong>日南の青果・小玉</strong>を追加予定です。
+            早味かん・日南の販売終了後は、
+            <strong className="text-orange-700">北原早生</strong>
+            を販売予定です。販売開始は、
+            <strong className="text-green-700">2026年10月20日頃</strong>
+            を予定しています。
           </p>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <p className="mt-3 text-sm sm:text-base leading-7 text-gray-700">
+            北原早生は、
+            <strong>
+              糖度が高く、コクのある甘みにほどよい酸味が加わった、絶妙なバランス
+            </strong>
+            が魅力のみかんです。
+          </p>
+
+          <div className="mt-5">
             <div className="rounded-2xl border border-orange-200 bg-white/92 px-4 py-4">
               <p className="text-xs font-bold tracking-[0.08em] text-orange-700">
-                販売予定①
+                販売予定
               </p>
-              <p className="mt-2 text-lg font-black text-[#2b3528]">
-                早味かん 青果・小玉
-              </p>
-              <p className="mt-1 text-sm text-gray-600">
-                2026年9月10日ごろ販売開始予定
-              </p>
-            </div>
 
-            <div className="rounded-2xl border border-green-200 bg-white/92 px-4 py-4">
-              <p className="text-xs font-bold tracking-[0.08em] text-green-700">
-                販売予定②
-              </p>
               <p className="mt-2 text-lg font-black text-[#2b3528]">
-                日南 青果・小玉
+                北原早生
               </p>
+
               <p className="mt-1 text-sm text-gray-600">
-                2026年9月20日ごろ追加予定
+                2026年10月20日頃販売開始予定
               </p>
             </div>
           </div>
@@ -244,13 +240,6 @@ function SaleNoticeCard() {
               className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(249,115,22,0.28)] transition hover:bg-orange-600"
             >
               お知らせを見る
-            </a>
-
-            <a
-              href="#products"
-              className="inline-flex items-center justify-center rounded-2xl border border-green-200 bg-white px-5 py-3 text-sm font-bold text-green-700 shadow-sm transition hover:bg-green-50"
-            >
-              現在の商品状況を見る
             </a>
           </div>
         </div>
@@ -267,6 +256,7 @@ function GradeGuideAccordion() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <SectionBadge tone="green">選び方ガイド</SectionBadge>
+
           <h2 className="text-xl md:text-[1.85rem] font-black tracking-tight text-[#263426]">
             A品・B品・C品の違い
           </h2>
@@ -291,9 +281,11 @@ function GradeGuideAccordion() {
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-3xl border border-green-200 bg-green-50/80 px-5 py-5 shadow-sm">
             <p className="text-lg font-black text-green-700">A品</p>
+
             <p className="mt-3 text-sm leading-6 text-gray-700">
               見た目がきれいで、贈答向けにも選びやすい品質です。
             </p>
+
             <ul className="mt-4 space-y-2 text-sm text-gray-700">
               <li>✓ 市場品質</li>
               <li>✓ 贈答向け</li>
@@ -302,9 +294,11 @@ function GradeGuideAccordion() {
 
           <div className="rounded-3xl border border-orange-200 bg-orange-50/80 px-5 py-5 shadow-sm">
             <p className="text-lg font-black text-orange-700">B品</p>
+
             <p className="mt-3 text-sm leading-6 text-gray-700">
               見た目にやや傷がありますが、中身はA品同等。家庭用で一番人気です。
             </p>
+
             <ul className="mt-4 space-y-2 text-sm text-gray-700">
               <li>✓ 中身はA品同等</li>
               <li>✓ 価格とのバランス◎</li>
@@ -313,9 +307,11 @@ function GradeGuideAccordion() {
 
           <div className="rounded-3xl border border-amber-200 bg-amber-50/80 px-5 py-5 shadow-sm">
             <p className="text-lg font-black text-amber-700">C品</p>
+
             <p className="mt-3 text-sm leading-6 text-gray-700">
               見た目に個体差があります。価格重視で選びたい方向けです。
             </p>
+
             <ul className="mt-4 space-y-2 text-sm text-gray-700">
               <li>✓ 最安クラス</li>
               <li>✓ お得重視向け</li>
@@ -337,7 +333,11 @@ function ProductCard({
   const router = useRouter();
 
   const options = useMemo(() => {
-    const list: { key: "5kg" | "10kg"; label: string; price: number }[] = [];
+    const list: {
+      key: "5kg" | "10kg";
+      label: string;
+      price: number;
+    }[] = [];
 
     if (product.price_5kg !== null && product.price_5kg !== undefined) {
       list.push({
@@ -357,9 +357,11 @@ function ProductCard({
 
     return list;
   }, [product.price_5kg, product.price_10kg]);
-    const [selectedKey, setSelectedKey] = useState<"5kg" | "10kg">(
+
+  const [selectedKey, setSelectedKey] = useState<"5kg" | "10kg">(
     options[0]?.key || "5kg"
   );
+
   const [qty, setQty] = useState(1);
 
   const selected =
@@ -398,6 +400,7 @@ function ProductCard({
 
           <div className="absolute left-4 top-4 flex flex-wrap gap-2">
             <SectionBadge tone="stone">{product.tag || "商品"}</SectionBadge>
+
             <SectionBadge tone={isOnSale ? "green" : "red"}>
               {product.stock_status || "販売中"}
             </SectionBadge>
@@ -415,6 +418,7 @@ function ProductCard({
         <div className="flex flex-wrap items-center gap-2">
           <SectionBadge tone="gold">送料込み</SectionBadge>
           <SectionBadge tone="green">農家直送</SectionBadge>
+
           <SectionBadge tone={isOnSale ? "green" : "red"}>
             {isOnSale ? "販売中" : "売り切れ"}
           </SectionBadge>
@@ -448,6 +452,7 @@ function ProductCard({
                   }`}
                 >
                   <span className="block">{option.label}</span>
+
                   <span className="block text-xs sm:text-sm">
                     {yen(option.price)}
                   </span>
@@ -483,9 +488,11 @@ function ProductCard({
           <div className="text-[1.7rem] sm:text-3xl font-black text-green-700">
             価格：{selected ? yen(selected.price) : "-"} / {unitLabel}
           </div>
+
           <div className="mt-2 text-base sm:text-lg font-bold text-green-700">
             小計：{yen(total)}
           </div>
+
           <p className="mt-3 text-xs text-gray-500">
             ※ すべて送料込み価格です。
           </p>
@@ -499,7 +506,9 @@ function ProductCard({
 
         {product.notice && (
           <div className="mt-4 rounded-3xl border border-yellow-200 bg-yellow-50 px-4 py-4">
-            <p className="text-sm text-gray-700 leading-6">{product.notice}</p>
+            <p className="text-sm text-gray-700 leading-6">
+              {product.notice}
+            </p>
           </div>
         )}
 
@@ -606,7 +615,9 @@ export default function ProductsPage() {
     <main className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-24 text-[#333]">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-[-120px] left-[-120px] h-[260px] w-[260px] rounded-full bg-green-200/20 blur-3xl" />
+
         <div className="absolute top-[260px] right-[-120px] h-[280px] w-[280px] rounded-full bg-orange-200/20 blur-3xl" />
+
         <div className="absolute bottom-[180px] left-[10%] h-[240px] w-[240px] rounded-full bg-emerald-200/10 blur-3xl" />
       </div>
 
@@ -630,8 +641,11 @@ export default function ProductsPage() {
           </h1>
 
           <p className="mt-3 max-w-3xl text-sm md:text-base leading-7 text-gray-700">
-            農家直送・<strong className="text-green-700">送料込み価格</strong>
-            でご注文いただけます。販売状況・価格・商品画像は管理画面の内容が反映されます。
+            <strong className="text-green-700">
+              2026年産みかんは9月5日（土）よりご注文受付開始。
+            </strong>
+            <br />
+            9月9日（水）より順次発送。早味かんは10月10日頃、日南は10月5日頃まで販売予定です。
           </p>
         </div>
       </section>

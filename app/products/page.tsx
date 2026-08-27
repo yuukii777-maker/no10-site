@@ -33,7 +33,7 @@ const CART_KEY = "yk_cart";
 const NEWS_LINK = "/news";
 
 /* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_START] 告知終了後はここから削除 ===== */
-const NEXT_SALE_COMPARISON_IMAGE = "/mikan/hayami-hinami-comparison.png";
+const NEXT_SALE_COMPARISON_IMAGE = "/mikan/kitagarawase-comparison1.png";
 /* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_END] 告知終了後はここまで削除 ===== */
 
 function readCart(): CartItem[] {

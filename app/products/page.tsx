@@ -33,8 +33,13 @@ const CART_KEY = "yk_cart";
 const NEWS_LINK = "/news";
 
 /* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_START] 告知終了後はここから削除 ===== */
-const NEXT_SALE_COMPARISON_IMAGE = "/mikan/kitagarawase-comparison1.png";
+const NEXT_SALE_COMPARISON_IMAGE =
+  "/mikan/kitagarawase-comparison1.png";
 /* ===== [TEMP_NEXT_SALE_COMPARISON_IMAGE_END] 告知終了後はここまで削除 ===== */
+
+/* 9月9日に実際に収穫・撮影した早味かんのPR画像 */
+const HAYAMIKAN_REAL_IMAGE =
+  "/mikan/hayamikan-real-20260909.png";
 
 function readCart(): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -55,8 +60,11 @@ function writeCart(items: CartItem[]) {
 
 function addToCart(item: CartItem) {
   const items = readCart();
+
   const index = items.findIndex(
-    (cartItem) => cartItem.id === item.id && cartItem.variant === item.variant
+    (cartItem) =>
+      cartItem.id === item.id &&
+      cartItem.variant === item.variant
   );
 
   if (index >= 0) {
@@ -69,11 +77,22 @@ function addToCart(item: CartItem) {
 }
 
 function cartCount() {
-  return readCart().reduce((sum, item) => sum + item.qty, 0);
+  return readCart().reduce(
+    (sum, item) => sum + item.qty,
+    0
+  );
 }
 
-function yen(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-";
+function yen(
+  value: number | null | undefined
+) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "-";
+  }
+
   return `${value.toLocaleString()}円`;
 }
 
@@ -81,16 +100,28 @@ function SectionBadge({
   tone = "green",
   children,
 }: {
-  tone?: "green" | "orange" | "amber" | "red" | "stone" | "gold";
+  tone?:
+    | "green"
+    | "orange"
+    | "amber"
+    | "red"
+    | "stone"
+    | "gold";
   children: React.ReactNode;
 }) {
   const tones = {
-    green: "bg-green-50 text-green-700 border-green-200",
-    orange: "bg-orange-50 text-orange-700 border-orange-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    red: "bg-red-50 text-red-700 border-red-200",
-    stone: "bg-stone-50 text-stone-700 border-stone-200",
-    gold: "bg-yellow-50 text-yellow-800 border-yellow-200",
+    green:
+      "bg-green-50 text-green-700 border-green-200",
+    orange:
+      "bg-orange-50 text-orange-700 border-orange-200",
+    amber:
+      "bg-amber-50 text-amber-700 border-amber-200",
+    red:
+      "bg-red-50 text-red-700 border-red-200",
+    stone:
+      "bg-stone-50 text-stone-700 border-stone-200",
+    gold:
+      "bg-yellow-50 text-yellow-800 border-yellow-200",
   } as const;
 
   return (
@@ -104,30 +135,56 @@ function SectionBadge({
 
 function CartTopButton() {
   const router = useRouter();
-  const [count, setCount] = useState(0);
+
+  const [count, setCount] =
+    useState(0);
 
   useEffect(() => {
-    const update = () => setCount(cartCount());
+    const update = () =>
+      setCount(cartCount());
 
     update();
-    window.addEventListener("storage", update);
-    window.addEventListener("yk-cart-updated", update as any);
+
+    window.addEventListener(
+      "storage",
+      update
+    );
+
+    window.addEventListener(
+      "yk-cart-updated",
+      update as any
+    );
 
     return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("yk-cart-updated", update as any);
+      window.removeEventListener(
+        "storage",
+        update
+      );
+
+      window.removeEventListener(
+        "yk-cart-updated",
+        update as any
+      );
     };
   }, []);
 
   return (
     <button
-      onClick={() => router.push("/order?cart=1")}
+      onClick={() =>
+        router.push("/order?cart=1")
+      }
       className="hidden sm:flex fixed z-50 right-5 top-20 sm:top-24 items-center gap-2 rounded-full px-4 py-2.5 bg-white/92 backdrop-blur border border-white/80 shadow-[0_10px_25px_rgba(0,0,0,0.12)] hover:bg-white transition"
       aria-label="カートへ"
       title="カートへ"
     >
-      <span className="text-lg">🛒</span>
-      <span className="text-sm font-bold text-gray-800">カート</span>
+      <span className="text-lg">
+        🛒
+      </span>
+
+      <span className="text-sm font-bold text-gray-800">
+        カート
+      </span>
+
       <span className="ml-1 inline-flex items-center justify-center min-w-[1.6rem] h-6 text-xs font-black rounded-full bg-green-600 text-white px-2">
         {count}
       </span>
@@ -137,38 +194,66 @@ function CartTopButton() {
 
 function CartWidget() {
   const router = useRouter();
-  const [count, setCount] = useState(0);
+
+  const [count, setCount] =
+    useState(0);
 
   useEffect(() => {
-    const update = () => setCount(cartCount());
+    const update = () =>
+      setCount(cartCount());
 
     update();
-    window.addEventListener("storage", update);
-    window.addEventListener("yk-cart-updated", update as any);
+
+    window.addEventListener(
+      "storage",
+      update
+    );
+
+    window.addEventListener(
+      "yk-cart-updated",
+      update as any
+    );
 
     return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("yk-cart-updated", update as any);
+      window.removeEventListener(
+        "storage",
+        update
+      );
+
+      window.removeEventListener(
+        "yk-cart-updated",
+        update as any
+      );
     };
   }, []);
 
-  if (count <= 0) return null;
+  if (count <= 0) {
+    return null;
+  }
 
   return (
     <button
-      onClick={() => router.push("/order?cart=1")}
+      onClick={() =>
+        router.push("/order?cart=1")
+      }
       className="fixed sm:hidden z-50 right-5 bottom-5 flex items-center gap-2 rounded-full px-5 py-3 bg-orange-500 text-white shadow-[0_16px_35px_rgba(249,115,22,0.35)] hover:bg-orange-600 transition"
       aria-label="カートを見る"
       title="カートを見る"
     >
-      🛒 カート <span className="ml-1 font-bold">{count}</span>
+      🛒 カート{" "}
+      <span className="ml-1 font-bold">
+        {count}
+      </span>
     </button>
   );
 }
 
 function SaleNoticeCard() {
   return (
-    <section id="next-sale" className="mt-5 scroll-mt-28">
+    <section
+      id="next-sale"
+      className="mt-5 scroll-mt-28"
+    >
       <div className="relative overflow-hidden rounded-[30px] border border-orange-200 bg-gradient-to-br from-[#fff8ef] via-white to-[#f4fff3] shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-14 right-0 h-40 w-40 rounded-full bg-orange-200/25 blur-3xl" />
@@ -177,9 +262,17 @@ function SaleNoticeCard() {
 
         <div className="relative px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center gap-2">
-            <SectionBadge tone="orange">次回販売のお知らせ</SectionBadge>
-            <SectionBadge tone="green">2026年秋予定</SectionBadge>
-            <SectionBadge tone="stone">メルマガ案内予定</SectionBadge>
+            <SectionBadge tone="orange">
+              次回販売のお知らせ
+            </SectionBadge>
+
+            <SectionBadge tone="green">
+              2026年秋予定
+            </SectionBadge>
+
+            <SectionBadge tone="stone">
+              メルマガ案内予定
+            </SectionBadge>
           </div>
 
           <h2 className="mt-4 text-[1.45rem] sm:text-[2rem] leading-tight font-black tracking-tight text-[#2b3528]">
@@ -190,7 +283,9 @@ function SaleNoticeCard() {
           <div className="mt-5 overflow-hidden rounded-[24px] border border-orange-100 bg-white shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
             <div className="relative aspect-[16/9] w-full">
               <img
-                src={NEXT_SALE_COMPARISON_IMAGE}
+                src={
+                  NEXT_SALE_COMPARISON_IMAGE
+                }
                 alt="北原早生は10月20日頃販売予定"
                 className="h-full w-full object-cover"
               />
@@ -200,9 +295,13 @@ function SaleNoticeCard() {
 
           <p className="mt-4 text-sm sm:text-base leading-7 text-gray-700">
             早味かん・日南の販売終了後は、
-            <strong className="text-orange-700">北原早生</strong>
+            <strong className="text-orange-700">
+              北原早生
+            </strong>
             を販売予定です。販売開始は、
-            <strong className="text-green-700">2026年10月20日頃</strong>
+            <strong className="text-green-700">
+              2026年10月20日頃
+            </strong>
             を予定しています。
           </p>
 
@@ -231,7 +330,8 @@ function SaleNoticeCard() {
           </div>
 
           <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm leading-6 text-gray-700">
-            ※ 事前予約をご希望の方は、お問合せよりご連絡ください。
+            ※
+            事前予約をご希望の方は、お問合せよりご連絡ください。
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -249,13 +349,16 @@ function SaleNoticeCard() {
 }
 
 function GradeGuideAccordion() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] =
+    useState(false);
 
   return (
     <section className="mt-10 rounded-[28px] border border-white/70 bg-white/90 backdrop-blur-md p-5 md:p-8 shadow-[0_14px_36px_rgba(0,0,0,0.07)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <SectionBadge tone="green">選び方ガイド</SectionBadge>
+          <SectionBadge tone="green">
+            選び方ガイド
+          </SectionBadge>
 
           <h2 className="text-xl md:text-[1.85rem] font-black tracking-tight text-[#263426]">
             青果と小玉の違い
@@ -264,59 +367,92 @@ function GradeGuideAccordion() {
 
         <button
           type="button"
-          onClick={() => setOpen((value) => !value)}
+          onClick={() =>
+            setOpen(
+              (value) => !value
+            )
+          }
           className="inline-flex items-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50"
         >
-          {open ? "閉じる" : "詳しく見る"}
+          {open
+            ? "閉じる"
+            : "詳しく見る"}
         </button>
       </div>
 
-<p className="mt-3 text-sm sm:text-base text-gray-600 leading-6 sm:leading-7">
-  <strong>「青果」</strong>は見た目も整った一般的なサイズで、
-  ご家庭用はもちろん<strong>特に、贈答用にも選ばれています。</strong>
-  <br />
-  <strong>「小玉」</strong>はお手頃の価格で小さめで食べやすく、
-  ご家庭用や贈答用としても気軽に楽しみたい方におすすめです。
-</p>
+      <p className="mt-3 text-sm sm:text-base text-gray-600 leading-6 sm:leading-7">
+        <strong>
+          「青果」
+        </strong>
+        は見た目も整った一般的なサイズで、
+        ご家庭用はもちろん
+        <strong>
+          特に、贈答用にも選ばれています。
+        </strong>
+        <br />
+        <strong>
+          「小玉」
+        </strong>
+        はお手頃の価格で小さめで食べやすく、
+        ご家庭用や贈答用としても気軽に楽しみたい方におすすめです。
+      </p>
 
       {open && (
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-3xl border border-green-200 bg-green-50/80 px-5 py-5 shadow-sm">
-            <p className="text-lg font-black text-green-700">A品</p>
+            <p className="text-lg font-black text-green-700">
+              A品
+            </p>
 
             <p className="mt-3 text-sm leading-6 text-gray-700">
               見た目がきれいで、贈答向けにも選びやすい品質です。
             </p>
 
             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-              <li>✓ 市場品質</li>
-              <li>✓ 贈答向け</li>
+              <li>
+                ✓ 市場品質
+              </li>
+              <li>
+                ✓ 贈答向け
+              </li>
             </ul>
           </div>
 
           <div className="rounded-3xl border border-orange-200 bg-orange-50/80 px-5 py-5 shadow-sm">
-            <p className="text-lg font-black text-orange-700">B品</p>
+            <p className="text-lg font-black text-orange-700">
+              B品
+            </p>
 
             <p className="mt-3 text-sm leading-6 text-gray-700">
               見た目にやや傷がありますが、中身はA品同等。家庭用で一番人気です。
             </p>
 
             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-              <li>✓ 中身はA品同等</li>
-              <li>✓ 価格とのバランス◎</li>
+              <li>
+                ✓ 中身はA品同等
+              </li>
+              <li>
+                ✓ 価格とのバランス◎
+              </li>
             </ul>
           </div>
 
           <div className="rounded-3xl border border-amber-200 bg-amber-50/80 px-5 py-5 shadow-sm">
-            <p className="text-lg font-black text-amber-700">C品</p>
+            <p className="text-lg font-black text-amber-700">
+              C品
+            </p>
 
             <p className="mt-3 text-sm leading-6 text-gray-700">
               見た目に個体差があります。価格重視で選びたい方向けです。
             </p>
 
             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-              <li>✓ 最安クラス</li>
-              <li>✓ お得重視向け</li>
+              <li>
+                ✓ 最安クラス
+              </li>
+              <li>
+                ✓ お得重視向け
+              </li>
             </ul>
           </div>
         </div>
@@ -325,7 +461,86 @@ function GradeGuideAccordion() {
   );
 }
 
-function ProductCard({
+function HayamikanRealPhotoAppeal() {
+  return (
+    <section
+      aria-label="早味かんの実物紹介"
+      className="mt-6 border-y border-green-100 py-5 sm:py-6"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <SectionBadge tone="green">
+          実際の商品
+        </SectionBadge>
+
+        <span className="text-[11px] sm:text-xs font-bold text-gray-500">
+          2026年9月9日撮影
+        </span>
+      </div>
+
+      <div className="mt-3">
+        <h3 className="text-[1.3rem] sm:text-[1.55rem] leading-tight font-black tracking-tight text-[#243224]">
+          見た目は青くても、中はみずみずしく。
+        </h3>
+
+        <p className="mt-2 text-sm sm:text-[15px] leading-7 text-gray-700">
+          写真は、9月9日に実際に収穫した早味かんを撮影したものです。
+          皮に青みが残る時期でも、中には鮮やかな果肉と果汁がしっかり詰まっています。
+        </p>
+      </div>
+
+      <figure className="mt-4">
+        <div className="overflow-hidden rounded-[22px] border border-stone-100 bg-[#f8faf5] shadow-[0_12px_30px_rgba(0,0,0,0.07)]">
+          <img
+            src={
+              HAYAMIKAN_REAL_IMAGE
+            }
+            alt="9月9日に実際に収穫した早味かんの箱詰めと輪切りの断面"
+            className="block h-auto w-full"
+            loading="lazy"
+          />
+        </div>
+
+        <figcaption className="mt-2 text-[11px] sm:text-xs leading-5 text-gray-500">
+          ※
+          掲載写真は2026年9月9日に撮影した実物です。
+          色づきや大きさには収穫時期・個体によって多少の違いがあります。
+        </figcaption>
+      </figure>
+
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="rounded-2xl bg-green-50/80 px-2 py-3 text-center">
+          <p className="text-[13px] sm:text-sm font-black text-green-700">
+            爽やか
+          </p>
+
+          <p className="mt-0.5 text-[10px] sm:text-xs font-bold text-gray-600">
+            な酸味
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-green-50/80 px-2 py-3 text-center">
+          <p className="text-[13px] sm:text-sm font-black text-green-700">
+            果汁
+          </p>
+
+          <p className="mt-0.5 text-[10px] sm:text-xs font-bold text-gray-600">
+            たっぷり
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-green-50/80 px-2 py-3 text-center">
+          <p className="text-[13px] sm:text-sm font-black text-green-700">
+            今だけ
+          </p>
+
+          <p className="mt-0.5 text-[10px] sm:text-xs font-bold text-gray-600">
+            の旬の味
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}function ProductCard({
   product,
   onToast,
 }: {
@@ -435,6 +650,8 @@ function ProductCard({
             {product.description}
           </p>
         )}
+
+        {product.name.includes("早味かん") && <HayamikanRealPhotoAppeal />}
 
         {options.length > 0 ? (
           <div className="mt-6">
@@ -644,10 +861,10 @@ export default function ProductsPage() {
 
           <p className="mt-3 max-w-3xl text-sm md:text-base leading-7 text-gray-700">
             <strong className="text-green-700">
-              2026年産みかんは9月5日（土）よりご注文受付開始。
+              9月8日より、今年のみかんの発送が始まりました
             </strong>
             <br />
-            9月9日（水）より順次発送。早味かんは10月10日頃、日南は10月5日頃まで販売予定です。
+            「ご注文受付中。お支払い確認後、順次発送いたします。」日南は10月5日頃まで販売予定です。
           </p>
         </div>
       </section>

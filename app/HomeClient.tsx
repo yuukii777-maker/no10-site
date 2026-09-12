@@ -13,10 +13,6 @@ const OpeningIntro = nextDynamic(() => import("../components/OpeningIntro"), {
   loading: () => null,
 });
 
-/* ★ 追加：ホームを毎回最新で配信（どちらか1つでOK。ここでは force-dynamic を採用） */
-export const dynamic = "force-dynamic";
-// export const revalidate = 0;
-
 /* ===========================
    フェードインアニメ（既存）
 =========================== */
@@ -52,6 +48,7 @@ export default function Home() {
   useEffect(() => setMounted(true), []);
 
   const INSTAGRAM_URL = "https://www.instagram.com/y_m.farm";
+  const LINE_URL = "https://lin.ee/ZNfgcnY";
 
   /* ===========================
      ★追加：iPhoneで残留した scroll lock を強制解除
@@ -209,8 +206,10 @@ export default function Home() {
 
     loadHomeBanners();
   }, []);
+
   // ーーー 修正①: タイマー多重起動ガード（既存） ーーー
   const sliderTimerRef = useRef<number | undefined>(undefined);
+
   useEffect(() => {
     const start = () => {
       if (sliderTimerRef.current) return;
@@ -218,12 +217,14 @@ export default function Home() {
         setIndex((prev) => (prev + 1) % sliderImages.length);
       }, 4000);
     };
+
     const stop = () => {
       if (sliderTimerRef.current) {
         clearInterval(sliderTimerRef.current);
         sliderTimerRef.current = undefined;
       }
     };
+
     const onVis = () => (document.hidden ? stop() : start());
     const onPageShow = () => start();
     const onPageHide = () => stop();
@@ -266,6 +267,7 @@ export default function Home() {
      ※既存コードは変更せず、CSS変数を流し込むだけ
   ============================ */
   const heroRootRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     const el = heroRootRef.current;
     if (!el) return;
@@ -291,6 +293,7 @@ export default function Home() {
 
       cx += (tx - cx) * 0.08;
       cy += (ty - cy) * 0.08;
+
       el.style.setProperty("--px", String(cx));
       el.style.setProperty("--py", String(cy));
 
@@ -318,12 +321,14 @@ export default function Home() {
       const r = el.getBoundingClientRect();
       const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
       const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+
       tx = clamp(nx, -1, 1);
       ty = clamp(ny, -1, 1);
     };
 
     const onOri = (e: DeviceOrientationEvent) => {
       if (typeof e.gamma !== "number" || typeof e.beta !== "number") return;
+
       tx = clamp(e.gamma / 25, -1, 1);
       ty = clamp(e.beta / 35, -1, 1);
     };
@@ -427,6 +432,7 @@ export default function Home() {
           <div className="absolute left-1/2 -translate-x-1/2 top-[7%] sm:top-[6.5%] md:top-[6%] hero-medal-float">
             <div className="hero-sun-wrap">
               <div className="hero-sun-glow" />
+
               <Image
                 src="/mikan/hero_sun.png"
                 alt="太陽"
@@ -457,7 +463,10 @@ export default function Home() {
                 width={1200}
                 height={420}
                 priority
-                style={{ width: `${HERO_SIZE.LOGO_SP}px`, height: "auto" }}
+                style={{
+                  width: `${HERO_SIZE.LOGO_SP}px`,
+                  height: "auto",
+                }}
                 className="hero-brand-image"
               />
             </div>
@@ -472,7 +481,10 @@ export default function Home() {
                 width={1200}
                 height={420}
                 priority
-                style={{ width: `${HERO_SIZE.LOGO_SM}px`, height: "auto" }}
+                style={{
+                  width: `${HERO_SIZE.LOGO_SM}px`,
+                  height: "auto",
+                }}
                 className="hero-brand-image"
               />
             </div>
@@ -487,7 +499,10 @@ export default function Home() {
                 width={1200}
                 height={420}
                 priority
-                style={{ width: `${HERO_SIZE.LOGO_MD}px`, height: "auto" }}
+                style={{
+                  width: `${HERO_SIZE.LOGO_MD}px`,
+                  height: "auto",
+                }}
                 className="hero-brand-image"
               />
             </div>
@@ -561,7 +576,10 @@ export default function Home() {
                   width={1280}
                   height={520}
                   priority
-                  style={{ width: `${HERO_SIZE.BUTTON_SM}px`, height: "auto" }}
+                  style={{
+                    width: `${HERO_SIZE.BUTTON_SM}px`,
+                    height: "auto",
+                  }}
                   className="hero-buy-image"
                 />
               </button>
@@ -596,7 +614,10 @@ export default function Home() {
                   width={1280}
                   height={520}
                   priority
-                  style={{ width: `${HERO_SIZE.BUTTON_MD}px`, height: "auto" }}
+                  style={{
+                    width: `${HERO_SIZE.BUTTON_MD}px`,
+                    height: "auto",
+                  }}
                   className="hero-buy-image"
                 />
               </button>
@@ -626,52 +647,156 @@ export default function Home() {
           }
 
           /* ★追加：レイヤー順を固定（iPhone Safari合成バグ対策） */
-          .hero-fixed-bg { z-index: 1; }
-          .hero-atmosphere { z-index: 2; }
-          .hero-particles { z-index: 3; }
-          .hero-sway { z-index: 10; }
-          .hero-kids-float { z-index: 12; }
-          .hero-medal-float { z-index: 13; }
-          .hero-brand-logo { z-index: 13; }
+          .hero-fixed-bg {
+            z-index: 1;
+          }
+
+          .hero-atmosphere {
+            z-index: 2;
+          }
+
+          .hero-particles {
+            z-index: 3;
+          }
+
+          .hero-sway {
+            z-index: 10;
+          }
+
+          .hero-kids-float {
+            z-index: 12;
+          }
+
+          .hero-medal-float {
+            z-index: 13;
+          }
+
+          .hero-brand-logo {
+            z-index: 13;
+          }
 
           /* ★追加：① 超微細パララックス（背景だけ） */
           .hero-fixed-bg :global(img) {
-            transform: translate3d(calc(var(--px) * -3px), calc(var(--py) * -2px), 0);
+            transform: translate3d(
+              calc(var(--px) * -3px),
+              calc(var(--py) * -2px),
+              0
+            );
           }
 
           /* ★追加：② 光粒子（微粒・ゆっくり） */
           .hero-particles {
             opacity: 0.55;
             background:
-              radial-gradient(circle at 18% 22%, rgba(255,255,255,0.55) 0 1px, rgba(255,255,255,0) 2px),
-              radial-gradient(circle at 72% 28%, rgba(255,255,255,0.45) 0 1px, rgba(255,255,255,0) 2px),
-              radial-gradient(circle at 34% 64%, rgba(255,255,255,0.40) 0 1px, rgba(255,255,255,0) 2px),
-              radial-gradient(circle at 82% 62%, rgba(255,255,255,0.35) 0 1px, rgba(255,255,255,0) 2px),
-              radial-gradient(circle at 52% 44%, rgba(255,255,255,0.35) 0 1px, rgba(255,255,255,0) 2px);
+              radial-gradient(
+                circle at 18% 22%,
+                rgba(255, 255, 255, 0.55) 0 1px,
+                rgba(255, 255, 255, 0) 2px
+              ),
+              radial-gradient(
+                circle at 72% 28%,
+                rgba(255, 255, 255, 0.45) 0 1px,
+                rgba(255, 255, 255, 0) 2px
+              ),
+              radial-gradient(
+                circle at 34% 64%,
+                rgba(255, 255, 255, 0.4) 0 1px,
+                rgba(255, 255, 255, 0) 2px
+              ),
+              radial-gradient(
+                circle at 82% 62%,
+                rgba(255, 255, 255, 0.35) 0 1px,
+                rgba(255, 255, 255, 0) 2px
+              ),
+              radial-gradient(
+                circle at 52% 44%,
+                rgba(255, 255, 255, 0.35) 0 1px,
+                rgba(255, 255, 255, 0) 2px
+              );
+
             filter: blur(0.15px);
             animation: particlesDrift 10.5s ease-in-out infinite;
-            transform: translate3d(0,0,0);
+            transform: translate3d(0, 0, 0);
           }
+
           @keyframes particlesDrift {
-            0%   { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 2px), 0); opacity: 0.45; }
-            50%  { transform: translate3d(calc(var(--px) * -2px), calc(var(--py) * -3px), 0); opacity: 0.65; }
-            100% { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 2px), 0); opacity: 0.45; }
+            0% {
+              transform: translate3d(
+                calc(var(--px) * 2px),
+                calc(var(--py) * 2px),
+                0
+              );
+              opacity: 0.45;
+            }
+
+            50% {
+              transform: translate3d(
+                calc(var(--px) * -2px),
+                calc(var(--py) * -3px),
+                0
+              );
+              opacity: 0.65;
+            }
+
+            100% {
+              transform: translate3d(
+                calc(var(--px) * 2px),
+                calc(var(--py) * 2px),
+                0
+              );
+              opacity: 0.45;
+            }
           }
 
           /* ★追加：③ 空気感（薄い朝もや・光の筋） */
           .hero-atmosphere {
             mix-blend-mode: screen;
             opacity: 0.35;
+
             background:
-              radial-gradient(1200px 700px at 50% 18%, rgba(255,255,255,0.28), rgba(255,255,255,0) 60%),
-              linear-gradient(120deg, rgba(255,236,190,0.0) 0%, rgba(255,236,190,0.22) 35%, rgba(255,236,190,0.0) 70%);
+              radial-gradient(
+                1200px 700px at 50% 18%,
+                rgba(255, 255, 255, 0.28),
+                rgba(255, 255, 255, 0) 60%
+              ),
+              linear-gradient(
+                120deg,
+                rgba(255, 236, 190, 0) 0%,
+                rgba(255, 236, 190, 0.22) 35%,
+                rgba(255, 236, 190, 0) 70%
+              );
+
             animation: hazeMove 9.5s ease-in-out infinite;
-            transform: translate3d(0,0,0);
+            transform: translate3d(0, 0, 0);
           }
+
           @keyframes hazeMove {
-            0%   { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
-            50%  { transform: translate3d(calc(var(--px) * -3px), calc(var(--py) * -2px), 0); opacity: 0.42; }
-            100% { transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0); opacity: 0.30; }
+            0% {
+              transform: translate3d(
+                calc(var(--px) * 3px),
+                calc(var(--py) * 2px),
+                0
+              );
+              opacity: 0.3;
+            }
+
+            50% {
+              transform: translate3d(
+                calc(var(--px) * -3px),
+                calc(var(--py) * -2px),
+                0
+              );
+              opacity: 0.42;
+            }
+
+            100% {
+              transform: translate3d(
+                calc(var(--px) * 3px),
+                calc(var(--py) * 2px),
+                0
+              );
+              opacity: 0.3;
+            }
           }
 
           .hero-sway {
@@ -698,7 +823,8 @@ export default function Home() {
           .hero-branch-bottomLayer {
             transform-origin: center bottom;
           }
-               .hero-branch-img-top,
+
+          .hero-branch-img-top,
           .hero-branch-img-bottom {
             pointer-events: none;
             user-select: none;
@@ -716,33 +842,82 @@ export default function Home() {
           }
 
           @keyframes heroSwayTop {
-            0%   { transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px), 0) rotate(-1.6deg) translateY(0px); }
-            50%  { transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px), 0) rotate(1.6deg) translateY(-1px); }
-            100% { transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px), 0) rotate(-1.6deg) translateY(0px); }
+            0% {
+              transform: translate3d(
+                  calc(var(--px) * 1px),
+                  calc(var(--py) * 0.7px),
+                  0
+                )
+                rotate(-1.6deg) translateY(0px);
+            }
+
+            50% {
+              transform: translate3d(
+                  calc(var(--px) * 1px),
+                  calc(var(--py) * 0.7px),
+                  0
+                )
+                rotate(1.6deg) translateY(-1px);
+            }
+
+            100% {
+              transform: translate3d(
+                  calc(var(--px) * 1px),
+                  calc(var(--py) * 0.7px),
+                  0
+                )
+                rotate(-1.6deg) translateY(0px);
+            }
           }
+
           @keyframes heroSwayBottom {
-            0%   { transform: translate3d(calc(var(--px) * 0.8px), calc(var(--py) * 0.55px), 0) rotate(-1.6deg) translateY(0px); }
-            50%  { transform: translate3d(calc(var(--px) * 0.8px), calc(var(--py) * 0.55px), 0) rotate(-1.6deg) translateY(-1px); }
-            100% { transform: translate3d(calc(var(--px) * 0.8px), calc(var(--py) * 0.55px), 0) rotate(-1.6deg) translateY(0px); }
+            0% {
+              transform: translate3d(
+                  calc(var(--px) * 0.8px),
+                  calc(var(--py) * 0.55px),
+                  0
+                )
+                rotate(-1.6deg) translateY(0px);
+            }
+
+            50% {
+              transform: translate3d(
+                  calc(var(--px) * 0.8px),
+                  calc(var(--py) * 0.55px),
+                  0
+                )
+                rotate(-1.6deg) translateY(-1px);
+            }
+
+            100% {
+              transform: translate3d(
+                  calc(var(--px) * 0.8px),
+                  calc(var(--py) * 0.55px),
+                  0
+                )
+                rotate(-1.6deg) translateY(0px);
+            }
           }
 
           .hero-branch-topLayer {
             top: -1%;
             height: 38%;
             animation: heroSwayTop 5.6s ease-in-out infinite;
+
             -webkit-mask-image: linear-gradient(
               to bottom,
-              rgba(0,0,0,1) 0%,
-              rgba(0,0,0,1) 62%,
-              rgba(0,0,0,0.72) 78%,
-              rgba(0,0,0,0) 100%
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 62%,
+              rgba(0, 0, 0, 0.72) 78%,
+              rgba(0, 0, 0, 0) 100%
             );
+
             mask-image: linear-gradient(
               to bottom,
-              rgba(0,0,0,1) 0%,
-              rgba(0,0,0,1) 62%,
-              rgba(0,0,0,0.72) 78%,
-              rgba(0,0,0,0) 100%
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 62%,
+              rgba(0, 0, 0, 0.72) 78%,
+              rgba(0, 0, 0, 0) 100%
             );
           }
 
@@ -750,19 +925,21 @@ export default function Home() {
             bottom: -1%;
             height: 24%;
             animation: heroSwayBottom 6.4s ease-in-out infinite;
+
             -webkit-mask-image: linear-gradient(
               to top,
-              rgba(0,0,0,1) 0%,
-              rgba(0,0,0,1) 58%,
-              rgba(0,0,0,0.72) 76%,
-              rgba(0,0,0,0) 100%
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 58%,
+              rgba(0, 0, 0, 0.72) 76%,
+              rgba(0, 0, 0, 0) 100%
             );
+
             mask-image: linear-gradient(
               to top,
-              rgba(0,0,0,1) 0%,
-              rgba(0,0,0,1) 58%,
-              rgba(0,0,0,0.72) 76%,
-              rgba(0,0,0,0) 100%
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 1) 58%,
+              rgba(0, 0, 0, 0.72) 76%,
+              rgba(0, 0, 0, 0) 100%
             );
           }
 
@@ -784,34 +961,82 @@ export default function Home() {
             }
 
             @keyframes heroSwayTopSP {
-              0%   { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
-              50%  { transform: translate3d(calc(var(--px) * 1.2px + 2px), calc(var(--py) * 0.8px), 0) rotate(1.6deg) translateY(-2px); }
-              100% { transform: translate3d(calc(var(--px) * 1.2px - 2px), calc(var(--py) * 0.8px), 0) rotate(-1.6deg) translateY(0px); }
+              0% {
+                transform: translate3d(
+                    calc(var(--px) * 1.2px - 2px),
+                    calc(var(--py) * 0.8px),
+                    0
+                  )
+                  rotate(-1.6deg) translateY(0px);
+              }
+
+              50% {
+                transform: translate3d(
+                    calc(var(--px) * 1.2px + 2px),
+                    calc(var(--py) * 0.8px),
+                    0
+                  )
+                  rotate(1.6deg) translateY(-2px);
+              }
+
+              100% {
+                transform: translate3d(
+                    calc(var(--px) * 1.2px - 2px),
+                    calc(var(--py) * 0.8px),
+                    0
+                  )
+                  rotate(-1.6deg) translateY(0px);
+              }
             }
 
             @keyframes heroSwayBottomSP {
-              0%   { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
-              50%  { transform: translate3d(calc(var(--px) * 1px + 2px), calc(var(--py) * 0.7px), 0) rotate(1.35deg) translateY(-2px); }
-              100% { transform: translate3d(calc(var(--px) * 1px - 2px), calc(var(--py) * 0.7px), 0) rotate(-1.35deg) translateY(0px); }
+              0% {
+                transform: translate3d(
+                    calc(var(--px) * 1px - 2px),
+                    calc(var(--py) * 0.7px),
+                    0
+                  )
+                  rotate(-1.35deg) translateY(0px);
+              }
+
+              50% {
+                transform: translate3d(
+                    calc(var(--px) * 1px + 2px),
+                    calc(var(--py) * 0.7px),
+                    0
+                  )
+                  rotate(1.35deg) translateY(-2px);
+              }
+
+              100% {
+                transform: translate3d(
+                    calc(var(--px) * 1px - 2px),
+                    calc(var(--py) * 0.7px),
+                    0
+                  )
+                  rotate(-1.35deg) translateY(0px);
+              }
             }
 
             .hero-branch-topLayer {
               top: -1%;
               height: 34%;
-              animation: heroSwayTopSP 5.0s ease-in-out infinite;
+              animation: heroSwayTopSP 5s ease-in-out infinite;
+
               -webkit-mask-image: linear-gradient(
                 to bottom,
-                rgba(0,0,0,1) 0%,
-                rgba(0,0,0,1) 64%,
-                rgba(0,0,0,0.72) 82%,
-                rgba(0,0,0,0) 100%
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 64%,
+                rgba(0, 0, 0, 0.72) 82%,
+                rgba(0, 0, 0, 0) 100%
               );
+
               mask-image: linear-gradient(
                 to bottom,
-                rgba(0,0,0,1) 0%,
-                rgba(0,0,0,1) 64%,
-                rgba(0,0,0,0.72) 82%,
-                rgba(0,0,0,0) 100%
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 64%,
+                rgba(0, 0, 0, 0.72) 82%,
+                rgba(0, 0, 0, 0) 100%
               );
             }
 
@@ -819,19 +1044,21 @@ export default function Home() {
               bottom: -1%;
               height: 21%;
               animation: heroSwayBottomSP 4.8s ease-in-out infinite;
+
               -webkit-mask-image: linear-gradient(
                 to top,
-                rgba(0,0,0,1) 0%,
-                rgba(0,0,0,1) 60%,
-                rgba(0,0,0,0.72) 80%,
-                rgba(0,0,0,0) 100%
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 60%,
+                rgba(0, 0, 0, 0.72) 80%,
+                rgba(0, 0, 0, 0) 100%
               );
+
               mask-image: linear-gradient(
                 to top,
-                rgba(0,0,0,1) 0%,
-                rgba(0,0,0,1) 60%,
-                rgba(0,0,0,0.72) 80%,
-                rgba(0,0,0,0) 100%
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 60%,
+                rgba(0, 0, 0, 0.72) 80%,
+                rgba(0, 0, 0, 0) 100%
               );
             }
 
@@ -839,19 +1066,21 @@ export default function Home() {
               bottom: -1%;
               height: 21%;
               animation: heroSwayBottomSP 6.1s ease-in-out infinite;
+
               -webkit-mask-image: linear-gradient(
                 to top,
-                rgba(0,0,0,1) 0%,
-                rgba(0,0,0,1) 60%,
-                rgba(0,0,0,0.72) 80%,
-                rgba(0,0,0,0) 100%
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 60%,
+                rgba(0, 0, 0, 0.72) 80%,
+                rgba(0, 0, 0, 0) 100%
               );
+
               mask-image: linear-gradient(
                 to top,
-                rgba(0,0,0,1) 0%,
-                rgba(0,0,0,1) 60%,
-                rgba(0,0,0,0.72) 80%,
-                rgba(0,0,0,0) 100%
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 60%,
+                rgba(0, 0, 0, 0.72) 80%,
+                rgba(0, 0, 0, 0) 100%
               );
             }
 
@@ -863,20 +1092,62 @@ export default function Home() {
           }
 
           @keyframes kidsFloat {
-            0%   { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px + 0px), 0); }
-            50%  { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px + -10px), 0); }
-            100% { transform: translate3d(calc(var(--px) * 2px), calc(var(--py) * 1.4px + 0px), 0); }
+            0% {
+              transform: translate3d(
+                calc(var(--px) * 2px),
+                calc(var(--py) * 1.4px + 0px),
+                0
+              );
+            }
+
+            50% {
+              transform: translate3d(
+                calc(var(--px) * 2px),
+                calc(var(--py) * 1.4px + -10px),
+                0
+              );
+            }
+
+            100% {
+              transform: translate3d(
+                calc(var(--px) * 2px),
+                calc(var(--py) * 1.4px + 0px),
+                0
+              );
+            }
           }
+
           .hero-kids-float {
             animation: kidsFloat 4.2s ease-in-out infinite;
             will-change: transform;
           }
 
           @keyframes medalFloat {
-            0%   { transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px + 0px), 0); }
-            50%  { transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px + -8px), 0); }
-            100% { transform: translate3d(calc(var(--px) * 1.6px), calc(var(--py) * 1.2px + 0px), 0); }
+            0% {
+              transform: translate3d(
+                calc(var(--px) * 1.6px),
+                calc(var(--py) * 1.2px + 0px),
+                0
+              );
+            }
+
+            50% {
+              transform: translate3d(
+                calc(var(--px) * 1.6px),
+                calc(var(--py) * 1.2px + -8px),
+                0
+              );
+            }
+
+            100% {
+              transform: translate3d(
+                calc(var(--px) * 1.6px),
+                calc(var(--py) * 1.2px + 0px),
+                0
+              );
+            }
           }
+
           .hero-medal-float {
             animation: medalFloat 3.6s ease-in-out infinite;
             will-change: transform;
@@ -886,23 +1157,27 @@ export default function Home() {
             position: relative;
             display: inline-block;
           }
+
           @keyframes sunGlowPulse {
             0% {
               opacity: 0.18;
               transform: translate(-50%, -50%) scale(0.92);
               filter: blur(8px);
             }
+
             50% {
               opacity: 0.55;
               transform: translate(-50%, -50%) scale(1.03);
               filter: blur(14px);
             }
+
             100% {
               opacity: 0.18;
               transform: translate(-50%, -50%) scale(0.92);
               filter: blur(8px);
             }
           }
+
           .hero-sun-glow {
             position: absolute;
             left: 50%;
@@ -911,12 +1186,14 @@ export default function Home() {
             height: 150%;
             transform: translate(-50%, -50%);
             border-radius: 9999px;
+
             background: radial-gradient(
               circle,
               rgba(255, 214, 90, 0.55) 0%,
               rgba(255, 214, 90, 0.22) 38%,
               rgba(255, 214, 90, 0) 70%
             );
+
             animation: sunGlowPulse 2.8s ease-in-out infinite;
             pointer-events: none;
           }
@@ -924,21 +1201,41 @@ export default function Home() {
           /* ★追加：ロゴは全体の揺れに合わせて少しだけ揺らす */
           @keyframes brandLogoFloat {
             0% {
-              transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px + 0px), 0) rotate(-0.28deg);
+              transform: translate3d(
+                  calc(var(--px) * 1px),
+                  calc(var(--py) * 0.7px + 0px),
+                  0
+                )
+                rotate(-0.28deg);
             }
+
             50% {
-              transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px + -4px), 0) rotate(0.28deg);
+              transform: translate3d(
+                  calc(var(--px) * 1px),
+                  calc(var(--py) * 0.7px + -4px),
+                  0
+                )
+                rotate(0.28deg);
             }
+
             100% {
-              transform: translate3d(calc(var(--px) * 1px), calc(var(--py) * 0.7px + 0px), 0) rotate(-0.28deg);
+              transform: translate3d(
+                  calc(var(--px) * 1px),
+                  calc(var(--py) * 0.7px + 0px),
+                  0
+                )
+                rotate(-0.28deg);
             }
           }
+
           .hero-brand-logo {
             animation: brandLogoFloat 4.8s ease-in-out infinite;
             will-change: transform;
           }
+
           .hero-brand-image {
             display: block;
+
             filter:
               drop-shadow(0 8px 20px rgba(0, 0, 0, 0.18))
               drop-shadow(0 0 10px rgba(255, 230, 140, 0.22));
@@ -967,7 +1264,14 @@ export default function Home() {
             height: 18%;
             transform: translateX(-50%);
             border-radius: 9999px;
-            background: radial-gradient(circle, rgba(239, 157, 20, 0.30) 0%, rgba(239, 157, 20, 0.12) 48%, rgba(239, 157, 20, 0) 78%);
+
+            background: radial-gradient(
+              circle,
+              rgba(239, 157, 20, 0.3) 0%,
+              rgba(239, 157, 20, 0.12) 48%,
+              rgba(239, 157, 20, 0) 78%
+            );
+
             filter: blur(10px);
             z-index: 0;
             pointer-events: none;
@@ -978,26 +1282,53 @@ export default function Home() {
             position: relative;
             z-index: 2;
             display: block;
-            filter: drop-shadow(0 16px 28px rgba(255, 170, 30, 0.18));
-            transition: transform 220ms ease, filter 220ms ease;
+
+            filter: drop-shadow(
+              0 16px 28px rgba(255, 170, 30, 0.18)
+            );
+
+            transition:
+              transform 220ms ease,
+              filter 220ms ease;
+
             user-select: none;
             -webkit-user-drag: none;
           }
 
           .hero-buy-button:hover .hero-buy-image {
             transform: scale(1.035);
-            filter: drop-shadow(0 18px 30px rgba(255, 170, 30, 0.26));
+
+            filter: drop-shadow(
+              0 18px 30px rgba(255, 170, 30, 0.26)
+            );
           }
 
           @keyframes buyButtonFloat {
             0% {
-              transform: translate3d(calc(var(--px) * 1.8px), calc(var(--py) * 1.2px + 0px), 0) rotate(-0.3deg);
+              transform: translate3d(
+                  calc(var(--px) * 1.8px),
+                  calc(var(--py) * 1.2px + 0px),
+                  0
+                )
+                rotate(-0.3deg);
             }
+
             50% {
-              transform: translate3d(calc(var(--px) * 1.8px), calc(var(--py) * 1.2px + -7px), 0) rotate(0.3deg);
+              transform: translate3d(
+                  calc(var(--px) * 1.8px),
+                  calc(var(--py) * 1.2px + -7px),
+                  0
+                )
+                rotate(0.3deg);
             }
+
             100% {
-              transform: translate3d(calc(var(--px) * 1.8px), calc(var(--py) * 1.2px + 0px), 0) rotate(-0.3deg);
+              transform: translate3d(
+                  calc(var(--px) * 1.8px),
+                  calc(var(--py) * 1.2px + 0px),
+                  0
+                )
+                rotate(-0.3deg);
             }
           }
 
@@ -1013,11 +1344,19 @@ export default function Home() {
             opacity: 0;
             pointer-events: none;
             z-index: 3;
+
             background:
-              radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95) 0 28%, rgba(255,230,170,0.9) 29% 55%, rgba(255,194,68,0.55) 56% 72%, rgba(255,194,68,0) 73% 100%);
+              radial-gradient(
+                circle at 35% 35%,
+                rgba(255, 255, 255, 0.95) 0 28%,
+                rgba(255, 230, 170, 0.9) 29% 55%,
+                rgba(255, 194, 68, 0.55) 56% 72%,
+                rgba(255, 194, 68, 0) 73% 100%
+              );
+
             box-shadow:
-              0 0 0 1px rgba(255,255,255,0.4) inset,
-              0 0 18px rgba(255,196,76,0.28);
+              0 0 0 1px rgba(255, 255, 255, 0.4) inset,
+              0 0 18px rgba(255, 196, 76, 0.28);
           }
 
           .hero-buy-button.is-popping {
@@ -1029,34 +1368,67 @@ export default function Home() {
           }
 
           .hero-buy-button.is-popping .hero-buy-image {
-            animation: bubblePopMain 520ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+            animation: bubblePopMain 520ms
+              cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
           }
 
-          .hero-buy-button.is-popping .hero-buy-burst-1 { animation: burst1 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-2 { animation: burst2 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-3 { animation: burst3 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-4 { animation: burst4 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-5 { animation: burst5 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-6 { animation: burst6 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-7 { animation: burst7 520ms ease-out forwards; }
-          .hero-buy-button.is-popping .hero-buy-burst-8 { animation: burst8 520ms ease-out forwards; }
+          .hero-buy-button.is-popping .hero-buy-burst-1 {
+            animation: burst1 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-2 {
+            animation: burst2 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-3 {
+            animation: burst3 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-4 {
+            animation: burst4 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-5 {
+            animation: burst5 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-6 {
+            animation: burst6 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-7 {
+            animation: burst7 520ms ease-out forwards;
+          }
+
+          .hero-buy-button.is-popping .hero-buy-burst-8 {
+            animation: burst8 520ms ease-out forwards;
+          }
 
           @keyframes bubblePopMain {
             0% {
               opacity: 1;
               transform: scale(1);
-              filter: drop-shadow(0 18px 30px rgba(255, 170, 30, 0.26));
+
+              filter: drop-shadow(
+                0 18px 30px rgba(255, 170, 30, 0.26)
+              );
             }
+
             22% {
               opacity: 1;
               transform: scale(1.08);
-              filter: drop-shadow(0 24px 36px rgba(255, 185, 60, 0.30));
+
+              filter: drop-shadow(
+                0 24px 36px rgba(255, 185, 60, 0.3)
+              );
             }
+
             58% {
               opacity: 0.92;
               transform: scale(0.78);
               filter: brightness(1.08) saturate(1.08) blur(0.6px);
             }
+
             100% {
               opacity: 0;
               transform: scale(0.22);
@@ -1065,89 +1437,306 @@ export default function Home() {
           }
 
           @keyframes burst1 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(-120px,-62px,0) scale(1.2); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(-120px, -62px, 0) scale(1.2);
+            }
           }
+
           @keyframes burst2 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(126px,-54px,0) scale(1.35); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(126px, -54px, 0) scale(1.35);
+            }
           }
+
           @keyframes burst3 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(-148px,8px,0) scale(1.05); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(-148px, 8px, 0) scale(1.05);
+            }
           }
+
           @keyframes burst4 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(156px,18px,0) scale(1.1); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(156px, 18px, 0) scale(1.1);
+            }
           }
+
           @keyframes burst5 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(-86px,82px,0) scale(1.15); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(-86px, 82px, 0) scale(1.15);
+            }
           }
+
           @keyframes burst6 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(92px,78px,0) scale(1.22); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(92px, 78px, 0) scale(1.22);
+            }
           }
+
           @keyframes burst7 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(0px,-110px,0) scale(1.3); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(0px, -110px, 0) scale(1.3);
+            }
           }
+
           @keyframes burst8 {
-            0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-            18%  { opacity: 1; }
-            100% { opacity: 0; transform: translate3d(0px,102px,0) scale(1.05); }
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 0, 0) scale(0.3);
+            }
+
+            18% {
+              opacity: 1;
+            }
+
+            100% {
+              opacity: 0;
+              transform: translate3d(0px, 102px, 0) scale(1.05);
+            }
           }
 
           @media (max-width: 640px) {
             @keyframes burst1 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(-82px,-44px,0) scale(1.05); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(-82px, -44px, 0) scale(1.05);
+              }
             }
+
             @keyframes burst2 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(86px,-38px,0) scale(1.12); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(86px, -38px, 0) scale(1.12);
+              }
             }
+
             @keyframes burst3 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(-98px,4px,0) scale(0.96); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(-98px, 4px, 0) scale(0.96);
+              }
             }
+
             @keyframes burst4 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(104px,12px,0) scale(1.0); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(104px, 12px, 0) scale(1);
+              }
             }
+
             @keyframes burst5 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(-60px,58px,0) scale(1.0); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(-60px, 58px, 0) scale(1);
+              }
             }
+
             @keyframes burst6 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(66px,54px,0) scale(1.06); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(66px, 54px, 0) scale(1.06);
+              }
             }
+
             @keyframes burst7 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(0px,-74px,0) scale(1.14); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(0px, -74px, 0) scale(1.14);
+              }
             }
+
             @keyframes burst8 {
-              0%   { opacity: 0; transform: translate3d(0,0,0) scale(0.3); }
-              18%  { opacity: 1; }
-              100% { opacity: 0; transform: translate3d(0px,68px,0) scale(0.96); }
+              0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(0.3);
+              }
+
+              18% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0;
+                transform: translate3d(0px, 68px, 0) scale(0.96);
+              }
             }
           }
         `}</style>
+      </section>
+
+      {/* ===========================
+          ★ SEO強化：山川みかん / 山口みかん農園
+          ※ 既存デザイン・既存ロジックは変更せず、この案内ブロックのみ追加
+      ============================ */}
+      <section
+        id="yamakawa-mikan"
+        aria-labelledby="yamakawa-mikan-title"
+        className="relative z-10 max-w-5xl mx-auto px-6 py-10 md:py-14"
+      >
+        <div className="rounded-2xl bg-white/70 backdrop-blur-sm shadow-md ring-1 ring-black/5 px-6 py-8 md:px-10 md:py-10 text-center">
+          <p className="text-sm font-semibold tracking-[0.12em] text-orange-600">
+            福岡県みやま市から農家直送
+          </p>
+
+          <h1
+            id="yamakawa-mikan-title"
+            className="mt-3 text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-[#36332e]"
+          >
+            山川みかん｜山口みかん農園
+          </h1>
+
+          <p className="mt-5 mx-auto max-w-3xl text-sm sm:text-base leading-7 sm:leading-8 text-gray-700">
+            山口みかん農園は、福岡県みやま市で山川みかんを育てるみかん農園です。
+            早味かん・日南・北原早生など、旬の時期に収穫したみかんを、
+            農家直送・産地直送で全国へお届けしています。
+          </p>
+
+          <p className="mt-3 mx-auto max-w-3xl text-sm sm:text-base leading-7 sm:leading-8 text-gray-700">
+            山川みかんの通販・お取り寄せをお探しの方へ、
+            畑から直接、旬のおいしさをお届けします。
+          </p>
+
+          <div className="mt-6 flex items-center justify-center">
+            <a
+              href="/products"
+              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+            >
+              山川みかんの商品を見る
+            </a>
+          </div>
+        </div>
       </section>
 
       <AboutTeaser />
@@ -1157,10 +1746,15 @@ export default function Home() {
         <div className="relative w-full overflow-hidden rounded-xl shadow-xl slider-container">
           <div
             className="slider-track"
-            style={{ transform: `translate3d(-${index * 100}%, 0, 0)` }}
+            style={{
+              transform: `translate3d(-${index * 100}%, 0, 0)`,
+            }}
           >
             {sliderImages.map((item, i) => (
-              <div key={i} className="slider-item relative h-[360px] sm:h-[850px]">
+              <div
+                key={i}
+                className="slider-item relative h-[360px] sm:h-[850px]"
+              >
                 <Image
                   src={item.src}
                   alt={item.caption}
@@ -1169,6 +1763,7 @@ export default function Home() {
                   priority={i === 0}
                   className="object-contain"
                 />
+
                 <div className="slider-caption">{item.caption}</div>
               </div>
             ))}
@@ -1177,7 +1772,10 @@ export default function Home() {
       </section>
 
       <section className="max-w-6xl mx-auto px-6 py-12 md:py-24">
-        <h2 className="text-3xl font-bold text-center">100円みかんの理由</h2>
+        <h2 className="text-3xl font-bold text-center">
+          100円みかんの理由
+        </h2>
+
         <div className="max-w-3xl mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 text-center text-gray-700">
           傷があっても味は抜群。安くて気軽に楽しんでほしい想いをそのまま箱に詰めました。
         </div>
@@ -1194,6 +1792,7 @@ export default function Home() {
                 priority
               />
             </div>
+
             <div className="relative w-full h-60 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-md">
               <Image
                 src="/mikan/reason_shop_2.jpg?v=20260226a"
@@ -1210,9 +1809,11 @@ export default function Home() {
               <span className="inline-flex items-center justify-center gap-2 text-[15px] font-semibold sm:text-base">
                 🍊 直売所の商品案内を見る
               </span>
+
               <span className="block text-xs text-gray-500 mt-1 group-open:hidden">
                 タップして開く
               </span>
+
               <span className="hidden group-open:block text-xs text-gray-500 mt-1">
                 もう一度タップで閉じる
               </span>
@@ -1245,21 +1846,60 @@ export default function Home() {
             </div>
           </details>
 
-          <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
-            <p className="text-lg font-semibold text-[#333]">📸 農園の日常をInstagramで発信中</p>
-            <p className="mt-2 text-sm text-gray-600">
-              収穫の様子や畑の風景など、山口みかん農園のリアルな日常を公開しています。
-            </p>
-            <p className="mt-1 text-sm font-medium text-orange-600">@y_m.farm</p>
+          {/* ===========================
+              ★ SNS / 公式LINE
+              Instagramの既存内容は維持し、公式LINEを追加
+          ============================ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Instagram */}
+            <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
+              <p className="text-lg font-semibold text-[#333]">
+                📸 農園の日常をInstagramで発信中
+              </p>
 
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-            >
-              Instagramを見る
-            </a>
+              <p className="mt-2 text-sm text-gray-600">
+                収穫の様子や畑の風景など、山口みかん農園のリアルな日常を公開しています。
+              </p>
+
+              <p className="mt-1 text-sm font-medium text-orange-600">
+                @y_m.farm
+              </p>
+
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="山口みかん農園のInstagramを見る"
+                className="mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+              >
+                Instagramを見る
+              </a>
+            </div>
+
+            {/* 公式LINE */}
+            <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
+              <p className="text-lg font-semibold text-[#333]">
+                💬 山口みかん農園 公式LINE
+              </p>
+
+              <p className="mt-2 text-sm text-gray-600">
+                販売情報や旬のみかんのお知らせなどを、公式LINEからご確認いただけます。
+              </p>
+
+              <p className="mt-1 text-sm font-medium text-[#06C755]">
+                友だち追加はこちら
+              </p>
+
+              <a
+                href={LINE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="山口みかん農園の公式LINEを友だち追加する"
+                className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#06C755] px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#06C755]"
+              >
+                公式LINEを友だち追加
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -1270,15 +1910,29 @@ export default function Home() {
             <span className="text-lg font-semibold">
               🍊 みかんのメリット＆デメリット
             </span>
+
             <span className="block text-sm text-gray-500 mt-1 group-open:hidden">
               タップして読む →
             </span>
           </summary>
+
           <div className="mt-4 space-y-2 text-sm text-gray-700 leading-relaxed">
-            <p>・手軽に食べれて、皮をお風呂に入れてリラックスできる。</p>
-            <p>・朝一番と深夜のエネルギー、水分不足を一個で解決。</p>
-            <p>・βカロテンで美肌効果あり。</p>
-            <p>・ビタミンとクエン酸で体の回復をサポート。</p>
+            <p>
+              ・手軽に食べれて、皮をお風呂に入れてリラックスできる。
+            </p>
+
+            <p>
+              ・朝一番と深夜のエネルギー、水分不足を一個で解決。
+            </p>
+
+            <p>
+              ・βカロテンで美肌効果あり。
+            </p>
+
+            <p>
+              ・ビタミンとクエン酸で体の回復をサポート。
+            </p>
+
             <p className="text-xs text-gray-500">
               ※ みかんは1日1〜2個を目安にお楽しみください。
               ４つ以上はお腹がゆるくなることがあります。
@@ -1298,11 +1952,13 @@ export default function Home() {
             title="訳ありみかん"
             text="甘さは本物。人気No.1。"
           />
+
           <GalleryItem
             src="/mikan/premium.png"
             title="正規品"
             text="贈答にも選ばれる品質。"
           />
+
           <GalleryItem
             src="/mikan/hand.png?v=20260226a"
             title="手作業収穫"
@@ -1316,6 +1972,7 @@ export default function Home() {
           position: relative;
           overflow: hidden;
         }
+
         .slider-track {
           display: flex;
           width: 100%;
@@ -1324,10 +1981,12 @@ export default function Home() {
           backface-visibility: hidden;
           transform: translate3d(0, 0, 0);
         }
+
         .slider-item {
           flex: 0 0 100%;
           position: relative;
         }
+
         .slider-item img {
           display: block;
           pointer-events: none;
@@ -1335,6 +1994,7 @@ export default function Home() {
           -webkit-user-drag: none;
           backface-visibility: hidden;
         }
+
         .slider-caption {
           position: absolute;
           left: 0;
@@ -1345,6 +2005,7 @@ export default function Home() {
           text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
           font-weight: 600;
         }
+
         @media (prefers-reduced-motion: reduce) {
           .slider-track {
             transition: none !important;
@@ -1368,8 +2029,12 @@ function GalleryItem({
   text: string;
 }) {
   const fade = useFadeIn();
+
   return (
-    <div ref={fade} className="opacity-0 translate-y-6 transition-all duration-700">
+    <div
+      ref={fade}
+      className="opacity-0 translate-y-6 transition-all duration-700"
+    >
       <div className="relative w-full h-56 rounded-xl overflow-hidden shadow-md">
         <Image
           src={src}
@@ -1379,10 +2044,16 @@ function GalleryItem({
           className="object-contain"
         />
       </div>
+
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 mt-4">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <p className="text-gray-600 text-sm mt-1">{text}</p>
+        <h3 className="text-lg font-semibold">
+          {title}
+        </h3>
+
+        <p className="text-gray-600 text-sm mt-1">
+          {text}
+        </p>
       </div>
     </div>
   );
-}       
+}

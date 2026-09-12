@@ -13,8 +13,9 @@ const GAS_ORDER_URL =
   process.env.GAS_ORDER_URL ||
   "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec";
 
-function isAdminLoggedIn() {
-  const session = cookies().get("admin_auth")?.value;
+async function isAdminLoggedIn() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("admin_auth")?.value;
   const sessionSecret = process.env.ADMIN_SESSION_SECRET;
 
   return !!sessionSecret && session === sessionSecret;
@@ -143,7 +144,7 @@ async function updateSpreadsheetStatus(order: any, status: string) {
 
 export async function GET() {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }
@@ -178,7 +179,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }

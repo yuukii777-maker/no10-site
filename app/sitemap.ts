@@ -1,46 +1,35 @@
 // app/sitemap.ts
+
 import type { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://yamaguchi-mikan.vercel.app";
-  const now = new Date();
+const BASE_URL = "https://yamaguchi-mikan.vercel.app";
 
+export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: `${baseUrl}`,
-      lastModified: now,
+      url: BASE_URL,
       changeFrequency: "daily",
-      priority: 1,
+      priority: 1.0,
     },
     {
-      url: `${baseUrl}/products`,
-      lastModified: now,
+      url: `${BASE_URL}/products`,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/about`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/news`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: now,
+      url: `${BASE_URL}/about`,
       changeFrequency: "monthly",
-      priority: 0.7,
+      priority: 0.8,
     },
     {
-      url: `${baseUrl}/order`,
-      lastModified: now,
+      url: `${BASE_URL}/news`,
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/contact`,
+      changeFrequency: "monthly",
+      priority: 0.6,
     },
   ];
 }

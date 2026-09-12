@@ -147,10 +147,14 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Supabase insert error:", error);
 
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        ok: true,
+        orderId: sheetResult.orderId,
+        sheet_order_id: sheetResult.orderId,
+        supabase_sync: false,
+        message:
+          "注文は受け付けました。管理画面への反映に失敗しましたが、スプレッドシートには保存されています。",
+      });
     }
 
     return NextResponse.json({

@@ -9,8 +9,9 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-function isAdminLoggedIn() {
-  const session = cookies().get("admin_auth")?.value;
+async function isAdminLoggedIn() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("admin_auth")?.value;
   const sessionSecret = process.env.ADMIN_SESSION_SECRET;
 
   return !!sessionSecret && session === sessionSecret;
@@ -50,7 +51,7 @@ function normalizeProductPayload(payload: any) {
 
 export async function GET() {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }
@@ -86,7 +87,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }
@@ -188,7 +189,7 @@ export async function PATCH(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }
@@ -284,7 +285,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    if (!isAdminLoggedIn()) {
+    if (!(await isAdminLoggedIn())) {
       return NextResponse.json(
         { ok: false, message: "ログインが必要です。" },
         { status: 401 }

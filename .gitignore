@@ -23,3 +23,4 @@ node_modules
 # ignore big archives
 *.zip
 site_review_*.zip
+.vercel

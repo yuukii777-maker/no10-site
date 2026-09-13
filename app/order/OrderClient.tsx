@@ -71,13 +71,22 @@ type CartItem = {
   qty: number;
   extra?: Record<string, any>;
 };
+
 const CART_KEY = "yk_cart";
+
 const readCart = (): CartItem[] => {
-  try { return JSON.parse((typeof window !== "undefined" && localStorage.getItem(CART_KEY)) || "[]"); }
-  catch { return []; }
+  try {
+    return JSON.parse(
+      (typeof window !== "undefined" && localStorage.getItem(CART_KEY)) || "[]"
+    );
+  } catch {
+    return [];
+  }
 };
+
 const writeCart = (items: CartItem[]) => {
   if (typeof window === "undefined") return;
+
   localStorage.setItem(CART_KEY, JSON.stringify(items));
   window.dispatchEvent(new Event("yk-cart-updated"));
 };
@@ -98,7 +107,10 @@ async function postToSupabaseOrder(payload: any): Promise<void> {
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new Error(data?.message || "Supabaseへの注文保存に失敗しました");
+
+    throw new Error(
+      data?.message || "Supabaseへの注文保存に失敗しました"
+    );
   }
 }
 /* ========================================================= */
@@ -107,9 +119,14 @@ export default function OrderClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const product = searchParams.get("product") || "商品名未設定";
-  const size = searchParams.get("size") || "5kg";
-  const price = Number(searchParams.get("price")) || 1500;
+  const product =
+    searchParams.get("product") || "商品名未設定";
+
+  const size =
+    searchParams.get("size") || "5kg";
+
+  const price =
+    Number(searchParams.get("price")) || 1500;
 
   const [name, setName] = useState("");
   const [postal, setPostal] = useState("");
@@ -121,97 +138,229 @@ export default function OrderClient() {
   const [loading, setLoading] = useState(false);
   const sentOnceRef = useRef(false);
 
+  // ★ 同一注文の再送時に重複登録を防ぐための注文固有ID
+  const clientOrderIdRef = useRef<string | null>(null);
+
+  function getClientOrderId() {
+    if (!clientOrderIdRef.current) {
+      clientOrderIdRef.current =
+        crypto.randomUUID();
+    }
+
+    return clientOrderIdRef.current;
+  }
+
   // ★ 送信完了フラグ
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] =
+    useState(false);
 
   /* =========================
      ★ 支払い方法（代引き追加）
   ========================= */
-  const [paymentMethod, setPaymentMethod] = useState<"bank" | "cod">("bank");
-  const codFee = paymentMethod === "cod" ? COD_FEE : 0;
+  const [paymentMethod, setPaymentMethod] =
+    useState<"bank" | "cod">("bank");
+
+  const codFee =
+    paymentMethod === "cod"
+      ? COD_FEE
+      : 0;
   /* ========================= */
 
   /* =========================
      ★ 到着希望（時間帯のみ）
   ========================= */
-  const [reqTime, setReqTime] = useState<string | null>(null);
+  const [reqTime, setReqTime] =
+    useState<string | null>(null);
   /* ========================= */
 
   /* =========================
      ★ カート会計の状態
   ========================= */
-  const cartMode = searchParams.get("cart") === "1";
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => readCart());
-  const subtotal = cartItems.reduce((s, it) => s + it.unitPrice * it.qty, 0);
+  const cartMode =
+    searchParams.get("cart") === "1";
+
+  const [cartItems, setCartItems] =
+    useState<CartItem[]>(() => readCart());
+
+  const subtotal =
+    cartItems.reduce(
+      (s, it) =>
+        s + it.unitPrice * it.qty,
+      0
+    );
 
   const inc = (i: number) => {
     if (!cartMode) return;
-    const next = [...cartItems]; next[i].qty++; setCartItems(next); writeCart(next);
+
+    const next = [...cartItems];
+
+    next[i].qty++;
+
+    setCartItems(next);
+    writeCart(next);
   };
+
   const dec = (i: number) => {
     if (!cartMode) return;
-    const next = [...cartItems]; next[i].qty = Math.max(1, next[i].qty - 1); setCartItems(next); writeCart(next);
+
+    const next = [...cartItems];
+
+    next[i].qty =
+      Math.max(1, next[i].qty - 1);
+
+    setCartItems(next);
+    writeCart(next);
   };
+
   const removeAt = (i: number) => {
     if (!cartMode) return;
-    const next = cartItems.filter((_, idx) => idx !== i); setCartItems(next); writeCart(next);
+
+    const next =
+      cartItems.filter(
+        (_, idx) => idx !== i
+      );
+
+    setCartItems(next);
+    writeCart(next);
   };
-  const clearCart = () => { if (!cartMode) return; setCartItems([]); writeCart([]); };
+
+  const clearCart = () => {
+    if (!cartMode) return;
+
+    setCartItems([]);
+    writeCart([]);
+  };
 
   const submitCartOrder = async () => {
-    if (cartItems.length === 0) { alert("カートが空です。"); return; }
-    if (!name || !postal || !prefecture || !address || !email) {
-      alert("必須項目をすべて入力してください");
+    if (cartItems.length === 0) {
+      alert("カートが空です。");
       return;
     }
+
+    if (
+      !name ||
+      !postal ||
+      !prefecture ||
+      !address ||
+      !email
+    ) {
+      alert(
+        "必須項目をすべて入力してください"
+      );
+      return;
+    }
+
     if (sentOnceRef.current) return;
+
     setLoading(true);
     sentOnceRef.current = true;
 
     try {
       const payload = {
+        client_order_id:
+          getClientOrderId(),
+
         mode: "cart",
+
         items: cartItems.map(it => ({
-          id: it.id, name: it.name, variant: it.variant, unitPrice: it.unitPrice, qty: it.qty, extra: it.extra
+          id: it.id,
+          name: it.name,
+          variant: it.variant,
+          unitPrice: it.unitPrice,
+          qty: it.qty,
+          extra: it.extra
         })),
+
         subtotal,
-        buyer: { name, postal, prefecture, address, phone, email },
-        ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
+
+        buyer: {
+          name,
+          postal,
+          prefecture,
+          address,
+          phone,
+          email
+        },
+
+        ua:
+          typeof navigator !== "undefined"
+            ? navigator.userAgent
+            : "",
+
         request_time: reqTime,
-        payment_method: paymentMethod,
-        cod_fee: codFee,
+
+        payment_method:
+          paymentMethod,
+
+        cod_fee:
+          codFee,
       };
 
-      await postToSupabaseOrder(payload);
+      await postToSupabaseOrder(
+        payload
+      );
 
       clearCart();
       setSubmitted(true);
+
     } catch (e) {
       console.error(e);
-      alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
+
+      alert(
+        "送信中にエラーが発生しました。時間をおいて再度お試しください。"
+      );
+
       sentOnceRef.current = false;
+
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAddress = async (zip: string) => {
+  const fetchAddress = async (
+    zip: string
+  ) => {
     if (!/^\d{7}$/.test(zip)) return;
+
     try {
-      const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`);
-      const data = await res.json();
-      if (data.results && data.results[0]) {
-        setPrefecture(data.results[0].address1);
-        setAddress(data.results[0].address2 + data.results[0].address3);
+      const res = await fetch(
+        `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`
+      );
+
+      const data =
+        await res.json();
+
+      if (
+        data.results &&
+        data.results[0]
+      ) {
+        setPrefecture(
+          data.results[0].address1
+        );
+
+        setAddress(
+          data.results[0].address2 +
+          data.results[0].address3
+        );
       }
     } catch {}
   };
 
   const submitOrder = async () => {
-    if (!name || !postal || !prefecture || !address || !email) {
-      alert("必須項目をすべて入力してください");
+    if (
+      !name ||
+      !postal ||
+      !prefecture ||
+      !address ||
+      !email
+    ) {
+      alert(
+        "必須項目をすべて入力してください"
+      );
+
       return;
     }
+
     if (sentOnceRef.current) return;
 
     setLoading(true);
@@ -219,116 +368,282 @@ export default function OrderClient() {
 
     try {
       const payload = {
+        client_order_id:
+          getClientOrderId(),
+
         product,
+
         size,
+
         price,
+
         name,
+
         postal,
+
         prefecture,
+
         address,
+
         phone,
+
         email,
-        ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
-        request_time: reqTime,
-        payment_method: paymentMethod,
-        cod_fee: codFee,
+
+        ua:
+          typeof navigator !== "undefined"
+            ? navigator.userAgent
+            : "",
+
+        request_time:
+          reqTime,
+
+        payment_method:
+          paymentMethod,
+
+        cod_fee:
+          codFee,
       };
 
-      await postToSupabaseOrder(payload);
+      await postToSupabaseOrder(
+        payload
+      );
 
       setSubmitted(true);
 
     } catch (e) {
       console.error(e);
-      alert("送信中にエラーが発生しました。時間をおいて再度お試しください。");
+
+      alert(
+        "送信中にエラーが発生しました。時間をおいて再度お試しください。"
+      );
+
       sentOnceRef.current = false;
+
     } finally {
       setLoading(false);
     }
   };
 
   // ★ カート会計UI（?cart=1 かつ 未送信時）
-  if (cartMode && !submitted) {
+  if (
+    cartMode &&
+    !submitted
+  ) {
     return (
       <main className="max-w-5xl mx-auto px-6 pt-28 pb-24 text-[#333]">
+
         <button
           type="button"
-          onClick={() => router.push("/admin/orders")}
+          onClick={() =>
+            router.push(
+              "/admin/orders"
+            )
+          }
           className="fixed top-24 right-4 z-50 bg-gray-900 hover:bg-gray-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow-lg"
         >
           管理画面
         </button>
 
-        <h1 className="text-3xl font-bold text-center">カートのご注文</h1>
+        <h1 className="text-3xl font-bold text-center">
+          カートのご注文
+        </h1>
 
         <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-8">
-          <h2 className="text-xl font-bold mb-4">注文内容</h2>
+
+          <h2 className="text-xl font-bold mb-4">
+            注文内容
+          </h2>
+
           {cartItems.length === 0 ? (
+
             <div className="text-center text-gray-600">
-              カートは空です。<button className="text-orange-600 underline" onClick={()=>router.push("/products")}>商品一覧へ</button>
+
+              カートは空です。
+
+              <button
+                className="text-orange-600 underline"
+                onClick={() =>
+                  router.push(
+                    "/products"
+                  )
+                }
+              >
+                商品一覧へ
+              </button>
+
             </div>
+
           ) : (
+
             <div className="space-y-4">
-              {cartItems.map((it, i) => (
-                <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-4 border-b pb-4">
-                  <div className="flex-1">
-                    <div className="font-semibold">{it.name}</div>
-                    <div className="text-sm text-gray-600">{it.variant}</div>
-                    <div className="text-sm text-gray-500">単価：{it.unitPrice.toLocaleString()}円</div>
+
+              {cartItems.map(
+                (it, i) => (
+
+                  <div
+                    key={i}
+                    className="flex flex-col sm:flex-row sm:items-center gap-4 border-b pb-4"
+                  >
+
+                    <div className="flex-1">
+
+                      <div className="font-semibold">
+                        {it.name}
+                      </div>
+
+                      <div className="text-sm text-gray-600">
+                        {it.variant}
+                      </div>
+
+                      <div className="text-sm text-gray-500">
+                        単価：
+                        {it.unitPrice.toLocaleString()}
+                        円
+                      </div>
+
+                    </div>
+
+                    <div className="flex items-center gap-2">
+
+                      <button
+                        onClick={() =>
+                          dec(i)
+                        }
+                        className="px-3 py-1 rounded border"
+                      >
+                        −
+                      </button>
+
+                      <span className="w-10 text-center">
+                        {it.qty}
+                      </span>
+
+                      <button
+                        onClick={() =>
+                          inc(i)
+                        }
+                        className="px-3 py-1 rounded border"
+                      >
+                        ＋
+                      </button>
+
+                    </div>
+
+                    <div className="w-24 text-right font-semibold">
+
+                      {(
+                        it.unitPrice *
+                        it.qty
+                      ).toLocaleString()}
+                      円
+
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        removeAt(i)
+                      }
+                      className="text-sm text-gray-600 underline self-start sm:self-auto"
+                    >
+                      削除
+                    </button>
+
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => dec(i)} className="px-3 py-1 rounded border">−</button>
-                    <span className="w-10 text-center">{it.qty}</span>
-                    <button onClick={() => inc(i)} className="px-3 py-1 rounded border">＋</button>
-                  </div>
-                  <div className="w-24 text-right font-semibold">
-                    {(it.unitPrice * it.qty).toLocaleString()}円
-                  </div>
-                  <button onClick={() => removeAt(i)} className="text-sm text-gray-600 underline self-start sm:self-auto">
-                    削除
-                  </button>
-                </div>
-              ))}
+                )
+              )}
 
               <div className="flex justify-between items-center pt-2">
-                <button onClick={clearCart} className="text-sm text-gray-500 underline">
+
+                <button
+                  onClick={
+                    clearCart
+                  }
+                  className="text-sm text-gray-500 underline"
+                >
                   カートを空にする
                 </button>
+
                 <div className="text-xl font-bold">
-                  合計：{(subtotal + codFee).toLocaleString()}円（送料込み）
+
+                  合計：
+                  {(
+                    subtotal +
+                    codFee
+                  ).toLocaleString()}
+                  円（送料込み）
+
                 </div>
+
               </div>
 
               <div className="pt-2">
-                <label className="block text-sm mb-1 font-semibold">お支払い方法</label>
+
+                <label className="block text-sm mb-1 font-semibold">
+                  お支払い方法
+                </label>
+
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod((e.target.value as any) || "bank")}
+                  value={
+                    paymentMethod
+                  }
+                  onChange={(e) =>
+                    setPaymentMethod(
+                      (e.target.value as any) ||
+                      "bank"
+                    )
+                  }
                 >
-                  <option value="bank">銀行振込 / PayPay（事前払い）</option>
-                  <option value="cod">代金引換（＋300円）</option>
+
+                  <option value="bank">
+                    銀行振込 / PayPay（事前払い）
+                  </option>
+
+                  <option value="cod">
+                    代金引換（＋300円）
+                  </option>
+
                 </select>
-                {paymentMethod === "cod" && (
+
+                {paymentMethod ===
+                  "cod" && (
+
                   <p className="text-xs text-gray-600 mt-2">
-                    ※ 代引き手数料として {COD_FEE}円 が加算されます。
+
+                    ※ 代引き手数料として{" "}
+                    {COD_FEE}
+                    円 が加算されます。
+
                   </p>
                 )}
+
               </div>
+
             </div>
+
           )}
+
         </section>
 
         {cartItems.length > 0 && (
+
           <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mt-8">
-            <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
+
+            <h2 className="text-xl font-bold mb-6">
+              お届け先情報
+            </h2>
 
             <div className="grid sm:grid-cols-2 gap-4">
+
               <input
                 className="w-full border rounded-lg px-4 py-2"
                 placeholder="お名前（必須）"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) =>
+                  setName(
+                    e.target.value
+                  )
+                }
               />
 
               <input
@@ -336,47 +651,89 @@ export default function OrderClient() {
                 placeholder="郵便番号（7桁・必須）"
                 value={postal}
                 onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, "");
+
+                  const v =
+                    e.target.value.replace(
+                      /\D/g,
+                      ""
+                    );
+
                   setPostal(v);
-                  if (v.length === 7) fetchAddress(v);
+
+                  if (
+                    v.length === 7
+                  ) {
+                    fetchAddress(v);
+                  }
+
                 }}
               />
 
               <select
                 className="w-full border rounded-lg px-4 py-2"
                 value={prefecture}
-                onChange={(e) => setPrefecture(e.target.value)}
+                onChange={(e) =>
+                  setPrefecture(
+                    e.target.value
+                  )
+                }
               >
-                <option value="">都道府県を選択（必須）</option>
-                {PREFECTURES.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
+
+                <option value="">
+                  都道府県を選択（必須）
+                </option>
+
+                {PREFECTURES.map(
+                  (p) => (
+                    <option
+                      key={p}
+                      value={p}
+                    >
+                      {p}
+                    </option>
+                  )
+                )}
+
               </select>
 
               <input
                 className="w-full border rounded-lg px-4 py-2"
                 placeholder="市区町村・番地（必須）"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) =>
+                  setAddress(
+                    e.target.value
+                  )
+                }
               />
 
               <input
                 className="w-full border rounded-lg px-4 py-2"
                 placeholder="電話番号（任意）"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) =>
+                  setPhone(
+                    e.target.value
+                  )
+                }
               />
 
               <input
                 className="w-full border rounded-lg px-4 py-2"
                 placeholder="メールアドレス（必須）"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(
+                    e.target.value
+                  )
+                }
               />
+
             </div>
 
             {/* ★ 連絡先についての注意 */}
             <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-relaxed text-gray-700">
+
               <p>
                 ご注文内容の確認や発送に関するご連絡のため、
                 SMSまたはメールでご連絡させていただく場合があります。
@@ -390,31 +747,47 @@ export default function OrderClient() {
               <p className="mt-2 font-semibold text-orange-700">
                 ※ ご連絡が取れない場合、注文確認や発送手続きを進められない場合があります。
               </p>
+
             </div>
 
             <DeliveryPicker
               valueSlot={reqTime}
-              onChange={(s) => setReqTime(s)}
+              onChange={(s) =>
+                setReqTime(s)
+              }
             />
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
+
               <button
-                onClick={submitCartOrder}
+                onClick={
+                  submitCartOrder
+                }
                 disabled={loading}
                 className="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white shadow disabled:opacity-60"
               >
-                {loading ? "送信中..." : "注文を確定する"}
+                {loading
+                  ? "送信中..."
+                  : "注文を確定する"}
               </button>
 
               <button
-                onClick={() => router.push("/products")}
+                onClick={() =>
+                  router.push(
+                    "/products"
+                  )
+                }
                 className="px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50"
               >
                 買い物を続ける
               </button>
+
             </div>
+
           </section>
+
         )}
+
       </main>
     );
   }
@@ -423,57 +796,103 @@ export default function OrderClient() {
   if (submitted) {
     return (
       <main className="max-w-2xl mx-auto px-6 pt-40 pb-24 text-center text-[#333]">
-        <h1 className="text-3xl font-bold mb-6">ご購入ありがとうございます</h1>
+
+        <h1 className="text-3xl font-bold mb-6">
+          ご購入ありがとうございます
+        </h1>
 
         <p className="text-lg leading-relaxed">
-          詳細は、ご登録いただいたメールアドレス宛へのメッセージをご確認の上、<br />
-          {paymentMethod === "cod" ? (
-            <>商品到着時にお支払いをお願いいたします。</>
+
+          詳細は、ご登録いただいたメールアドレス宛へのメッセージをご確認の上、
+
+          <br />
+
+          {paymentMethod ===
+          "cod" ? (
+
+            <>
+              商品到着時にお支払いをお願いいたします。
+            </>
+
           ) : (
-            <>お支払いをお願いいたします。</>
+
+            <>
+              お支払いをお願いいたします。
+            </>
+
           )}
+
         </p>
 
         <button
-          onClick={() => router.push("/")}
+          onClick={() =>
+            router.push("/")
+          }
           className="mt-10 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-xl"
         >
           トップページへ戻る
         </button>
+
       </main>
     );
   }
 
   return (
     <main className="max-w-3xl mx-auto px-6 pt-28 pb-24 text-[#333]">
+
       <button
         type="button"
-        onClick={() => router.push("/admin/orders")}
+        onClick={() =>
+          router.push(
+            "/admin/orders"
+          )
+        }
         className="fixed top-24 right-4 z-50 bg-gray-900 hover:bg-gray-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow-lg"
       >
         管理画面
       </button>
 
-      <h1 className="text-3xl font-bold text-center mb-8">ご購入手続き</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">
+        ご購入手続き
+      </h1>
 
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8 mb-10">
-        <h2 className="text-xl font-bold mb-4">注文内容</h2>
+
+        <h2 className="text-xl font-bold mb-4">
+          注文内容
+        </h2>
 
         <p>
-          商品：<strong>{product}</strong>
+          商品：
+          <strong>
+            {product}
+          </strong>
         </p>
 
         <p className="mt-2">
-          規格：<strong>{size}</strong>
+          規格：
+          <strong>
+            {size}
+          </strong>
         </p>
 
         <p className="text-2xl font-bold text-green-700 mt-4">
-          商品代金：{(price + codFee).toLocaleString()}円
+
+          商品代金：
+          {(
+            price +
+            codFee
+          ).toLocaleString()}
+          円
+
         </p>
 
-        <p className="text-sm text-gray-600 mt-2">※ 送料込みです</p>
+        <p className="text-sm text-gray-600 mt-2">
+          ※ 送料込みです
+        </p>
 
         <div className="mt-4">
+
           <label className="block text-sm mb-1 font-semibold">
             お支払い方法
           </label>
@@ -482,30 +901,57 @@ export default function OrderClient() {
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
             value={paymentMethod}
             onChange={(e) =>
-              setPaymentMethod((e.target.value as any) || "bank")
+              setPaymentMethod(
+                (e.target.value as any) ||
+                "bank"
+              )
             }
           >
-            <option value="bank">銀行振込 / PayPay（事前払い）</option>
-            <option value="cod">代金引換（＋300円）</option>
+
+            <option value="bank">
+              銀行振込 / PayPay（事前払い）
+            </option>
+
+            <option value="cod">
+              代金引換（＋300円）
+            </option>
+
           </select>
 
-          {paymentMethod === "cod" && (
+          {paymentMethod ===
+            "cod" && (
+
             <p className="text-xs text-gray-600 mt-2">
-              ※ 代引き手数料として {COD_FEE}円 が加算されます。
+
+              ※ 代引き手数料として{" "}
+              {COD_FEE}
+              円 が加算されます。
+
             </p>
+
           )}
+
         </div>
+
       </section>
 
       <section className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-md p-6 md:p-8">
-        <h2 className="text-xl font-bold mb-6">お届け先情報</h2>
+
+        <h2 className="text-xl font-bold mb-6">
+          お届け先情報
+        </h2>
 
         <div className="space-y-4">
+
           <input
             className="w-full border rounded-lg px-4 py-2"
             placeholder="お名前（必須）"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) =>
+              setName(
+                e.target.value
+              )
+            }
           />
 
           <input
@@ -513,48 +959,89 @@ export default function OrderClient() {
             placeholder="郵便番号（7桁・必須）"
             value={postal}
             onChange={(e) => {
-              const v = e.target.value.replace(/\D/g, "");
+
+              const v =
+                e.target.value.replace(
+                  /\D/g,
+                  ""
+                );
+
               setPostal(v);
-              if (v.length === 7) fetchAddress(v);
+
+              if (
+                v.length === 7
+              ) {
+                fetchAddress(v);
+              }
+
             }}
           />
 
           <select
             className="w-full border rounded-lg px-4 py-2"
             value={prefecture}
-            onChange={(e) => setPrefecture(e.target.value)}
+            onChange={(e) =>
+              setPrefecture(
+                e.target.value
+              )
+            }
           >
-            <option value="">都道府県を選択（必須）</option>
 
-            {PREFECTURES.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
+            <option value="">
+              都道府県を選択（必須）
+            </option>
+
+            {PREFECTURES.map(
+              (p) => (
+                <option
+                  key={p}
+                  value={p}
+                >
+                  {p}
+                </option>
+              )
+            )}
+
           </select>
 
           <input
             className="w-full border rounded-lg px-4 py-2"
             placeholder="市区町村・番地（必須）"
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={(e) =>
+              setAddress(
+                e.target.value
+              )
+            }
           />
 
           <input
             className="w-full border rounded-lg px-4 py-2"
             placeholder="電話番号（任意）"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) =>
+              setPhone(
+                e.target.value
+              )
+            }
           />
 
           <input
             className="w-full border rounded-lg px-4 py-2"
             placeholder="メールアドレス（必須）"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) =>
+              setEmail(
+                e.target.value
+              )
+            }
           />
+
         </div>
 
         {/* ★ 連絡先についての注意 */}
         <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-relaxed text-gray-700">
+
           <p>
             ご注文内容の確認や発送に関するご連絡のため、
             SMSまたはメールでご連絡させていただく場合があります。
@@ -568,11 +1055,14 @@ export default function OrderClient() {
           <p className="mt-2 font-semibold text-orange-700">
             ※ ご連絡が取れない場合、注文確認や発送手続きを進められない場合があります。
           </p>
+
         </div>
 
         <DeliveryPicker
           valueSlot={reqTime}
-          onChange={(s) => setReqTime(s)}
+          onChange={(s) =>
+            setReqTime(s)
+          }
         />
 
         <button
@@ -580,16 +1070,22 @@ export default function OrderClient() {
           disabled={loading}
           className="mt-8 w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-lg font-bold py-4 rounded-xl shadow-lg transition"
         >
-          {loading ? "送信中..." : "注文を確定する"}
+          {loading
+            ? "送信中..."
+            : "注文を確定する"}
         </button>
 
         <button
-          onClick={() => router.back()}
+          onClick={() =>
+            router.back()
+          }
           className="mt-4 w-full text-sm text-gray-500 underline"
         >
           商品ページへ戻る
         </button>
+
       </section>
+
     </main>
   );
 }

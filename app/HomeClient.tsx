@@ -21,6 +21,7 @@ function useFadeIn() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -31,9 +32,12 @@ function useFadeIn() {
       },
       { threshold: 0.2 }
     );
+
     obs.observe(el);
+
     return () => obs.disconnect();
   }, []);
+
   return ref;
 }
 
@@ -45,6 +49,7 @@ export default function Home() {
 
   // ✅ Hydration完全対策：初回レンダーをSSRと一致させる
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => setMounted(true), []);
 
   const INSTAGRAM_URL = "https://www.instagram.com/y_m.farm";
@@ -83,9 +88,11 @@ export default function Home() {
     const t4 = window.setTimeout(unlockScroll, 2600);
 
     const onPageShow = () => unlockScroll();
+
     const onVisibility = () => {
       if (!document.hidden) unlockScroll();
     };
+
     const onFocus = () => unlockScroll();
     const onResize = () => unlockScroll();
 
@@ -99,6 +106,7 @@ export default function Home() {
       window.clearTimeout(t2);
       window.clearTimeout(t3);
       window.clearTimeout(t4);
+
       window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("focus", onFocus);
@@ -183,6 +191,7 @@ export default function Home() {
           .sort((a: any, b: any) => Number(a.slot) - Number(b.slot))
           .map((banner: any) => {
             const imageUrl = String(banner.image_url);
+
             const version = banner.updated_at
               ? new Date(banner.updated_at).getTime()
               : Date.now();
@@ -213,6 +222,7 @@ export default function Home() {
   useEffect(() => {
     const start = () => {
       if (sliderTimerRef.current) return;
+
       sliderTimerRef.current = window.setInterval(() => {
         setIndex((prev) => (prev + 1) % sliderImages.length);
       }, 4000);
@@ -230,12 +240,14 @@ export default function Home() {
     const onPageHide = () => stop();
 
     start();
+
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("pageshow", onPageShow);
     window.addEventListener("pagehide", onPageHide);
 
     return () => {
       stop();
+
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("pageshow", onPageShow);
       window.removeEventListener("pagehide", onPageHide);
@@ -247,15 +259,18 @@ export default function Home() {
   ============================ */
   const FADE_DURATION = 250;
   const POP_DURATION = 520;
+
   const [leaving, setLeaving] = useState(false);
   const [popping, setPopping] = useState(false);
 
   const goProducts = () => {
     if (popping) return;
+
     setPopping(true);
 
     window.setTimeout(() => {
       setLeaving(true);
+
       window.setTimeout(() => {
         router.push("/products");
       }, FADE_DURATION);
@@ -270,6 +285,7 @@ export default function Home() {
 
   useEffect(() => {
     const el = heroRootRef.current;
+
     if (!el) return;
 
     const clamp = (v: number, min: number, max: number) =>
@@ -302,13 +318,16 @@ export default function Home() {
 
     const start = () => {
       if (raf != null) return;
+
       running = true;
       raf = requestAnimationFrame(apply);
     };
 
     const stop = () => {
       running = false;
+
       if (raf != null) cancelAnimationFrame(raf);
+
       raf = null;
     };
 
@@ -319,6 +338,7 @@ export default function Home() {
 
     const onMouse = (e: MouseEvent) => {
       const r = el.getBoundingClientRect();
+
       const nx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
       const ny = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
 
@@ -333,7 +353,10 @@ export default function Home() {
       ty = clamp(e.beta / 35, -1, 1);
     };
 
-    window.addEventListener("mousemove", onMouse, { passive: true });
+    window.addEventListener("mousemove", onMouse, {
+      passive: true,
+    });
+
     window.addEventListener("deviceorientation", onOri);
     document.addEventListener("visibilitychange", onVis);
 
@@ -342,6 +365,7 @@ export default function Home() {
 
     return () => {
       stop();
+
       window.removeEventListener("mousemove", onMouse);
       window.removeEventListener("deviceorientation", onOri);
       document.removeEventListener("visibilitychange", onVis);
@@ -687,6 +711,7 @@ export default function Home() {
           /* ★追加：② 光粒子（微粒・ゆっくり） */
           .hero-particles {
             opacity: 0.55;
+
             background:
               radial-gradient(
                 circle at 18% 22%,
@@ -726,6 +751,7 @@ export default function Home() {
                 calc(var(--py) * 2px),
                 0
               );
+
               opacity: 0.45;
             }
 
@@ -735,6 +761,7 @@ export default function Home() {
                 calc(var(--py) * -3px),
                 0
               );
+
               opacity: 0.65;
             }
 
@@ -744,6 +771,7 @@ export default function Home() {
                 calc(var(--py) * 2px),
                 0
               );
+
               opacity: 0.45;
             }
           }
@@ -777,6 +805,7 @@ export default function Home() {
                 calc(var(--py) * 2px),
                 0
               );
+
               opacity: 0.3;
             }
 
@@ -786,6 +815,7 @@ export default function Home() {
                 calc(var(--py) * -2px),
                 0
               );
+
               opacity: 0.42;
             }
 
@@ -795,6 +825,7 @@ export default function Home() {
                 calc(var(--py) * 2px),
                 0
               );
+
               opacity: 0.3;
             }
           }
@@ -1740,6 +1771,65 @@ export default function Home() {
       </section>
 
       <AboutTeaser />
+
+      {/* ===========================
+          ★ SNS / 公式LINE
+          表示位置のみ変更：AboutTeaser直後へ移動
+      ============================ */}
+      <section className="relative z-10 max-w-5xl mx-auto px-6 pb-8 md:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Instagram */}
+          <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
+            <p className="text-lg font-semibold text-[#333]">
+              📸 農園の日常をInstagramで発信中
+            </p>
+
+            <p className="mt-2 text-sm text-gray-600">
+              収穫の様子や畑の風景など、山口みかん農園のリアルな日常を公開しています。
+            </p>
+
+            <p className="mt-1 text-sm font-medium text-orange-600">
+              @y_m.farm
+            </p>
+
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="山口みかん農園のInstagramを見る"
+              className="mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+            >
+              Instagramを見る
+            </a>
+          </div>
+
+          {/* 公式LINE */}
+          <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
+            <p className="text-lg font-semibold text-[#333]">
+              💬 山口みかん農園 公式LINE
+            </p>
+
+            <p className="mt-2 text-sm text-gray-600">
+              販売情報や旬のみかんのお知らせなどを、公式LINEからご確認いただけます。
+            </p>
+
+            <p className="mt-1 text-sm font-medium text-[#06C755]">
+              友だち追加はこちら
+            </p>
+
+            <a
+              href={LINE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="山口みかん農園の公式LINEを友だち追加する"
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#06C755] px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#06C755]"
+            >
+              公式LINEを友だち追加
+            </a>
+          </div>
+        </div>
+      </section>
+
       <SubFlash />
 
       <section className="max-w-6xl mx-auto px-6 py-8 md:py-16 relative z-10">
@@ -1764,7 +1854,9 @@ export default function Home() {
                   className="object-contain"
                 />
 
-                <div className="slider-caption">{item.caption}</div>
+                <div className="slider-caption">
+                  {item.caption}
+                </div>
               </div>
             ))}
           </div>
@@ -1845,62 +1937,6 @@ export default function Home() {
               </a>
             </div>
           </details>
-
-          {/* ===========================
-              ★ SNS / 公式LINE
-              Instagramの既存内容は維持し、公式LINEを追加
-          ============================ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Instagram */}
-            <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
-              <p className="text-lg font-semibold text-[#333]">
-                📸 農園の日常をInstagramで発信中
-              </p>
-
-              <p className="mt-2 text-sm text-gray-600">
-                収穫の様子や畑の風景など、山口みかん農園のリアルな日常を公開しています。
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-orange-600">
-                @y_m.farm
-              </p>
-
-              <a
-                href={INSTAGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="山口みかん農園のInstagramを見る"
-                className="mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-              >
-                Instagramを見る
-              </a>
-            </div>
-
-            {/* 公式LINE */}
-            <div className="rounded-2xl bg-white/70 p-5 shadow-sm ring-1 ring-black/5 text-center">
-              <p className="text-lg font-semibold text-[#333]">
-                💬 山口みかん農園 公式LINE
-              </p>
-
-              <p className="mt-2 text-sm text-gray-600">
-                販売情報や旬のみかんのお知らせなどを、公式LINEからご確認いただけます。
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-[#06C755]">
-                友だち追加はこちら
-              </p>
-
-              <a
-                href={LINE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="山口みかん農園の公式LINEを友だち追加する"
-                className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#06C755] px-5 py-2.5 text-white shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#06C755]"
-              >
-                公式LINEを友だち追加
-              </a>
-            </div>
-          </div>
         </div>
       </section>
 

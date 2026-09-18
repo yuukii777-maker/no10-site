@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // ★追加：環境変数が無いとき用の“固定URL”フォールバック
 const GAS_FALLBACK =
-  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec";
+  "https://script.google.com/macros/s/AKfycbxUcnlYNwPZZTOD6O2kNSluEIX1ZbIWEyhkrXgDI8speIPSohRpTuKmyfLJ9b2jbdcq/exec";
 
 export async function POST(req: NextRequest) {
   try {

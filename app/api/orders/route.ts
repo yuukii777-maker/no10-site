@@ -19,7 +19,7 @@ const supabase = createClient(
 
 const GAS_ORDER_URL =
   process.env.GAS_ORDER_URL ||
-  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec";
+  "https://script.google.com/macros/s/AKfycbxUcnlYNwPZZTOD6O2kNSluEIX1ZbIWEyhkrXgDI8speIPSohRpTuKmyfLJ9b2jbdcq/exec";
 
 /* =========================================================
    共通

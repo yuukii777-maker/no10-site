@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 
 const GAS_BASE =
-  "https://script.google.com/macros/s/AKfycbw9FiKbkzno4gqGK4jkZKaBB-Cxw8gOYtSCmMBOM8RNX95ZLp_uqxGiHvv0Wzm2eH1s/exec";
+  "https://script.google.com/macros/s/AKfycbxUcnlYNwPZZTOD6O2kNSluEIX1ZbIWEyhkrXgDI8speIPSohRpTuKmyfLJ9b2jbdcq/exec";
 
 export default function CancelBox() {
   const [orderId, setOrderId] = useState("");

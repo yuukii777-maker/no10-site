@@ -43,6 +43,61 @@ function createFallbackClientOrderId() {
 }
 
 /* =========================================================
+   GAS注文レスポンス解析
+========================================================= */
+
+function parseGasOrderResponse(
+  responseText: string
+) {
+  const raw = text(responseText);
+
+  if (!raw) {
+    return null;
+  }
+
+  /*
+    旧形式(JSON)も読み取れるように残す。
+  */
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // JSONでなければ新形式を確認する
+  }
+
+  /*
+    GAS側の注文レスポンス新形式:
+
+    GAS_ORDER_RESPONSE:<Base64URL>
+
+    HtmlService がHTMLとして返した場合でも、
+    本文中からマーカーを探して取り出す。
+  */
+  const match = raw.match(
+    /GAS_ORDER_RESPONSE:([A-Za-z0-9_-]+={0,2})/
+  );
+
+  if (!match || !match[1]) {
+    return null;
+  }
+
+  try {
+    const json = Buffer.from(
+      match[1],
+      "base64url"
+    ).toString("utf8");
+
+    return JSON.parse(json);
+  } catch (error) {
+    console.error(
+      "GAS_ORDER_RESPONSE_DECODE_ERROR",
+      error
+    );
+
+    return null;
+  }
+}
+
+/* =========================================================
    スプレッドシートへ注文作成
 ========================================================= */
 
@@ -72,81 +127,36 @@ async function createSpreadsheetOrder(
     params.set("client_order_id", clientOrderId);
     params.set("supabase_id", supabaseId);
 
-    let res = await fetch(GAS_ORDER_URL, {
-      method: "POST",
+    /*
+      GAS側では注文(action=order)だけ
+      HtmlService を使って以下の形式で返す。
 
-      headers: {
-        "Content-Type":
-          "application/x-www-form-urlencoded;charset=UTF-8",
-      },
+      GAS_ORDER_RESPONSE:<Base64URL>
 
-      body: params.toString(),
+      ContentService のリダイレクト先を
+      Vercelが読めない問題を回避するため、
+      返ってきた本文から専用マーカーを解析する。
+    */
+    const res = await fetch(
+      GAS_ORDER_URL,
+      {
+        method: "POST",
 
-      cache: "no-store",
+        headers: {
+          "Content-Type":
+            "application/x-www-form-urlencoded;charset=UTF-8",
+        },
 
-      /*
-        Google Apps Script の ContentService は、
-        script.googleusercontent.com 側へリダイレクトして
-        JSON本文を返すことがある。
+        body: params.toString(),
 
-        Vercel / Node.js の fetch が自動追従すると、
-        Google側の権限ページHTMLを拾うケースがあるため、
-        リダイレクトは手動で受けてGETで取得する。
-      */
-      redirect: "manual",
-    });
+        cache: "no-store",
 
-    if (
-      res.status >= 300 &&
-      res.status < 400
-    ) {
-      const location =
-        res.headers.get("location");
-
-      if (!location) {
-        console.error(
-          "SPREADSHEET_REDIRECT_LOCATION_MISSING",
-          {
-            status: res.status,
-          }
-        );
-
-        return {
-          ok: false,
-          orderId: "",
-          message:
-            "スプレッドシート側からの応答先を取得できませんでした。",
-        };
+        redirect: "follow",
       }
-
-      const redirectUrl =
-        new URL(
-          location,
-          GAS_ORDER_URL
-        ).toString();
-
-      res = await fetch(
-        redirectUrl,
-        {
-          method: "GET",
-          cache: "no-store",
-          redirect: "follow",
-        }
-      );
-    }
+    );
 
     const responseText =
       await res.text().catch(() => "");
-
-    let data: any = null;
-
-    try {
-      data = responseText
-        ? JSON.parse(responseText)
-        : null;
-    } catch {
-      data = null;
-    }
 
     if (!res.ok) {
       console.error(
@@ -164,6 +174,11 @@ async function createSpreadsheetOrder(
       };
     }
 
+    const data =
+      parseGasOrderResponse(
+        responseText
+      );
+
     if (!data || data.ok !== true) {
       console.error(
         "SPREADSHEET_RESPONSE_ERROR",
@@ -174,6 +189,8 @@ async function createSpreadsheetOrder(
         ok: false,
         orderId: "",
         message:
+          data?.error ||
+          data?.message ||
           responseText ||
           "スプレッドシート側の注文作成に失敗しました。",
       };

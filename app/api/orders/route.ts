@@ -72,7 +72,7 @@ async function createSpreadsheetOrder(
     params.set("client_order_id", clientOrderId);
     params.set("supabase_id", supabaseId);
 
-    const res = await fetch(GAS_ORDER_URL, {
+    let res = await fetch(GAS_ORDER_URL, {
       method: "POST",
 
       headers: {
@@ -83,9 +83,60 @@ async function createSpreadsheetOrder(
       body: params.toString(),
 
       cache: "no-store",
+
+      /*
+        Google Apps Script の ContentService は、
+        script.googleusercontent.com 側へリダイレクトして
+        JSON本文を返すことがある。
+
+        Vercel / Node.js の fetch が自動追従すると、
+        Google側の権限ページHTMLを拾うケースがあるため、
+        リダイレクトは手動で受けてGETで取得する。
+      */
+      redirect: "manual",
     });
 
-    const responseText = await res.text().catch(() => "");
+    if (
+      res.status >= 300 &&
+      res.status < 400
+    ) {
+      const location =
+        res.headers.get("location");
+
+      if (!location) {
+        console.error(
+          "SPREADSHEET_REDIRECT_LOCATION_MISSING",
+          {
+            status: res.status,
+          }
+        );
+
+        return {
+          ok: false,
+          orderId: "",
+          message:
+            "スプレッドシート側からの応答先を取得できませんでした。",
+        };
+      }
+
+      const redirectUrl =
+        new URL(
+          location,
+          GAS_ORDER_URL
+        ).toString();
+
+      res = await fetch(
+        redirectUrl,
+        {
+          method: "GET",
+          cache: "no-store",
+          redirect: "follow",
+        }
+      );
+    }
+
+    const responseText =
+      await res.text().catch(() => "");
 
     let data: any = null;
 
@@ -506,8 +557,6 @@ export async function POST(
     /* -----------------------------------------
        ① Supabaseを先に保存
 
-       ★ 今回一番重要な変更
-
        スプレッドシートが落ちても、
        管理画面から注文が消えない。
     ----------------------------------------- */
@@ -524,10 +573,6 @@ export async function POST(
         client_order_id:
           clientOrderId,
 
-        /*
-          スプレッドシート作成前なので
-          最初はnull
-        */
         sheet_order_id: null,
 
         mode: isCart
@@ -609,12 +654,6 @@ export async function POST(
           }
         );
 
-        /*
-          ★ 今までのコードは
-          ここで ok:true を返していた。
-
-          今回から絶対に成功扱いしない。
-        */
         return NextResponse.json(
           {
             ok: false,
@@ -638,11 +677,6 @@ export async function POST(
 
     /* -----------------------------------------
        ② スプレッドシート作成
-
-       ここで失敗しても、
-       Supabaseには既に注文がある。
-
-       → 管理画面から注文が消えない。
     ----------------------------------------- */
 
     const sheetResult =
@@ -666,15 +700,6 @@ export async function POST(
         }
       );
 
-      /*
-        Supabaseには保存済み。
-
-        エラーを返すので
-        ブラウザでは再試行可能。
-
-        同じ client_order_id を使えば
-        Supabaseは二重登録されない。
-      */
       return NextResponse.json(
         {
           ok: false,
@@ -742,16 +767,9 @@ export async function POST(
       );
 
       /*
-        この時点では、
-
-        Supabase ✅
-        Spreadsheet ✅
-
-        なので注文そのものは成功。
-
-        管理画面にも注文は表示される。
-
-        YMK番号の紐付けだけ失敗している。
+        Supabaseとスプレッドシートには
+        既に注文が保存されているため、
+        注文自体は成功として返す。
       */
       return NextResponse.json({
         ok: true,

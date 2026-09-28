@@ -865,6 +865,7 @@ export default function ProductsPage() {
   </strong>
   <br />
   早味かんの青果販売は、10月2日をもって終了予定です。
+  早味かんの小玉販売は、10月15日をもって終了予定です。
   <br />
   日南の青果販売を開始しました。
   <br />

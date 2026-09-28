@@ -860,12 +860,16 @@ export default function ProductsPage() {
           </h1>
 
           <p className="mt-3 max-w-3xl text-sm md:text-base leading-7 text-gray-700">
-            <strong className="text-green-700">
-              9月8日より、今年のみかんの発送が始まりました
-            </strong>
-            <br />
-            「ご注文受付中。お支払い確認後、順次発送いたします。」日南は10月5日頃まで販売予定です。
-          </p>
+  <strong className="text-green-700">
+    🍊 早味かん・日南のお知らせ
+  </strong>
+  <br />
+  早味かんの青果販売は、10月2日をもって終了予定です。
+  <br />
+  日南の青果販売を開始しました。
+  <br />
+  皆さまからのご注文を心よりお待ちしております。
+</p>
         </div>
       </section>
 

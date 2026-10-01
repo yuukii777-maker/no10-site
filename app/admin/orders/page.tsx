@@ -137,6 +137,7 @@ function compactProductName(order: Order) {
   if (Array.isArray(order.items) && order.items.length > 0) {
     if (order.items.length === 1) {
       const item = order.items[0];
+
       return `${item.name || "商品名未設定"} ${item.variant || ""} ×${
         item.qty || 1
       }`;
@@ -167,6 +168,7 @@ function compactAddress(order: Order) {
   const address = `${order.prefecture || ""}${order.address || ""}`.trim();
 
   if (!postal && !address) return "-";
+
   return `${postal} ${address}`.trim();
 }
 
@@ -184,6 +186,7 @@ function OrderItemsView({ order }: { order: Order }) {
                 <p className="font-black text-white">
                   {item.name || "商品名未設定"}
                 </p>
+
                 <p className="mt-1 text-xs text-white/45">
                   {item.variant || "-"} / 数量：{item.qty || 1}
                 </p>
@@ -204,6 +207,7 @@ function OrderItemsView({ order }: { order: Order }) {
       <p className="font-black text-white">
         {order.product_name || "商品名未設定"}
       </p>
+
       <p className="mt-1 text-xs text-white/45">
         {order.size || "-"} / 数量：{order.quantity || 1}
       </p>
@@ -227,6 +231,7 @@ function OrderRuleBox({ compact = false }: { compact?: boolean }) {
       <div className="mt-4 space-y-3">
         <div>
           <p className="font-bold text-white/70">基本の流れ</p>
+
           <p className="mt-1 text-yellow-100/80">
             ordered → PAID → SHIPPED
           </p>
@@ -234,6 +239,7 @@ function OrderRuleBox({ compact = false }: { compact?: boolean }) {
 
         <div>
           <p className="font-bold text-white/70">やること</p>
+
           <ol className="mt-1 list-decimal space-y-1 pl-4">
             <li>ordered の注文を確認</li>
             <li>入金後「入金確認メールを送信」</li>
@@ -243,6 +249,7 @@ function OrderRuleBox({ compact = false }: { compact?: boolean }) {
 
         <div>
           <p className="font-bold text-white/70">ステータス</p>
+
           <div className="mt-1 space-y-1">
             <p>ordered：注文受付</p>
             <p>PAID：入金確認済み</p>
@@ -289,6 +296,7 @@ function OrderCard({
 
   const isPaidMailSaving = mailSavingId === paidMailSavingKey;
   const isShippedMailSaving = mailSavingId === shippedMailSavingKey;
+
   const isSaving =
     savingId === order.id || isPaidMailSaving || isShippedMailSaving;
 
@@ -307,6 +315,7 @@ function OrderCard({
               >
                 {status}
               </span>
+
               <span className="text-[11px] text-white/35">
                 {formatDate(order.created_at)}
               </span>
@@ -324,6 +333,7 @@ function OrderCard({
             <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-white/55 md:grid-cols-2">
               <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <span className="text-white/35">注文ID：</span>
+
                 <span className="font-bold text-white/75 break-all">
                   {orderDisplayId(order)}
                 </span>
@@ -331,6 +341,7 @@ function OrderCard({
 
               <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <span className="text-white/35">メール：</span>
+
                 <span className="font-bold text-white/75 break-all">
                   {order.email || "-"}
                 </span>
@@ -338,6 +349,7 @@ function OrderCard({
 
               <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <span className="text-white/35">電話：</span>
+
                 <span className="font-bold text-white/75">
                   {order.phone || "-"}
                 </span>
@@ -345,8 +357,17 @@ function OrderCard({
 
               <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <span className="text-white/35">住所：</span>
+
                 <span className="font-bold text-white/75">
                   {compactAddress(order)}
+                </span>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <span className="text-white/35">時間指定：</span>
+
+                <span className="font-bold text-white/75">
+                  {order.request_time || "指定なし"}
                 </span>
               </div>
             </div>
@@ -385,7 +406,9 @@ function OrderCard({
                     disabled={isSaving || !order.email}
                     className="rounded-lg border border-green-300/25 bg-green-500/15 px-4 py-3 text-sm font-black text-green-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_20px_rgba(0,0,0,0.22)] transition active:translate-y-[2px] active:scale-[0.99] hover:bg-green-500/25 disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    {isShippedMailSaving ? "送信中..." : "発送完了メールを送信"}
+                    {isShippedMailSaving
+                      ? "送信中..."
+                      : "発送完了メールを送信"}
                   </button>
                 </div>
               </div>
@@ -408,6 +431,7 @@ function OrderCard({
 
             <div className="rounded-lg border border-yellow-300/20 bg-yellow-300/10 px-5 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_24px_rgba(0,0,0,0.2)]">
               <p className="text-xs text-white/45">合計</p>
+
               <p className="text-xl font-black text-yellow-100">
                 {yen(order.total_price)}
               </p>
@@ -440,7 +464,10 @@ function OrderCard({
             <h3 className="mt-2 text-xl sm:text-2xl font-black">
               {order.customer_name || "名前未設定"}
             </h3>
-            <p className="mt-1 text-sm text-white/45">{order.email || "-"}</p>
+
+            <p className="mt-1 text-sm text-white/45">
+              {order.email || "-"}
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -459,6 +486,7 @@ function OrderCard({
 
             <div className="rounded-lg border border-yellow-300/20 bg-yellow-300/10 px-5 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_24px_rgba(0,0,0,0.2)]">
               <p className="text-xs text-white/45">合計</p>
+
               <p className="text-xl font-black text-yellow-100">
                 {yen(order.total_price)}
               </p>
@@ -472,6 +500,7 @@ function OrderCard({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="rounded-xl border border-white/10 bg-black/35 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_rgba(0,0,0,0.18)]">
               <p className="text-xs text-white/40">住所</p>
+
               <p className="mt-2 text-sm leading-6 text-white/80">
                 〒{order.postal_code || "-"}
                 <br />
@@ -482,6 +511,7 @@ function OrderCard({
 
             <div className="rounded-xl border border-white/10 bg-black/35 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_rgba(0,0,0,0.18)]">
               <p className="text-xs text-white/40">連絡先</p>
+
               <p className="mt-2 text-sm leading-6 text-white/80">
                 電話：{order.phone || "-"}
                 <br />
@@ -491,6 +521,7 @@ function OrderCard({
 
             <div className="rounded-xl border border-white/10 bg-black/35 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_rgba(0,0,0,0.18)]">
               <p className="text-xs text-white/40">支払い</p>
+
               <p className="mt-2 text-sm leading-6 text-white/80">
                 {paymentLabel(order.payment_method)}
                 <br />
@@ -500,6 +531,7 @@ function OrderCard({
 
             <div className="rounded-xl border border-white/10 bg-black/35 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_rgba(0,0,0,0.18)]">
               <p className="text-xs text-white/40">到着希望</p>
+
               <p className="mt-2 text-sm leading-6 text-white/80">
                 {order.request_time || "指定なし"}
               </p>
@@ -542,7 +574,9 @@ function OrderCard({
                   disabled={isSaving || !order.email}
                   className="rounded-lg border border-green-300/25 bg-green-500/15 px-4 py-3 text-sm font-black text-green-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_20px_rgba(0,0,0,0.22)] transition active:translate-y-[2px] active:scale-[0.99] hover:bg-green-500/25 disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  {isShippedMailSaving ? "送信中..." : "発送完了メールを送信"}
+                  {isShippedMailSaving
+                    ? "送信中..."
+                    : "発送完了メールを送信"}
                 </button>
               </div>
             </div>
@@ -555,16 +589,23 @@ function OrderCard({
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
               <span className="text-white/45">商品小計</span>
-              <span className="font-bold text-white">{yen(order.subtotal)}</span>
+
+              <span className="font-bold text-white">
+                {yen(order.subtotal)}
+              </span>
             </div>
 
             <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
               <span className="text-white/45">代引き手数料</span>
-              <span className="font-bold text-white">{yen(order.cod_fee)}</span>
+
+              <span className="font-bold text-white">
+                {yen(order.cod_fee)}
+              </span>
             </div>
 
             <div className="flex items-center justify-between gap-3 pt-2">
               <span className="text-yellow-100 font-black">合計</span>
+
               <span className="text-xl font-black text-yellow-100">
                 {yen(order.total_price)}
               </span>
@@ -581,9 +622,11 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [mailSavingId, setMailSavingId] = useState<string | null>(null);
-  const [trackingNumbers, setTrackingNumbers] = useState<Record<string, string>>(
-    {}
-  );
+
+  const [trackingNumbers, setTrackingNumbers] = useState<
+    Record<string, string>
+  >({});
+
   const [message, setMessage] = useState("");
   const [showCanceled, setShowCanceled] = useState(false);
   const [showShipped, setShowShipped] = useState(false);
@@ -632,31 +675,42 @@ export default function AdminOrdersPage() {
   const activeOrders = useMemo(() => {
     return orders.filter((order) => {
       const status = normalizeStatus(order.status);
+
       return status !== "CANCELED" && status !== "SHIPPED";
     });
   }, [orders]);
 
   const shippedOrders = useMemo(() => {
-    return orders.filter((order) => normalizeStatus(order.status) === "SHIPPED");
+    return orders.filter(
+      (order) => normalizeStatus(order.status) === "SHIPPED"
+    );
   }, [orders]);
 
   const canceledOrders = useMemo(() => {
-    return orders.filter((order) => normalizeStatus(order.status) === "CANCELED");
+    return orders.filter(
+      (order) => normalizeStatus(order.status) === "CANCELED"
+    );
   }, [orders]);
 
   const counts = useMemo(() => {
     return {
       total: orders.length,
       active: activeOrders.length,
-      ordered: orders.filter((order) => normalizeStatus(order.status) === "ordered")
-        .length,
+      ordered: orders.filter(
+        (order) => normalizeStatus(order.status) === "ordered"
+      ).length,
       paidNeedCheck: orders.filter(
         (order) => normalizeStatus(order.status) === "PAID（要確認）"
       ).length,
       shipped: shippedOrders.length,
       canceled: canceledOrders.length,
     };
-  }, [orders, activeOrders.length, shippedOrders.length, canceledOrders.length]);
+  }, [
+    orders,
+    activeOrders.length,
+    shippedOrders.length,
+    canceledOrders.length,
+  ]);
 
   const updateStatus = async (order: Order, status: string) => {
     setSavingId(order.id);
@@ -727,8 +781,12 @@ export default function AdminOrdersPage() {
 
     const ok = window.confirm(
       mailType === "paid"
-        ? `「${order.customer_name || "名前未設定"}」様へ入金確認メールを送信します。\nステータスはPAIDになります。\n\n間違いありませんか？`
-        : `「${order.customer_name || "名前未設定"}」様へ発送完了メールを送信します。\n追跡番号：${trackingNumber}\nステータスはSHIPPEDになります。\n\n間違いありませんか？`
+        ? `「${
+            order.customer_name || "名前未設定"
+          }」様へ入金確認メールを送信します。\nステータスはPAIDになります。\n\n間違いありませんか？`
+        : `「${
+            order.customer_name || "名前未設定"
+          }」様へ発送完了メールを送信します。\n追跡番号：${trackingNumber}\nステータスはSHIPPEDになります。\n\n間違いありませんか？`
     );
 
     if (!ok) return;
@@ -789,7 +847,9 @@ export default function AdminOrdersPage() {
     <main className="min-h-screen bg-[#06090d] text-white">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_8%,rgba(250,204,21,0.20),transparent_32%),radial-gradient(circle_at_84%_18%,rgba(34,197,94,0.13),transparent_30%),radial-gradient(circle_at_50%_80%,rgba(59,130,246,0.10),transparent_32%),linear-gradient(135deg,#05070a_0%,#111827_48%,#030405_100%)]" />
+
         <div className="absolute inset-0 opacity-[0.10] bg-[linear-gradient(90deg,white_1px,transparent_1px),linear-gradient(0deg,white_1px,transparent_1px)] bg-[size:38px_38px]" />
+
         <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.05)_45%,transparent_48%)]" />
       </div>
 
@@ -799,7 +859,9 @@ export default function AdminOrdersPage() {
             <p className="text-xs tracking-[0.35em] text-yellow-300/80">
               MIKAN AGENT
             </p>
+
             <h1 className="mt-3 text-2xl font-black">山口みかん農園</h1>
+
             <p className="mt-2 text-xs text-white/45">
               Order Control Console
             </p>
@@ -812,12 +874,14 @@ export default function AdminOrdersPage() {
             >
               注文管理
             </a>
+
             <a
               href="/admin/products"
               className="block rounded-lg px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
             >
               商品管理
             </a>
+
             <a
               href="/products"
               className="block rounded-lg px-4 py-3 text-sm text-white/65 hover:bg-white/10 hover:text-white"
@@ -844,6 +908,7 @@ export default function AdminOrdersPage() {
               <p className="text-[10px] tracking-[0.18em] text-yellow-200/70">
                 オーダー状況
               </p>
+
               <p className="mt-1 text-[11px] text-white/55">
                 通常 {counts.active} / ordered {counts.ordered} / PAID{" "}
                 {counts.paidNeedCheck} / CXL {counts.canceled}
@@ -866,18 +931,21 @@ export default function AdminOrdersPage() {
             }}
           >
             <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-yellow-300/80 via-green-300/40 to-transparent" />
+
             <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
 
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-md border border-yellow-300/20 bg-yellow-400/10 px-3 py-2 text-[11px] sm:text-xs text-yellow-100 mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                   <span className="h-2 w-2 rounded-full bg-yellow-300 shadow-[0_0_18px_rgba(250,204,21,0.9)]" />
+
                   オーダー　システム
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
                   注文管理
                 </h2>
+
                 <p className="mt-3 text-white/55 text-xs sm:text-base leading-6">
                   注文内容・住所・支払い方法・メール送信・発送状況をここで管理します。
                 </p>
@@ -886,6 +954,7 @@ export default function AdminOrdersPage() {
               <div className="hidden sm:flex flex-wrap gap-3">
                 <div className="rounded-lg border border-white/10 bg-black/30 backdrop-blur-xl px-5 py-4 min-w-[130px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_26px_rgba(0,0,0,0.22)]">
                   <p className="text-xs text-white/45">通常注文</p>
+
                   <p className="text-2xl font-black text-yellow-200 mt-1">
                     {counts.active}
                   </p>
@@ -893,6 +962,7 @@ export default function AdminOrdersPage() {
 
                 <div className="rounded-lg border border-sky-300/20 bg-sky-400/[0.08] backdrop-blur-xl px-5 py-4 min-w-[130px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_26px_rgba(0,0,0,0.22)]">
                   <p className="text-xs text-white/45">ordered</p>
+
                   <p className="text-2xl font-black text-sky-200 mt-1">
                     {counts.ordered}
                   </p>
@@ -900,6 +970,7 @@ export default function AdminOrdersPage() {
 
                 <div className="rounded-lg border border-blue-300/20 bg-blue-400/[0.08] backdrop-blur-xl px-5 py-4 min-w-[130px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_26px_rgba(0,0,0,0.22)]">
                   <p className="text-xs text-white/45">PAID確認</p>
+
                   <p className="text-2xl font-black text-blue-200 mt-1">
                     {counts.paidNeedCheck}
                   </p>
@@ -907,6 +978,7 @@ export default function AdminOrdersPage() {
 
                 <div className="rounded-lg border border-red-300/20 bg-red-400/[0.08] backdrop-blur-xl px-5 py-4 min-w-[130px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_26px_rgba(0,0,0,0.22)]">
                   <p className="text-xs text-white/45">CANCELED</p>
+
                   <p className="text-2xl font-black text-red-200 mt-1">
                     {counts.canceled}
                   </p>
@@ -925,6 +997,7 @@ export default function AdminOrdersPage() {
                 <p className="text-[11px] tracking-[0.22em] text-yellow-200/75">
                   Manual
                 </p>
+
                 <p className="mt-1 text-sm font-black text-white">
                   処理手順
                 </p>
@@ -1000,6 +1073,7 @@ export default function AdminOrdersPage() {
                 <p className="text-[10px] sm:text-xs tracking-[0.22em] text-green-200/70">
                   SHIPPED ORDERS
                 </p>
+
                 <h3 className="mt-1 text-base sm:text-lg font-black text-white">
                   発送済み注文
                 </h3>
@@ -1009,6 +1083,7 @@ export default function AdminOrdersPage() {
                 <span className="rounded-md border border-green-300/20 bg-green-400/10 px-3 py-1.5 text-xs sm:text-sm font-black text-green-100">
                   {shippedOrders.length}件
                 </span>
+
                 <span className="text-xs sm:text-sm text-white/50">
                   {showShipped ? "閉じる ▲" : "開く ▼"}
                 </span>
@@ -1052,6 +1127,7 @@ export default function AdminOrdersPage() {
                 <p className="text-[10px] sm:text-xs tracking-[0.22em] text-red-200/70">
                   CANCELED ORDERS
                 </p>
+
                 <h3 className="mt-1 text-base sm:text-lg font-black text-white">
                   キャンセル済み注文
                 </h3>
@@ -1061,6 +1137,7 @@ export default function AdminOrdersPage() {
                 <span className="rounded-md border border-red-300/20 bg-red-400/10 px-3 py-1.5 text-xs sm:text-sm font-black text-red-100">
                   {canceledOrders.length}件
                 </span>
+
                 <span className="text-xs sm:text-sm text-white/50">
                   {showCanceled ? "閉じる ▲" : "開く ▼"}
                 </span>

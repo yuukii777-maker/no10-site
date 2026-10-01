@@ -1,4 +1,5 @@
 // app/(whatever)/OrderClient.tsx
+
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -60,7 +61,7 @@ function DeliveryPicker({
 }
 /* ========================= */
 
- /* =========================
+/* =========================
    ★ カート会計サポート
 ========================= */
 type CartItem = {
@@ -173,6 +174,12 @@ export default function OrderClient() {
     useState<string | null>(null);
   /* ========================= */
 
+  const [noticeAgreed, setNoticeAgreed] =
+    useState(false);
+
+  const [noticeError, setNoticeError] =
+    useState(false);
+
   /* =========================
      ★ カート会計の状態
   ========================= */
@@ -250,6 +257,11 @@ export default function OrderClient() {
       return;
     }
 
+    if (!noticeAgreed) {
+      setNoticeError(true);
+      return;
+    }
+
     if (sentOnceRef.current) return;
 
     setLoading(true);
@@ -294,6 +306,9 @@ export default function OrderClient() {
 
         cod_fee:
           codFee,
+
+        notice_agreed:
+          noticeAgreed,
       };
 
       await postToSupabaseOrder(
@@ -361,6 +376,11 @@ export default function OrderClient() {
       return;
     }
 
+    if (!noticeAgreed) {
+      setNoticeError(true);
+      return;
+    }
+
     if (sentOnceRef.current) return;
 
     setLoading(true);
@@ -402,6 +422,9 @@ export default function OrderClient() {
 
         cod_fee:
           codFee,
+
+        notice_agreed:
+          noticeAgreed,
       };
 
       await postToSupabaseOrder(
@@ -732,7 +755,13 @@ export default function OrderClient() {
             </div>
 
             {/* ★ 連絡先についての注意 */}
-            <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-relaxed text-gray-700">
+            <div
+              className={`mt-4 rounded-xl border px-4 py-4 text-sm leading-relaxed text-gray-700 ${
+                noticeError
+                  ? "border-red-500 bg-red-50"
+                  : "border-orange-200 bg-orange-50"
+              }`}
+            >
 
               <p>
                 ご注文内容の確認や発送に関するご連絡のため、
@@ -745,8 +774,43 @@ export default function OrderClient() {
               </p>
 
               <p className="mt-2 font-semibold text-orange-700">
+                ※ 生もののため、置き配はできません。対面手渡しとなります。
+              </p>
+
+              <p className="mt-2 font-semibold text-orange-700">
+                ※ お受け取り可能な時間帯がある場合は、下記「到着希望」より必ず時間帯をご選択ください。
+              </p>
+
+              <p className="mt-2 font-semibold text-orange-700">
                 ※ ご連絡が取れない場合、注文確認や発送手続きを進められない場合があります。
               </p>
+
+              <label className="mt-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-white/70 px-3 py-3 cursor-pointer">
+
+                <input
+                  type="checkbox"
+                  checked={noticeAgreed}
+                  onChange={(e) => {
+                    setNoticeAgreed(e.target.checked);
+
+                    if (e.target.checked) {
+                      setNoticeError(false);
+                    }
+                  }}
+                  className="mt-1 h-4 w-4 shrink-0"
+                />
+
+                <span className="font-semibold text-gray-800">
+                  上記の注意事項を確認し、内容に同意します。
+                </span>
+
+              </label>
+
+              {noticeError && (
+                <p className="mt-3 font-bold text-red-600">
+                  注意事項への同意が確認できません。内容をご確認のうえ、チェックを入れてください。
+                </p>
+              )}
 
             </div>
 
@@ -1040,7 +1104,13 @@ export default function OrderClient() {
         </div>
 
         {/* ★ 連絡先についての注意 */}
-        <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-relaxed text-gray-700">
+        <div
+          className={`mt-4 rounded-xl border px-4 py-4 text-sm leading-relaxed text-gray-700 ${
+            noticeError
+              ? "border-red-500 bg-red-50"
+              : "border-orange-200 bg-orange-50"
+          }`}
+        >
 
           <p>
             ご注文内容の確認や発送に関するご連絡のため、
@@ -1053,8 +1123,43 @@ export default function OrderClient() {
           </p>
 
           <p className="mt-2 font-semibold text-orange-700">
+            ※ 生もののため、置き配はできません。対面手渡しとなります。
+          </p>
+
+          <p className="mt-2 font-semibold text-orange-700">
+            ※ お受け取り可能な時間帯がある場合は、下記「到着希望」より必ず時間帯をご選択ください。
+          </p>
+
+          <p className="mt-2 font-semibold text-orange-700">
             ※ ご連絡が取れない場合、注文確認や発送手続きを進められない場合があります。
           </p>
+
+          <label className="mt-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-white/70 px-3 py-3 cursor-pointer">
+
+            <input
+              type="checkbox"
+              checked={noticeAgreed}
+              onChange={(e) => {
+                setNoticeAgreed(e.target.checked);
+
+                if (e.target.checked) {
+                  setNoticeError(false);
+                }
+              }}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+
+            <span className="font-semibold text-gray-800">
+              上記の注意事項を確認し、内容に同意します。
+            </span>
+
+          </label>
+
+          {noticeError && (
+            <p className="mt-3 font-bold text-red-600">
+              注意事項への同意が確認できません。内容をご確認のうえ、チェックを入れてください。
+            </p>
+          )}
 
         </div>
 

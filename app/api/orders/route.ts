@@ -459,6 +459,23 @@ export async function POST(
       );
     }
 
+    /* -----------------------------------------
+       注意事項への同意チェック
+    ----------------------------------------- */
+
+    if (payload.notice_agreed !== true) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "注意事項への同意が確認できません。内容をご確認のうえ、同意してください。",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
     if (
       isCart &&
       (!Array.isArray(payload.items) ||
